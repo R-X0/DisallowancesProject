@@ -309,22 +309,47 @@ async function generatePdf(text, outputPath) {
 /**
  * Generate protest letter using OpenAI with example template
  */
-async function generateERCProtestLetter(businessInfo, covidData, havenForHopeExample) {
+async function generateERCProtestLetter(businessInfo, covidData, templateContent) {
   try {
-    console.log('Generating protest letter using GPT...');
+    console.log('Generating document using GPT...');
     
-    const response = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'o3-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `You are an expert in creating IRS Employee Retention Credit (ERC) protest letters. 
-          Create a formal protest letter following the exact format and style of the example letter provided, 
-          using the specific business information and COVID-19 research data provided.`
-        },
-        {
-          role: 'user',
-          content: `Please create an ERC protest letter using the following information:
+    // Determine which template to use based on the document type
+    let promptTemplate;
+    let systemPrompt;
+    
+    if (businessInfo.documentType === 'form886A') {
+      // For Form 886-A document
+      systemPrompt = `You are an expert in creating IRS Form 886-A documents for Employee Retention Credit (ERC) substantiation. 
+      Create a comprehensive Form 886-A document with sections for Issue, Facts, Law, Argument, and Conclusion based on the specific business information and COVID-19 research data provided.`;
+      
+      promptTemplate = `Please create a Form 886-A document for ERC substantiation using the following information:
+
+BUSINESS INFORMATION:
+Business Name: ${businessInfo.businessName}
+EIN: ${businessInfo.ein}
+Location: ${businessInfo.location}
+Time Periods: ${businessInfo.timePeriod} and other relevant quarters
+Business Type: ${businessInfo.businessType || 'business'}
+
+COVID-19 RESEARCH DATA:
+${covidData}
+
+FORMAT: Create a comprehensive Form 886-A document with the following structure:
+1. Issue - Define the question of whether the business was fully or partially suspended by government orders
+2. Facts - Detail the business operations and how they were affected by specific government orders
+3. Law - Explain the ERC provisions, IRS Notice 2021-20, and other relevant guidance
+4. Argument - Present the case for why the business qualifies quarter by quarter
+5. Conclusion - Summarize the eligibility determination
+
+Use today's date: ${new Date().toLocaleDateString()}`;
+    
+    } else {
+      // Default to protest letter (original functionality)
+      systemPrompt = `You are an expert in creating IRS Employee Retention Credit (ERC) protest letters. 
+      Create a formal protest letter following the exact format and style of the example letter provided, 
+      using the specific business information and COVID-19 research data provided.`;
+      
+      promptTemplate = `Please create an ERC protest letter using the following information:
 
 BUSINESS INFORMATION:
 Business Name: ${businessInfo.businessName}
@@ -333,80 +358,92 @@ Location: ${businessInfo.location}
 Time Period: ${businessInfo.timePeriod}
 Business Type: ${businessInfo.businessType || 'business'}
 
-COVID-19 RESEARCH DATA FROM CHATGPT, THIS IS THE DATA THAT IS ACTUALLY RELAVENT TO OUR PROTEST LETTER:
+COVID-19 RESEARCH DATA FROM CHATGPT, THIS IS THE DATA THAT IS ACTUALLY RELEVANT TO OUR PROTEST LETTER:
 ${covidData}
 
-FORMAT EXAMPLE (FOLLOW THIS EXACT FORMAT AND STYLE), MAKE SURE TO INCLUDE THE LINKS WE FOUND IN OUR RESEARCH DATA SIMILAR TO HOW ITS INCLUDED IN THE EXAMPLE:
-${havenForHopeExample}
+FORMAT EXAMPLE (FOLLOW THIS EXACT FORMAT AND STYLE), MAKE SURE TO INCLUDE THE LINKS WE FOUND IN OUR RESEARCH DATA SIMILAR TO HOW IT'S INCLUDED IN THE EXAMPLE:
+${templateContent}
 
-Create a comprehensive protest letter using the business information and COVID data above, following the exact format and structure of the example letter. Make it specific to the time period and location of the business. Use today's date: ${new Date().toLocaleDateString()}`
+Create a comprehensive protest letter using the business information and COVID data above, following the exact format and structure of the example letter. Make it specific to the time period and location of the business. Use today's date: ${new Date().toLocaleDateString()}`;
+    }
+    
+    const response = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || 'o3-mini',
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt
+        },
+        {
+          role: 'user',
+          content: promptTemplate
         }
       ],
     });
     
-    const generatedLetter = response.choices[0].message.content.trim();
-    console.log('Letter successfully generated');
+    const generatedDocument = response.choices[0].message.content.trim();
+    console.log('Document successfully generated');
     
-    return generatedLetter;
+    return generatedDocument;
   } catch (error) {
-    console.error('Error generating protest letter:', error);
-    throw new Error(`Failed to generate protest letter: ${error.message}`);
+    console.error('Error generating document:', error);
+    throw new Error(`Failed to generate document: ${error.message}`);
   }
 }
 
 // Generate customized COVID prompt through OpenAI
 router.post('/generate-prompt', async (req, res) => {
-    try {
-      const { basePrompt, businessInfo } = req.body;
-      
-      if (!basePrompt || !businessInfo) {
-        return res.status(400).json({
-          success: false,
-          message: 'Base prompt and business information are required'
-        });
-      }
-      
-      // Use OpenAI to generate a customized prompt
-      const response = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || 'o3-mini',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a tool that generates COVID-19 government order research prompts. 
-            Your output must be ONLY the finished prompt with no explanations, introductions, or meta-commentary.
-            Do not include phrases like "Here is a prompt" or "This is a customized prompt."
-            Just provide the actual prompt content that the user will copy and paste.`
-          },
-          {
-            role: 'user',
-            content: `Create a detailed research prompt about COVID-19 government orders for a ${businessInfo.businessType} 
-            in ${businessInfo.city}, ${businessInfo.state} during ${businessInfo.timePeriod}.
-            
-            Base your response on this template but improve and expand it:
-            ${basePrompt}
-            
-            Make it more specific with questions relevant to this business type and time period.
-            Format with numbered sections if appropriate, but do NOT include any explanatory text about what you're doing.
-            Your entire response should be ONLY the prompt that will be copied and pasted.`
-          }
-        ],
-      });
-  
-      // Get GPT's customized prompt
-      const customizedPrompt = response.choices[0].message.content.trim();
-      
-      res.status(200).json({
-        success: true,
-        prompt: customizedPrompt
-      });
-    } catch (error) {
-      console.error('Error generating customized prompt:', error);
-      res.status(500).json({
+  try {
+    const { basePrompt, businessInfo } = req.body;
+    
+    if (!basePrompt || !businessInfo) {
+      return res.status(400).json({
         success: false,
-        message: `Error generating prompt: ${error.message}`
+        message: 'Base prompt and business information are required'
       });
     }
-  });
+    
+    // Use OpenAI to generate a customized prompt
+    const response = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || 'o3-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a tool that generates COVID-19 government order research prompts. 
+          Your output must be ONLY the finished prompt with no explanations, introductions, or meta-commentary.
+          Do not include phrases like "Here is a prompt" or "This is a customized prompt."
+          Just provide the actual prompt content that the user will copy and paste.`
+        },
+        {
+          role: 'user',
+          content: `Create a detailed research prompt about COVID-19 government orders for a ${businessInfo.businessType} 
+          in ${businessInfo.city}, ${businessInfo.state} during ${businessInfo.timePeriod}.
+          
+          Base your response on this template but improve and expand it:
+          ${basePrompt}
+          
+          Make it more specific with questions relevant to this business type and time period.
+          Format with numbered sections if appropriate, but do NOT include any explanatory text about what you're doing.
+          Your entire response should be ONLY the prompt that will be copied and pasted.`
+        }
+      ],
+    });
+
+    // Get GPT's customized prompt
+    const customizedPrompt = response.choices[0].message.content.trim();
+    
+    res.status(200).json({
+      success: true,
+      prompt: customizedPrompt
+    });
+  } catch (error) {
+    console.error('Error generating customized prompt:', error);
+    res.status(500).json({
+      success: false,
+      message: `Error generating prompt: ${error.message}`
+    });
+  }
+});
 
 // ----------------------------------------------------------------------------
 // MAIN ROUTE
@@ -421,7 +458,8 @@ router.post('/process-chatgpt', async (req, res) => {
       location,
       timePeriod,
       businessType,
-      trackingId
+      trackingId,
+      documentType = 'protestLetter' // Default to protest letter if not specified
     } = req.body;
 
     // Validate required inputs
@@ -441,6 +479,7 @@ router.post('/process-chatgpt', async (req, res) => {
 
     console.log(`Processing ChatGPT link: ${chatGptLink}`);
     console.log(`Business: ${businessName}, Period: ${timePeriod}, Type: ${businessType || 'Not specified'}`);
+    console.log(`Document Type: ${documentType}`);
 
     // Create unique directory for request
     const requestId = uuidv4().substring(0, 8);
@@ -539,14 +578,33 @@ router.post('/process-chatgpt', async (req, res) => {
       await browser.close();
       console.log('Browser closed');
 
-      // Get the Haven for Hope example letter
-      const havenForHopeExample = await fs.readFile(
-        path.join(__dirname, '../templates/haven_for_hope_letter.txt'),
-        'utf8'
-      ).catch(async () => {
-        // If the file doesn't exist, use the hard-coded example
-        return;
-      });
+      // Get the appropriate template based on document type
+      let templateContent = '';
+      
+      if (documentType === 'form886A') {
+        // Get the Form 886-A template
+        try {
+          templateContent = await fs.readFile(
+            path.join(__dirname, '../templates/form_886a_template.txt'),
+            'utf8'
+          );
+        } catch (err) {
+          console.log('Form 886-A template not found, using default template');
+          // Use a default template structure if file not found
+          templateContent = 'Form 886-A template with Issue, Facts, Law, Argument, and Conclusion sections';
+        }
+      } else {
+        // Default to the Haven for Hope example for protest letters
+        try {
+          templateContent = await fs.readFile(
+            path.join(__dirname, '../templates/haven_for_hope_letter.txt'),
+            'utf8'
+          );
+        } catch (err) {
+          console.log('Haven for Hope template not found, using default template');
+          templateContent = 'Standard protest letter format';
+        }
+      }
 
       // 3) Create business info object
       const businessInfo = {
@@ -554,48 +612,53 @@ router.post('/process-chatgpt', async (req, res) => {
         ein,
         location,
         timePeriod,
-        businessType: businessType || 'business'
+        businessType: businessType || 'business',
+        documentType
       };
 
-      // 4) Generate protest letter using GPT with example
-      const letter = await generateERCProtestLetter(
+      // 4) Generate document using GPT with appropriate template
+      const document = await generateERCProtestLetter(
         businessInfo,
         conversationContent, // Pass the entire cleaned conversation as the COVID data
-        havenForHopeExample
+        templateContent
       );
       
-      // Save the generated letter in text format
+      // Save the generated document in text format
+      const documentFileName = documentType === 'form886A' ? 'form_886a.txt' : 'protest_letter.txt';
       await fs.writeFile(
-        path.join(outputDir, 'protest_letter.txt'),
-        letter,
+        path.join(outputDir, documentFileName),
+        document,
         'utf8'
       );
       
-      // 5) Process URLs in the letter and download as PDFs
-      console.log('Extracting and downloading URLs from the letter...');
-      const { letter: updatedLetter, attachments } = await extractAndDownloadUrls(
-        letter, 
+      // 5) Process URLs in the document and download as PDFs
+      console.log('Extracting and downloading URLs from the document...');
+      const { letter: updatedDocument, attachments } = await extractAndDownloadUrls(
+        document, 
         outputDir
       );
       
-      // Save the updated letter with attachment references
+      // Save the updated document with attachment references
+      const updatedFileName = documentType === 'form886A' ? 'form_886a_with_attachments.txt' : 'protest_letter_with_attachments.txt';
       await fs.writeFile(
-        path.join(outputDir, 'protest_letter_with_attachments.txt'),
-        updatedLetter,
+        path.join(outputDir, updatedFileName),
+        updatedDocument,
         'utf8'
       );
       
-      // 6) Generate PDF version of the letter
-      console.log('Generating PDF version of the letter...');
-      const pdfPath = path.join(outputDir, 'protest_letter.pdf');
-      await generatePdf(updatedLetter, pdfPath);
+      // 6) Generate PDF version of the document
+      console.log('Generating PDF version of the document...');
+      const pdfFileName = documentType === 'form886A' ? 'form_886a.pdf' : 'protest_letter.pdf';
+      const pdfPath = path.join(outputDir, pdfFileName);
+      await generatePdf(updatedDocument, pdfPath);
       
       // 7) Create a complete package as a ZIP file
-      console.log('Creating complete protest package ZIP file...');
-      const zipPath = path.join(outputDir, 'complete_protest_package.zip');
+      console.log('Creating complete package ZIP file...');
+      const packageName = documentType === 'form886A' ? 'form_886a_package.zip' : 'complete_protest_package.zip';
+      const zipPath = path.join(outputDir, packageName);
       const zip = new AdmZip();
       
-      // Add the main letter PDF
+      // Add the main document PDF
       zip.addLocalFile(pdfPath);
       
       // Add all attachment PDFs
@@ -604,16 +667,25 @@ router.post('/process-chatgpt', async (req, res) => {
       }
       
       // Add a README file explaining the package contents
-      const readmeContent = `ERC PROTEST PACKAGE
+      const readmeContent = documentType === 'form886A' 
+        ? `ERC FORM 886-A PACKAGE
 
 Main Document:
-- protest_letter.pdf (The main protest letter)
+- ${pdfFileName} (The main Form 886-A document)
 
 Attachments:
 ${attachments.map((a, i) => `${i+1}. ${a.filename} (original URL: ${a.originalUrl})`).join('\n')}
 
-Generated on: ${new Date().toISOString()}
-`;
+Generated on: ${new Date().toISOString()}`
+        : `ERC PROTEST PACKAGE
+
+Main Document:
+- ${pdfFileName} (The main protest letter)
+
+Attachments:
+${attachments.map((a, i) => `${i+1}. ${a.filename} (original URL: ${a.originalUrl})`).join('\n')}
+
+Generated on: ${new Date().toISOString()}`;
       
       zip.addFile('README.txt', Buffer.from(readmeContent));
       
@@ -639,7 +711,7 @@ Generated on: ${new Date().toISOString()}
             console.log(`- PDF Size: ${pdfStats.size} bytes`);
             console.log(`- ZIP Size: ${zipStats.size} bytes`);
             
-            // Upload files to Drive (this is the key fix)
+            // Upload files to Drive
             driveUrls = await uploadFilesToDriveAndUpdateTracking(
               trackingId,
               businessName,
@@ -661,7 +733,7 @@ Generated on: ${new Date().toISOString()}
       if (driveUrls) {
         res.status(200).json({
           success: true,
-          letter: updatedLetter,
+          letter: updatedDocument,
           conversationContent,
           outputPath: outputDir,
           pdfPath,
@@ -675,7 +747,7 @@ Generated on: ${new Date().toISOString()}
       } else {
         res.status(200).json({
           success: true,
-          letter: updatedLetter,
+          letter: updatedDocument,
           conversationContent,
           outputPath: outputDir,
           pdfPath,

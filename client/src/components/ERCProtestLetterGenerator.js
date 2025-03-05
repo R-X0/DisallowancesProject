@@ -3,9 +3,9 @@ import {
   Box, Button, Paper, Typography, TextField, CircularProgress,
   Divider, Alert, Snackbar, IconButton, Dialog, DialogTitle,
   DialogContent, DialogActions, LinearProgress,
-  FormControlLabel, Switch
+  FormControlLabel, Switch, ButtonGroup, Tooltip
 } from '@mui/material';
-import { ContentCopy, CheckCircle, Description, Link, FileDownload } from '@mui/icons-material';
+import { ContentCopy, CheckCircle, Description, Link, FileDownload, SwapHoriz } from '@mui/icons-material';
 import { generateERCProtestLetter } from '../services/api';
 
 // Utility function to map NAICS code to business type
@@ -40,6 +40,7 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
   const [processingMessage, setProcessingMessage] = useState('');
   const [processingStep, setProcessingStep] = useState(0);
   const [packageData, setPackageData] = useState(null);
+  const [documentType, setDocumentType] = useState('protestLetter'); // New state for toggling document type
 
   // Function to generate protest letter using our LLM API
   const generateProtestLetter = async () => {
@@ -61,7 +62,8 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
         timePeriod: formData.timePeriod,
         chatGptLink: chatGptLink,
         businessType: businessType,
-        trackingId: formData.trackingId || '' // Pass tracking ID if available
+        trackingId: formData.trackingId || '', // Pass tracking ID if available
+        documentType: documentType // Pass the document type to the backend
       };
       
       // Update processing steps
@@ -76,7 +78,9 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
       const response = await generateERCProtestLetter(letterData);
       
       await new Promise(resolve => setTimeout(resolve, 1500));
-      setProcessingMessage('Generating protest letter...');
+      setProcessingMessage(documentType === 'protestLetter' ? 
+        'Generating protest letter...' : 
+        'Generating Form 886-A document...');
       setProcessingStep(3);
       
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -84,7 +88,7 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
       setProcessingStep(4);
       
       await new Promise(resolve => setTimeout(resolve, 1500));
-      setProcessingMessage('Creating complete protest package...');
+      setProcessingMessage('Creating complete package...');
       setProcessingStep(5);
       
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -95,17 +99,17 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
           pdfPath: response.pdfPath,
           zipPath: response.zipPath,
           attachments: response.attachments || [],
-          packageFilename: response.packageFilename || 'complete_protest_package.zip'
+          packageFilename: response.packageFilename || 'complete_package.zip'
         });
         setDialogOpen(true);
         setProcessing(false);
       } else {
-        throw new Error(response.message || 'Failed to generate letter');
+        throw new Error(response.message || 'Failed to generate document');
       }
     } catch (error) {
-      console.error('Error generating protest letter:', error);
+      console.error('Error generating document:', error);
       setProcessing(false);
-      setError(`Failed to generate protest letter: ${error.message}`);
+      setError(`Failed to generate document: ${error.message}`);
     } finally {
       setGenerating(false);
     }
@@ -145,14 +149,37 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
   return (
     <Box mt={3}>
       <Paper elevation={3} sx={{ p: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Generate ERC Protest Letter
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h6" gutterBottom>
+            Generate ERC Documentation
+          </Typography>
+          <ButtonGroup variant="contained" aria-label="document type toggle">
+            <Tooltip title="Generate a formal protest letter to the IRS">
+              <Button 
+                color={documentType === 'protestLetter' ? 'primary' : 'inherit'}
+                onClick={() => setDocumentType('protestLetter')}
+              >
+                Protest Letter
+              </Button>
+            </Tooltip>
+            <Tooltip title="Generate a Form 886-A substantiation document">
+              <Button 
+                color={documentType === 'form886A' ? 'primary' : 'inherit'}
+                onClick={() => setDocumentType('form886A')}
+                startIcon={<SwapHoriz />}
+              >
+                Form 886-A
+              </Button>
+            </Tooltip>
+          </ButtonGroup>
+        </Box>
+        
         <Divider sx={{ mb: 2 }} />
         
-        <Typography variant="body2" color="text.secondary" paragraph>
-          Paste a link to your ChatGPT conversation containing COVID-19 research. 
-          Our system will extract the information and generate a customized protest letter for your ERC claim.
+        <Typography variant="body2" color="text.secondary" mb={2}>
+          {documentType === 'protestLetter' 
+            ? 'Generate a customized protest letter for your ERC claim using your ChatGPT research.'
+            : 'Generate a Form 886-A document with Issue, Facts, Law, Argument, and Conclusion sections for enhanced substantiation.'}
         </Typography>
         
         <TextField
@@ -172,8 +199,9 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
         />
         
         <Alert severity="info" sx={{ mb: 2 }}>
-          Make sure your ChatGPT conversation includes specific COVID-19 orders that affected your business during {formData.timePeriod}. 
-          The system will analyze your conversation to extract this information for your protest letter.
+          {documentType === 'protestLetter' 
+            ? 'Make sure your ChatGPT conversation includes specific COVID-19 orders that affected your business during the selected time period.' 
+            : 'Make sure your ChatGPT conversation includes comprehensive information about government orders affecting your business across all ERC quarters.'}
         </Alert>
         
         {error && (
@@ -191,7 +219,9 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
             disabled={generating || !chatGptLink || !validateChatGptLink(chatGptLink)}
             sx={{ minWidth: 240 }}
           >
-            {generating ? 'Generating...' : 'Generate Complete Protest Package'}
+            {generating ? 'Generating...' : documentType === 'protestLetter' 
+              ? 'Generate Protest Package' 
+              : 'Generate Form 886-A Document'}
           </Button>
         </Box>
         
@@ -206,12 +236,12 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
               sx={{ mt: 1, mb: 2 }}
             />
             <Typography variant="caption" align="center" display="block" color="text.secondary">
-              This process may take 2-3 minutes to extract data from ChatGPT, generate the letter, and create PDFs of all referenced sources.
+              This process may take 2-3 minutes to extract data from ChatGPT, generate the document, and create PDFs of all referenced sources.
             </Typography>
           </Box>
         )}
         
-        {/* Protest Letter Dialog */}
+        {/* Document Dialog */}
         <Dialog
           open={dialogOpen}
           onClose={handleCloseDialog}
@@ -226,7 +256,7 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
           }}
         >
           <DialogTitle>
-            ERC Protest Package
+            {documentType === 'protestLetter' ? 'ERC Protest Package' : 'Form 886-A Document'}
             <IconButton
               aria-label="copy"
               onClick={copyToClipboard}
@@ -240,10 +270,12 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
               <Box mb={3}>
                 <Alert severity="success" sx={{ mb: 2 }}>
                   <Typography variant="subtitle1">
-                    Complete protest package generated successfully!
+                    {documentType === 'protestLetter' 
+                      ? 'Complete protest package generated successfully!' 
+                      : 'Form 886-A document generated successfully!'}
                   </Typography>
                   <Typography variant="body2">
-                    Your package includes the protest letter and {packageData.attachments.length} PDF attachments 
+                    Your package includes the {documentType === 'protestLetter' ? 'protest letter' : 'Form 886-A document'} and {packageData.attachments.length} PDF attachments 
                     of the referenced sources. You can download the complete package below.
                   </Typography>
                 </Alert>
@@ -256,7 +288,7 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
                     onClick={downloadProtestPackage}
                     sx={{ minWidth: 240 }}
                   >
-                    Download Complete Protest Package
+                    Download Complete Package
                   </Button>
                 </Box>
                 
@@ -285,7 +317,7 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
             )}
             
             <Typography variant="subtitle1" gutterBottom>
-              Protest Letter Preview:
+              {documentType === 'protestLetter' ? 'Protest Letter Preview:' : 'Form 886-A Document Preview:'}
             </Typography>
             <TextField
               fullWidth

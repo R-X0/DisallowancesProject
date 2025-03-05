@@ -1,0 +1,52 @@
+Form 886-A – ERC Eligibility Analysis (Q2 2020 to Q3 2021)
+Taxpayer: [BUSINESS_NAME] ([LOCATION])
+EIN: [EIN]
+Tax Periods: [DETAILED_TIME_PERIODS] (Employee Retention Credit quarters at issue)
+
+Issue
+Was [BUSINESS_NAME] fully or partially suspended by governmental orders during [TIME_PERIODS]? Specifically, did federal, state, or local government orders related to COVID-19 limit or halt [BUSINESS_NAME]'s business operations in those quarters such that the company meets the ERC eligibility criterion of a "full or partial suspension" of operations due to governmental orders (rather than the gross receipts test)?
+
+This issue breaks down into sub-questions:
+- Were there qualifying government orders in effect during these quarters that applied to [BUSINESS_NAME]'s business (directly or indirectly)?
+- If so, did those orders result in a full suspension (complete shutdown) or a partial suspension (more than a nominal portion of operations suspended) of the [BUSINESS_TYPE]'s trade or business?
+- Over what timeframes (which quarters) did each suspension occur, and do those correspond to the quarters for which ERC is claimed?
+- Additionally, did government orders affecting [BUSINESS_NAME]'s suppliers cause the business to suspend operations due to inability to obtain critical goods?
+
+The resolution of this issue will determine [BUSINESS_NAME]'s eligibility for the ERC for the quarters in question under the governmental order provision.
+
+Facts
+[FACTS_SECTION]
+
+Law
+Employee Retention Credit (ERC) – Government Order Suspension Eligibility:
+The ERC, as originally enacted in Section 2301 of the CARES Act (2020) and extended/modified by subsequent legislation (including the Taxpayer Certainty and Disaster Tax Relief Act of 2020 and American Rescue Plan Act of 2021), provides a payroll tax credit to eligible employers. One way to be an "Eligible Employer" is if operations were fully or partially suspended due to orders from a governmental authority limiting commerce, travel, or group meetings due to COVID-19 (CARES Act §2301(c)(2)(A)(ii)(I)). Key legal provisions and guidance include:
+
+- CARES Act §2301(c)(2)(A)(ii)(I): An employer carrying on a trade or business during 2020 (and similarly for 2021 under subsequent law) is eligible for ERC for a given calendar quarter if "the operation of the trade or business...is fully or partially suspended during the calendar quarter due to orders from an appropriate governmental authority limiting commerce, travel, or group meetings...due to COVID-19". This statutory language is the basis for the government orders criteria. It applies to orders at federal, state, or local level that have force of law. Importantly, orders are distinct from mere recommendations; only mandates count.
+
+- IRS Guidance (Notice 2021-20 and related FAQs): The IRS issued detailed guidance interpreting the ERC provisions. Section III.D of Notice 2021-20 (and analogous sections of Notice 2021-23 and 2021-49 for 2021) addresses "Full or Partial Suspension of Trade or Business Operations." Key points from the IRS interpretation:
+
+o A "governmental order" includes orders, proclamations, or decrees from the federal government, or any state or local government, that limit commerce, travel, or group meetings due to COVID-19. Examples given are orders closing businesses, stay-at-home orders, curfews, or capacity restrictions.
+
+o Full vs. Partial Suspension: An employer is fully suspended if it had to completely cease all business operations at its physical location for a period due to an order. A partial suspension means that "more than a nominal portion" of its operations were suspended due to an order, even if the business could continue some activities. The IRS safe harbor for "more than nominal" is that the affected operations account for at least 10% of gross receipts or hours worked (from the corresponding period in 2019).
+
+o Effect of Being "Essential": Being labeled an "essential" business does not automatically disqualify an employer from having a suspension. The IRS clarifies that if an essential business was allowed to remain open without any restrictions, then it wouldn't meet the suspension test. However, if an essential business still faced restrictions that impact its operations (e.g., capacity limits, or it has both essential and non-essential operations), it can still be considered partially suspended.
+
+o Supplier Shutdowns: Importantly for supply chain issues, IRS Notice 2021-20 Q/A #12 states: "An employer may be considered to have a full or partial suspension of operations if the business's suppliers are unable to make deliveries of critical goods or materials due to a governmental order that caused the supplier to suspend its operations." If the inability to obtain critical supplies causes the employer to suspend its operations (fully or partially), that employer is eligible for ERC for the affected period. In short, a government order on a supplier can trigger a qualifying suspension for the customer business, so long as the goods are critical and not replaceable immediately.
+
+o Duration of Eligibility: Eligibility lasts for the period during which the order is in effect and the business is suspended because of it. If an order spans parts of a quarter, the whole quarter is treated as eligible (IRS allows the entire quarter if any part of it had a suspension, under the original law's interpretation, since eligibility is determined quarter-by-quarter).
+
+- No Gross Receipts Test Needed if Suspension Met: By law, an employer can qualify by EITHER the government order test OR the gross receipts decline test. It need not meet both. Provided the suspension criterion is satisfied for given quarters, it is irrelevant whether gross receipts declined by more than 50% (2020 rule) or 20% (2021 rule).
+
+Argument
+[ARGUMENT_SECTION]
+
+Conclusion
+[BUSINESS_NAME] qualifies as an Eligible Employer for the Employee Retention Credit for [TIME_PERIODS] because its operations were fully or partially suspended during each of those quarters due to COVID-19 related government orders. The evidence shows a direct nexus between governmental orders and [BUSINESS_NAME]'s operational disruptions:
+
+[CONCLUSION_SECTION]
+
+In conclusion, [BUSINESS_NAME] has demonstrated that its trade or business was fully or partially suspended due to COVID-19 governmental orders during the relevant quarters. Under Section 2301 of the CARES Act and subsequent IRS guidance, the company is eligible for the Employee Retention Credit. The attached documentation includes copies of the pertinent government orders and a timeline of their impact on [BUSINESS_NAME]'s operations, providing a clear audit trail as required. The ERC claims for [TIME_PERIODS] are therefore fully substantiated as per IRS rules and should be allowed.
+
+Attestation: "Under penalties of perjury, I declare that I submitted this Form 886-A and accompanying documents, and to the best of my personal knowledge and belief, the information stated herein and in accompanying documents is true, correct, and complete."
+
+[SIGNATURE_LINE]
