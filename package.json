@@ -1,0 +1,38 @@
+{
+  "name": "disallowances",
+  "version": "1.0.0",
+  "description": "ERC Disallowance Protest Generator",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "client": "cd client && npm start",
+    "dev": "concurrently \"npm run start\" \"npm run client\"",
+    "install-all": "npm install && cd client && npm install",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "erc",
+    "protest",
+    "tax"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "cheerio": "^1.0.0",
+    "cors": "*",
+    "dotenv": "*",
+    "express": "*",
+    "googleapis": "*",
+    "helmet": "*",
+    "morgan": "*",
+    "multer": "*",
+    "openai": "^4.86.1",
+    "pdf-lib": "^1.17.1",
+    "puppeteer": "^24.3.0",
+    "uuid": "*"
+  },
+  "devDependencies": {
+    "concurrently": "*"
+  }
+}
