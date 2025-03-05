@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Box, Button, Paper, Typography, TextField, CircularProgress,
-  Divider, Alert, Snackbar, IconButton
+  Divider, Alert, Snackbar, IconButton, ButtonGroup, Tooltip
 } from '@mui/material';
-import { ContentCopy, CheckCircle } from '@mui/icons-material';
+import { ContentCopy, CheckCircle, SwapHoriz } from '@mui/icons-material';
 import axios from 'axios';
 
 // Utility function to extract city and state from location string
@@ -43,12 +43,13 @@ const COVIDPromptGenerator = ({ formData }) => {
   const [prompt, setPrompt] = useState('');
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [promptType, setPromptType] = useState('covidOrders'); // Default to COVID orders
   
   useEffect(() => {
     if (formData && Object.keys(formData).length > 0) {
       generatePrompt();
     }
-  }, [formData]);
+  }, [formData, promptType]);
   
   const generatePrompt = async () => {
     setGenerating(true);
@@ -69,8 +70,28 @@ const COVIDPromptGenerator = ({ formData }) => {
         }
       }
       
-      // Base template prompt that we want to customize
-      const basePrompt = `Please provide all state, city, and county COVID-related government orders, proclamations, and public health orders in place during 2020-2021 that would affect a "${businessType}" business located in ${city}, ${state}. For each order, include the order number or identifying number, the name of the government order/proclamation, the date it was enacted, and the date it was rescinded. If rescinded by subsequent orders, list subsequent order and dates. Additionally, please provide a detailed summary of 3-5 sentences for each order, explaining what the order entailed and how it specifically impacted a ${businessType} in ${formData.timePeriod}. Provide possible reasons how ${formData.timePeriod} Covid Orders would have affected the business in that quarter.`;
+      // Choose the right base prompt based on promptType
+      let basePrompt = '';
+      
+      if (promptType === 'covidOrders') {
+        // Base template prompt for COVID orders research
+        basePrompt = `Please provide all state, city, and county COVID-related government orders, proclamations, and public health orders in place during 2020-2021 that would affect a "${businessType}" business located in ${city}, ${state}. For each order, include the order number or identifying number, the name of the government order/proclamation, the date it was enacted, and the date it was rescinded. If rescinded by subsequent orders, list subsequent order and dates. Additionally, please provide a detailed summary of 3-5 sentences for each order, explaining what the order entailed and how it specifically impacted a ${businessType} in ${formData.timePeriod}. Provide possible reasons how ${formData.timePeriod} Covid Orders would have affected the business in that quarter.`;
+      } else {
+        // Base template prompt for Form 886-A
+        basePrompt = `Review the following information about ${formData.businessName}. Provide a general overview summary of the business operations. With the information found regarding the business operations, review all federal, state, city, county government orders that would have been in place and affected ${formData.businessName} located in ${city}, ${state} from Q2 2020 – Q3 2021. 
+
+Provide the order name, order number, the date enacted, the date rescinded, a 2-3 sentence summary of the order, a summary of how the order would have affected the business and for what period of time (which quarters). 
+
+With the information gained regarding operations and government orders in place, I need help creating a Form 886-A IRS response. Create a comprehensive document exclusively for ERC claims related to COVID-19 with the following structure:
+
+Issue:
+Facts:
+Law:
+Argument:
+Conclusion:
+
+The document should provide detailed IRS-style explanations, prioritize official IRS and government sources and all federal, state, city, county applicable government orders that would have affected the business, allow for flexible formatting, adapt to different claim periods, and provide document-ready outputs. ${formData.businessName} qualified for ERC from their applicable quarters due to full and partial shutdowns due to government orders.`;
+      }
       
       // Use OpenAI API to generate a customized prompt based on the business info
       try {
@@ -103,7 +124,11 @@ const COVIDPromptGenerator = ({ formData }) => {
       const { city, state } = extractCityState(formData.location || '');
       const businessType = getNaicsDescription(formData.naicsCode);
       
-      setPrompt(`Please provide all state, city, and county COVID-related government orders, proclamations, and public health orders in place during ${formData.timePeriod} that would affect a "${businessType}" business located in ${city}, ${state}. For each order, include the order number, the date it was enacted, and the date it was rescinded. Additionally, please explain how each order specifically impacted a ${businessType}.`);
+      if (promptType === 'covidOrders') {
+        setPrompt(`Please provide all state, city, and county COVID-related government orders, proclamations, and public health orders in place during ${formData.timePeriod} that would affect a "${businessType}" business located in ${city}, ${state}. For each order, include the order number, the date it was enacted, and the date it was rescinded. Additionally, please explain how each order specifically impacted a ${businessType}.`);
+      } else {
+        setPrompt(`Please help create a Form 886-A response for ${formData.businessName}, a ${businessType} located in ${city}, ${state}, regarding their ERC claim for ${formData.timePeriod}. Include sections for Issue, Facts, Law, Argument, and Conclusion.`);
+      }
     } finally {
       setGenerating(false);
     }
@@ -122,10 +147,38 @@ const COVIDPromptGenerator = ({ formData }) => {
   
   return (
     <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        COVID Orders Research Prompt
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h6" gutterBottom>
+          Research Prompt Generator
+        </Typography>
+        <ButtonGroup variant="contained" aria-label="prompt type toggle">
+          <Tooltip title="Generate a prompt for COVID-19 orders research">
+            <Button 
+              color={promptType === 'covidOrders' ? 'primary' : 'inherit'}
+              onClick={() => setPromptType('covidOrders')}
+            >
+              COVID Orders
+            </Button>
+          </Tooltip>
+          <Tooltip title="Generate a prompt for Form 886-A substantiation">
+            <Button 
+              color={promptType === 'form886A' ? 'primary' : 'inherit'}
+              onClick={() => setPromptType('form886A')}
+              startIcon={<SwapHoriz />}
+            >
+              Form 886-A
+            </Button>
+          </Tooltip>
+        </ButtonGroup>
+      </Box>
+      
       <Divider sx={{ mb: 2 }} />
+      
+      <Typography variant="body2" color="text.secondary" mb={2}>
+        {promptType === 'covidOrders' 
+          ? 'Generate a prompt to research specific COVID-19 orders that affected your business during the selected time period.'
+          : 'Generate a prompt to create an IRS Form 886-A response for enhanced ERC claim substantiation.'}
+      </Typography>
       
       {generating ? (
         <Box display="flex" justifyContent="center" alignItems="center" py={4}>
@@ -138,7 +191,9 @@ const COVIDPromptGenerator = ({ formData }) => {
         <>
           <Box mb={2}>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Use this prompt in GPT to research COVID-19 orders affecting your business:
+              {promptType === 'covidOrders' 
+                ? 'Use this prompt in GPT to research COVID-19 orders affecting your business:'
+                : 'Use this prompt in GPT to generate a Form 886-A response for your ERC claim:'}
             </Typography>
             <TextField
               fullWidth
@@ -169,7 +224,7 @@ const COVIDPromptGenerator = ({ formData }) => {
         </>
       ) : (
         <Alert severity="info">
-          Fill out the business information form to generate a research prompt for COVID-19 orders.
+          Fill out the business information form to generate a research prompt.
         </Alert>
       )}
       
