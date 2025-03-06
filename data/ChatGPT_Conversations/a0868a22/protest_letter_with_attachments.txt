@@ -1,0 +1,77 @@
+03/06/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 2342  
+Taxpayer Name: 34  
+RE: Formal Protest to Letter [Insert Letter Number] – ERC Disallowance for Q3  
+Tax Period: 3rd Quarter 2020 (202009)  
+Claim Amount: Not Provided  
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing our Employee Retention Credit (ERC) claim for the third quarter of 2020. The disallowance was based on an assertion that no governmental orders were in effect during this period that imposed a suspension of our business operations. We respectfully disagree. Multiple federal, state, county, and city government orders were active during Q3 2020, and these orders imposed direct and indirect restrictions that materially limited our normal operations. In this letter, we provide a detailed timeline of relevant government orders, outline their impact on our business activities during Q3 2020, and cite applicable IRS guidance supporting our position that 34 qualifies for the ERC under the “partial suspension” provisions.
+
+Timeline of COVID-19 Government Orders Active in Q3 2020
+
+• Order Name: National Emergency Concerning COVID-19  
+  Order Number: Proclamation 9994  
+  Date Enacted: 03/13/2020  
+  Date Rescinded: Still in effect  
+  Order Summary: This federal proclamation declared a nationwide emergency in response to COVID-19, thereby activating emergency powers and funding. It laid the groundwork for subsequent state and local emergency health directives.  
+  Impact on Quarter: The declared national emergency served as the legal basis for the extensive health orders that restricted business operations in Q3 2020, indirectly affecting our ability to operate at normal capacity.  
+
+• Order Name: Statewide “Stay-at-Home” Order  
+  Order Number: Executive Order N-33-20  
+  Date Enacted: 03/19/2020  
+  Date Rescinded: 06/15/2021  
+  Order Summary: This order mandated that non-essential businesses either close or operate only at a minimal capacity, requiring residents to remain at home except for essential activities. It compelled a swift transition to remote operations and drastically limited in-person services.  
+  Impact on Quarter: During Q3 2020, as restrictions fluctuated between reopening and reclosure, our business was forced to modify operations, reduce physical interactions, and limit in-person activities, thereby curtailing normal business functions.  
+
+• Order Name: Statewide Rollback of Reopening  
+  Order Number: State Public Health Officer Order (July 13, 2020)  
+  Date Enacted: 07/13/2020  
+  Date Rescinded: 08/31/2020  
+  Order Summary: In response to a surge in COVID-19 cases, this order re-imposed closures for indoor operations of many businesses, including retail, dining, and personal care services. The order mandated that only limited take-out, outdoor, or essential services continue operating.  
+  Impact on Quarter: The rollback led to the forced suspension or curtailment of indoor services for our business during Q3 2020, directly impacting our revenue and ability to serve customers in our regular manner.  
+
+• Order Name: Color-Tier Reopening System (“Blueprint for a Safer Economy”)  
+  Order Number: State Public Health Officer Order (August 28, 2020)  
+  Date Enacted: 08/28/2020 (effective 08/31/2020)  
+  Date Rescinded: 06/15/2021  
+  Order Summary: This order established a risk-based, color-coded tier system for reopening the economy, imposing strict limitations on indoor operations for businesses located in high-risk areas. Non-essential businesses were required to adapt service models to comply with capacity and safety restrictions.  
+  Impact on Quarter: As our locality was classified in one of the more restrictive tiers, our business continued to experience significant limitations on indoor activities, further reducing our operating capacity during the latter part of Q3 2020.  
+
+• Order Name: Local Emergency Proclamation  
+  Order Number: EOC Director Order No. 20-1  
+  Date Enacted: 03/13/2020  
+  Date Rescinded: Still in effect  
+  Order Summary: The City of Camarillo declared a local emergency that authorized the suspension of non-essential city services and community events. This order provided local officials with the authority to enforce additional public health measures.  
+  Impact on Quarter: The citywide emergency disrupted normal municipal operations and support services, creating an environment of uncertainty and additional operational barriers for our business throughout Q3 2020.  
+
+• Order Name: Local Implementation of State Rollback  
+  Order Number: Ventura County July 2020 Order  
+  Date Enacted: 07/13/2020 (effective 07/14/2020)  
+  Date Rescinded: 10/06/2020  
+  Order Summary: Issued by Ventura County, this order enforced the state-mandated rollback by mandating the closure of indoor operations for non-essential businesses within the county. It reinforced the limitations on operations initially set out by state-level directives.  
+  Impact on Quarter: This order directly affected local businesses by forcing the suspension of indoor services during a critical period of Q3 2020, further contributing to reduced business activity and revenue losses.
+
+Conclusion and Request
+
+In light of the detailed timeline and the significant impact these government orders imposed on our operations, we assert that 34 experienced a partial suspension of its business activities during the third quarter of 2020. The combined restrictions from federal, state, county, and city orders limited our ability to operate at full capacity and curtailed many of our revenue-generating activities. This situation squarely meets the criteria for ERC eligibility under the partial suspension rules as outlined in applicable IRS guidance.
+
+We respectfully request that the IRS reconsider and reverse the disallowance of our Q3 2020 ERC claim. The credit we claimed is fully supported by the factual circumstances and the government orders in effect during that period. Enclosed you will find documentation of the specific orders cited and an analysis detailing the impact on our business operations.
+
+Attestation: “Under penalties of perjury, I declare that I submitted the protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated in the protest and accompanying documents is true, correct, and complete.”
+
+Sincerely,
+
+[Signature]
+
+[Name of Authorized Representative]  
+Authorized Representative for 34  
+
+Enclosures:  
+• Copies of Government Orders and Relevant Excerpts  
+• ERC Calculations for Q3 2020  
+• Supporting IRS Guidance Documentation
