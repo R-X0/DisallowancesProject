@@ -2,11 +2,23 @@ import React, { useState } from 'react';
 import { 
   Container, Box, TextField, MenuItem, Button, 
   Typography, Paper, Grid, Divider, CircularProgress,
-  Stepper, Step, StepLabel, StepContent, Alert, Chip
+  Stepper, Step, StepLabel, StepContent, Alert, Chip,
+  Select, FormControl, InputLabel, OutlinedInput, Checkbox, ListItemText
 } from '@mui/material';
 import { FileUpload } from '@mui/icons-material';
 import COVIDPromptGenerator from './COVIDPromptGenerator';
 import ERCProtestLetterGenerator from './ERCProtestLetterGenerator';
+
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
+  },
+};
 
 const ERCProtestForm = () => {
   // State for form data
@@ -16,7 +28,7 @@ const ERCProtestForm = () => {
     location: '',
     businessWebsite: '',
     naicsCode: '',
-    timePeriod: '',
+    timePeriods: [], // Changed from timePeriod (string) to timePeriods (array)
     additionalInfo: ''
   });
   
@@ -40,6 +52,15 @@ const ERCProtestForm = () => {
     }));
   };
   
+  // Handle time periods multi-select change
+  const handleTimePeriodsChange = (event) => {
+    const { value } = event.target;
+    setFormData(prevData => ({
+      ...prevData,
+      timePeriods: typeof value === 'string' ? value.split(',') : value
+    }));
+  };
+  
   // Handle file uploads
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
@@ -57,7 +78,12 @@ const ERCProtestForm = () => {
       
       // Append form field data
       Object.keys(formData).forEach(key => {
-        submitData.append(key, formData[key]);
+        if (key === 'timePeriods') {
+          // Convert array to JSON string for FormData
+          submitData.append(key, JSON.stringify(formData[key]));
+        } else {
+          submitData.append(key, formData[key]);
+        }
       });
       
       // Append files
@@ -120,7 +146,7 @@ const ERCProtestForm = () => {
       formData.ein &&
       formData.location &&
       formData.naicsCode &&
-      formData.timePeriod
+      formData.timePeriods.length > 0 // Check for at least one selected time period
     );
   };
   
@@ -232,21 +258,27 @@ const ERCProtestForm = () => {
                   </Grid>
                   
                   <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      required
-                      select
-                      label="Time Period"
-                      name="timePeriod"
-                      value={formData.timePeriod}
-                      onChange={handleInputChange}
-                    >
-                      {quarters.map((quarter) => (
-                        <MenuItem key={quarter} value={quarter}>
-                          {quarter}
-                        </MenuItem>
-                      ))}
-                    </TextField>
+                    {/* Replaced single select with multi-select */}
+                    <FormControl fullWidth required>
+                      <InputLabel id="time-periods-label">Time Periods</InputLabel>
+                      <Select
+                        labelId="time-periods-label"
+                        id="time-periods"
+                        multiple
+                        value={formData.timePeriods}
+                        onChange={handleTimePeriodsChange}
+                        input={<OutlinedInput label="Time Periods" />}
+                        renderValue={(selected) => selected.join(', ')}
+                        MenuProps={MenuProps}
+                      >
+                        {quarters.map((quarter) => (
+                          <MenuItem key={quarter} value={quarter}>
+                            <Checkbox checked={formData.timePeriods.indexOf(quarter) > -1} />
+                            <ListItemText primary={quarter} />
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
                   </Grid>
                   
                   <Grid item xs={12}>
@@ -403,4 +435,4 @@ const ERCProtestForm = () => {
   );
 };
 
-export default ERCProtestForm;
+export default ERCProtestForm

@@ -3,7 +3,8 @@ import {
   Box, Button, Paper, Typography, TextField, CircularProgress,
   Divider, Alert, Snackbar, IconButton, Dialog, DialogTitle,
   DialogContent, DialogActions, LinearProgress,
-  FormControlLabel, Switch, ButtonGroup, Tooltip
+  FormControlLabel, Switch, ButtonGroup, Tooltip,
+  Select, MenuItem, FormControl, InputLabel
 } from '@mui/material';
 import { ContentCopy, CheckCircle, Description, Link, FileDownload, SwapHoriz } from '@mui/icons-material';
 import { generateERCProtestLetter } from '../services/api';
@@ -40,7 +41,20 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
   const [processingMessage, setProcessingMessage] = useState('');
   const [processingStep, setProcessingStep] = useState(0);
   const [packageData, setPackageData] = useState(null);
-  const [documentType, setDocumentType] = useState('protestLetter'); // New state for toggling document type
+  const [documentType, setDocumentType] = useState('protestLetter'); // State for toggling document type
+  const [selectedTimePeriod, setSelectedTimePeriod] = useState(''); // For selecting which period to focus on for protest letter
+
+  // Initialize selected time period when form data changes
+  React.useEffect(() => {
+    if (formData && formData.timePeriods && formData.timePeriods.length > 0 && !selectedTimePeriod) {
+      setSelectedTimePeriod(formData.timePeriods[0]);
+    }
+  }, [formData, selectedTimePeriod]);
+
+  // Handle time period selection change
+  const handleTimePeriodChange = (event) => {
+    setSelectedTimePeriod(event.target.value);
+  };
 
   // Function to generate protest letter using our LLM API
   const generateProtestLetter = async () => {
@@ -54,12 +68,23 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
       // Get business type based on NAICS code
       const businessType = getNaicsDescription(formData.naicsCode);
       
+      // Get all selected time periods for context
+      const allTimePeriods = formData.timePeriods ? formData.timePeriods : [formData.timePeriod];
+      const timePeriodsText = allTimePeriods.join(', ');
+      
+      // For protest letters, use the selected time period
+      // For Form 886-A, use all time periods
+      const timePeriodToUse = documentType === 'protestLetter' ? 
+        selectedTimePeriod : 
+        timePeriodsText;
+      
       // Prepare data for API call
       const letterData = {
         businessName: formData.businessName,
         ein: formData.ein,
         location: formData.location,
-        timePeriod: formData.timePeriod,
+        timePeriod: timePeriodToUse,
+        allTimePeriods: allTimePeriods,
         chatGptLink: chatGptLink,
         businessType: businessType,
         trackingId: formData.trackingId || '', // Pass tracking ID if available
@@ -146,6 +171,9 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
     }
   };
   
+  // Check if we have time periods data
+  const hasTimePeriods = formData.timePeriods && formData.timePeriods.length > 0;
+  
   return (
     <Box mt={3}>
       <Paper elevation={3} sx={{ p: 3 }}>
@@ -182,6 +210,31 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
             : 'Generate a Form 886-A document with Issue, Facts, Law, Argument, and Conclusion sections for enhanced substantiation.'}
         </Typography>
         
+        {/* Time Period Selector (only show for Protest Letter type) */}
+        {hasTimePeriods && documentType === 'protestLetter' && (
+          <Box mb={3}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="select-protest-period-label">Select Quarter for Protest Letter</InputLabel>
+              <Select
+                labelId="select-protest-period-label"
+                id="select-protest-period"
+                value={selectedTimePeriod}
+                onChange={handleTimePeriodChange}
+                label="Select Quarter for Protest Letter"
+              >
+                {formData.timePeriods.map((period) => (
+                  <MenuItem key={period} value={period}>{period}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+              {documentType === 'protestLetter' 
+                ? 'Select a specific quarter for the protest letter. Each quarter typically requires a separate protest letter.' 
+                : 'Form 886-A documents will include all selected quarters.'}
+            </Typography>
+          </Box>
+        )}
+        
         <TextField
           fullWidth
           label="ChatGPT Conversation Link"
@@ -200,8 +253,8 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
         
         <Alert severity="info" sx={{ mb: 2 }}>
           {documentType === 'protestLetter' 
-            ? 'Make sure your ChatGPT conversation includes specific COVID-19 orders that affected your business during the selected time period.' 
-            : 'Make sure your ChatGPT conversation includes comprehensive information about government orders affecting your business across all ERC quarters.'}
+            ? `Make sure your ChatGPT conversation includes specific COVID-19 orders that affected your business during ${selectedTimePeriod || 'the selected time period'}.` 
+            : `Make sure your ChatGPT conversation includes comprehensive information about government orders affecting your business across all ERC quarters: ${hasTimePeriods ? formData.timePeriods.join(', ') : 'the selected time periods'}.`}
         </Alert>
         
         {error && (
@@ -216,7 +269,12 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
             color="primary"
             startIcon={<Description />}
             onClick={generateProtestLetter}
-            disabled={generating || !chatGptLink || !validateChatGptLink(chatGptLink)}
+            disabled={
+              generating || 
+              !chatGptLink || 
+              !validateChatGptLink(chatGptLink) || 
+              (documentType === 'protestLetter' && !selectedTimePeriod && hasTimePeriods)
+            }
             sx={{ minWidth: 240 }}
           >
             {generating ? 'Generating...' : documentType === 'protestLetter' 
@@ -271,8 +329,8 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
                 <Alert severity="success" sx={{ mb: 2 }}>
                   <Typography variant="subtitle1">
                     {documentType === 'protestLetter' 
-                      ? 'Complete protest package generated successfully!' 
-                      : 'Form 886-A document generated successfully!'}
+                      ? `Complete protest package for ${selectedTimePeriod} generated successfully!` 
+                      : `Form 886-A document for ${formData.timePeriods?.join(', ') || 'selected quarters'} generated successfully!`}
                   </Typography>
                   <Typography variant="body2">
                     Your package includes the {documentType === 'protestLetter' ? 'protest letter' : 'Form 886-A document'} and {packageData.attachments.length} PDF attachments 

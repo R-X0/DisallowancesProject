@@ -308,10 +308,20 @@ async function generatePdf(text, outputPath) {
 
 /**
  * Generate protest letter using OpenAI with example template
+ * UPDATED TO SUPPORT MULTIPLE TIME PERIODS
  */
 async function generateERCProtestLetter(businessInfo, covidData, templateContent) {
   try {
     console.log('Generating document using GPT...');
+    
+    // Handle multiple time periods
+    let timePeriods = businessInfo.timePeriod;
+    let allTimePeriods = businessInfo.allTimePeriods || [businessInfo.timePeriod];
+    
+    // Format the time periods for display
+    const timePeriodsFormatted = Array.isArray(allTimePeriods) 
+      ? allTimePeriods.join(', ') 
+      : timePeriods;
     
     // Determine which template to use based on the document type
     let promptTemplate;
@@ -328,7 +338,7 @@ BUSINESS INFORMATION:
 Business Name: ${businessInfo.businessName}
 EIN: ${businessInfo.ein}
 Location: ${businessInfo.location}
-Time Periods: ${businessInfo.timePeriod} and other relevant quarters
+Time Periods: ${timePeriodsFormatted}
 Business Type: ${businessInfo.businessType || 'business'}
 
 COVID-19 RESEARCH DATA:
@@ -368,7 +378,7 @@ BUSINESS INFORMATION:
 Business Name: ${businessInfo.businessName}
 EIN: ${businessInfo.ein}
 Location: ${businessInfo.location}
-Time Period: ${businessInfo.timePeriod}
+Time Period: ${timePeriods}
 Business Type: ${businessInfo.businessType || 'business'}
 
 COVID-19 RESEARCH DATA FROM CHATGPT:
@@ -390,7 +400,7 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 FORMAT EXAMPLE (FOLLOW THIS EXACT FORMAT AND STRUCTURE):
 ${templateContent}
 
-Create a comprehensive protest letter using the business information and COVID data above, following the format and structure of the example letter. Make it specific to the time period and location of the business. Use today's date: ${new Date().toLocaleDateString()}`;
+Create a comprehensive protest letter using the business information and COVID data above, following the format and structure of the example letter. Make it specific to the time period ${timePeriods} and location of the business. Use today's date: ${new Date().toLocaleDateString()}`;
     }
     
     const response = await openai.chat.completions.create({
@@ -483,6 +493,7 @@ router.post('/process-chatgpt', async (req, res) => {
       ein,
       location,
       timePeriod,
+      allTimePeriods,
       businessType,
       trackingId,
       documentType = 'protestLetter' // Default to protest letter if not specified
@@ -506,6 +517,11 @@ router.post('/process-chatgpt', async (req, res) => {
     console.log(`Processing ChatGPT link: ${chatGptLink}`);
     console.log(`Business: ${businessName}, Period: ${timePeriod}, Type: ${businessType || 'Not specified'}`);
     console.log(`Document Type: ${documentType}`);
+    
+    // Log if multiple time periods are provided
+    if (allTimePeriods && Array.isArray(allTimePeriods)) {
+      console.log(`All Time Periods: ${allTimePeriods.join(', ')}`);
+    }
 
     // Create unique directory for request
     const requestId = uuidv4().substring(0, 8);
@@ -638,6 +654,7 @@ router.post('/process-chatgpt', async (req, res) => {
         ein,
         location,
         timePeriod,
+        allTimePeriods: allTimePeriods || [timePeriod], // Include all time periods if provided
         businessType: businessType || 'business',
         documentType
       };

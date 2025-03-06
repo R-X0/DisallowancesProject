@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Box, Button, Paper, Typography, TextField, CircularProgress,
-  Divider, Alert, Snackbar, IconButton, ButtonGroup, Tooltip
+  Divider, Alert, Snackbar, IconButton, ButtonGroup, Tooltip,
+  Select, MenuItem, FormControl, InputLabel
 } from '@mui/material';
 import { ContentCopy, CheckCircle, SwapHoriz } from '@mui/icons-material';
 import axios from 'axios';
@@ -44,12 +45,25 @@ const COVIDPromptGenerator = ({ formData }) => {
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [promptType, setPromptType] = useState('covidOrders'); // Default to COVID orders
+  const [selectedTimePeriod, setSelectedTimePeriod] = useState(''); // For selecting which period to focus on
   
   useEffect(() => {
     if (formData && Object.keys(formData).length > 0) {
-      generatePrompt();
+      // Set default selected time period when form data changes
+      if (formData.timePeriods && formData.timePeriods.length > 0 && !selectedTimePeriod) {
+        setSelectedTimePeriod(formData.timePeriods[0]);
+      }
+      
+      if (selectedTimePeriod) {
+        generatePrompt();
+      }
     }
-  }, [formData, promptType]);
+  }, [formData, promptType, selectedTimePeriod]);
+  
+  // Handle time period selection change
+  const handleTimePeriodChange = (event) => {
+    setSelectedTimePeriod(event.target.value);
+  };
   
   const generatePrompt = async () => {
     setGenerating(true);
@@ -58,12 +72,18 @@ const COVIDPromptGenerator = ({ formData }) => {
       const { city, state } = extractCityState(formData.location || '');
       const businessType = getNaicsDescription(formData.naicsCode);
       
+      // Use the selected time period for generating the prompt
+      const timePeriod = selectedTimePeriod;
+      
+      // Get all selected time periods for context
+      const allPeriods = formData.timePeriods ? formData.timePeriods.join(', ') : timePeriod;
+      
       // Extract quarter and year from time period
       let quarter = '';
       let year = '';
       
-      if (formData.timePeriod) {
-        const parts = formData.timePeriod.split(' ');
+      if (timePeriod) {
+        const parts = timePeriod.split(' ');
         if (parts.length === 2) {
           quarter = parts[0];
           year = parts[1];
@@ -75,34 +95,34 @@ const COVIDPromptGenerator = ({ formData }) => {
       
       if (promptType === 'covidOrders') {
         // Improved template prompt for COVID orders research with better structure
-        basePrompt = `Please provide all federal, state, county, and city COVID-related government orders that would affect a "${businessType}" business located in ${city}, ${state} during ${formData.timePeriod}.
+        basePrompt = `Please provide all federal, state, county, and city COVID-related government orders that would affect a "${businessType}" business located in ${city}, ${state} during ${timePeriod}.
 
 For each order, provide the following information using this EXACT format:
 
 • Order Name: [Full name of the order/proclamation]
 • Order Number: [Official number or identifier]
 • Date Enacted: [MM/DD/YYYY]
-• Date Rescinded: [MM/DD/YYYY or "Still in effect during ${formData.timePeriod}" if applicable]
+• Date Rescinded: [MM/DD/YYYY or "Still in effect during ${timePeriod}" if applicable]
 • Order Summary: [2-3 sentence description of what the order mandated]
-• Impact on Quarter: [How this specifically affected a ${businessType} during ${formData.timePeriod}]
+• Impact on Quarter: [How this specifically affected a ${businessType} during ${timePeriod}]
 
-For each level of government (federal, state, county, city), organize the orders chronologically. Only include orders that were in effect during ${formData.timePeriod} or that had a continuing impact on business operations during that quarter.
+For each level of government (federal, state, county, city), organize the orders chronologically. Only include orders that were in effect during ${timePeriod} or that had a continuing impact on business operations during that quarter.
 
 For each order, explain:
 1. Exactly what restrictions were imposed (capacity limits, mask requirements, social distancing, etc.)
 2. How these restrictions specifically impacted a ${businessType}
 3. Whether the business would have experienced a "more than nominal" effect (at least 10% impact on operations or revenue)
 
-Please be as specific and detailed as possible about the impact on normal business operations during ${formData.timePeriod}.
+Please be as specific and detailed as possible about the impact on normal business operations during ${timePeriod}.
 
 IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to any business internal records or documentation.`;
       } else {
-        // Improved template prompt for Form 886-A
-        basePrompt = `Please help me create a comprehensive Form 886-A response for ${formData.businessName}, a ${businessType} located in ${city}, ${state}, regarding their Employee Retention Credit (ERC) claim for ${formData.timePeriod}.
+        // Improved template prompt for Form 886-A, now including all selected quarters
+        basePrompt = `Please help me create a comprehensive Form 886-A response for ${formData.businessName}, a ${businessType} located in ${city}, ${state}, regarding their Employee Retention Credit (ERC) claim for the following quarters: ${allPeriods}.
 
 First, provide a general overview of the business operations for ${formData.businessName}.
 
-Then, research and list ALL federal, state, county, and city government orders that would have affected this ${businessType} from Q2 2020 through Q3 2021, with particular focus on ${formData.timePeriod}.
+Then, research and list ALL federal, state, county, and city government orders that would have affected this ${businessType} from Q2 2020 through Q3 2021, with particular focus on ${allPeriods}.
 
 For each government order, use this EXACT format:
 
@@ -120,7 +140,7 @@ Finally, create a Form 886-A document with the following structure:
 4. Argument - Present the case for why the business qualifies quarter by quarter
 5. Conclusion - Summarize the eligibility determination
 
-The document should prioritize official IRS and government sources and all applicable government orders that would have affected the business. Make a strong case that ${formData.businessName} qualified for ERC due to full or partial shutdowns from government orders during ${formData.timePeriod}.
+The document should prioritize official IRS and government sources and all applicable government orders that would have affected the business. Make a strong case that ${formData.businessName} qualified for ERC due to full or partial shutdowns from government orders during each of the following quarters: ${allPeriods}.
 
 IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to any business internal records or documentation. Use consistent bullet point formatting (•) throughout the document.`;
       }
@@ -135,7 +155,8 @@ IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to an
             state,
             quarter,
             year,
-            timePeriod: formData.timePeriod
+            timePeriod,
+            allPeriods
           }
         });
         
@@ -155,11 +176,13 @@ IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to an
       // In case of any error, just use a simpler version of the prompt
       const { city, state } = extractCityState(formData.location || '');
       const businessType = getNaicsDescription(formData.naicsCode);
+      const timePeriod = selectedTimePeriod;
+      const allPeriods = formData.timePeriods ? formData.timePeriods.join(', ') : timePeriod;
       
       if (promptType === 'covidOrders') {
-        setPrompt(`Please provide all COVID-related government orders affecting a "${businessType}" business in ${city}, ${state} during ${formData.timePeriod}. For each order, include: Order Name, Order Number, Date Enacted, Date Rescinded, Order Summary, and Impact on Quarter. Do NOT include web links or URLs in your response.`);
+        setPrompt(`Please provide all COVID-related government orders affecting a "${businessType}" business in ${city}, ${state} during ${timePeriod}. For each order, include: Order Name, Order Number, Date Enacted, Date Rescinded, Order Summary, and Impact on Quarter. Do NOT include web links or URLs in your response.`);
       } else {
-        setPrompt(`Please help create a Form 886-A response for ${formData.businessName}, a ${businessType} in ${city}, ${state}, regarding their ERC claim for ${formData.timePeriod}. Include sections for Issue, Facts, Law, Argument, and Conclusion. Do NOT include web links or URLs in your response.`);
+        setPrompt(`Please help create a Form 886-A response for ${formData.businessName}, a ${businessType} in ${city}, ${state}, regarding their ERC claim for the following quarters: ${allPeriods}. Include sections for Issue, Facts, Law, Argument, and Conclusion. Do NOT include web links or URLs in your response.`);
       }
     } finally {
       setGenerating(false);
@@ -176,6 +199,9 @@ IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to an
         console.error('Failed to copy text: ', err);
       });
   };
+  
+  // Check if we have time periods data
+  const hasTimePeriods = formData.timePeriods && formData.timePeriods.length > 0;
   
   return (
     <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
@@ -206,10 +232,35 @@ IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to an
       
       <Divider sx={{ mb: 2 }} />
       
+      {/* Time Period Selector (only show for COVID Orders type) */}
+      {hasTimePeriods && promptType === 'covidOrders' && (
+        <Box mb={3}>
+          <FormControl fullWidth size="small">
+            <InputLabel id="select-time-period-label">Select Quarter for Research</InputLabel>
+            <Select
+              labelId="select-time-period-label"
+              id="select-time-period"
+              value={selectedTimePeriod}
+              onChange={handleTimePeriodChange}
+              label="Select Quarter for Research"
+            >
+              {formData.timePeriods.map((period) => (
+                <MenuItem key={period} value={period}>{period}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+            {promptType === 'covidOrders' 
+              ? 'Select a specific quarter to research COVID orders. For Form 886-A documents, all quarters will be included.' 
+              : 'Form 886-A documents will include all selected quarters.'}
+          </Typography>
+        </Box>
+      )}
+      
       <Typography variant="body2" color="text.secondary" mb={2}>
         {promptType === 'covidOrders' 
-          ? 'Generate a prompt to research specific COVID-19 orders that affected your business during the selected time period.'
-          : 'Generate a prompt to create an IRS Form 886-A response for enhanced ERC claim substantiation.'}
+          ? `Generate a prompt to research specific COVID-19 orders that affected your business during ${selectedTimePeriod || 'the selected time period'}.`
+          : `Generate a prompt to create an IRS Form 886-A response for enhanced ERC claim substantiation for ${hasTimePeriods ? formData.timePeriods.join(', ') : 'the selected time periods'}.`}
       </Typography>
       
       {generating ? (
@@ -224,8 +275,8 @@ IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to an
           <Box mb={2}>
             <Typography variant="body2" color="text.secondary" gutterBottom>
               {promptType === 'covidOrders' 
-                ? 'Use this prompt in GPT to research COVID-19 orders affecting your business:'
-                : 'Use this prompt in GPT to generate a Form 886-A response for your ERC claim:'}
+                ? `Use this prompt in GPT to research COVID-19 orders affecting your business during ${selectedTimePeriod}:`
+                : `Use this prompt in GPT to generate a Form 886-A response for your ERC claim for ${hasTimePeriods ? formData.timePeriods.join(', ') : 'the selected time periods'}:`}
             </Typography>
             <TextField
               fullWidth
@@ -256,7 +307,11 @@ IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to an
         </>
       ) : (
         <Alert severity="info">
-          Fill out the business information form to generate a research prompt.
+          {!hasTimePeriods 
+            ? 'Please select at least one time period in the business information form.' 
+            : promptType === 'covidOrders' && !selectedTimePeriod
+              ? 'Please select a specific quarter for COVID orders research.'
+              : 'Fill out the business information form to generate a research prompt.'}
         </Alert>
       )}
       

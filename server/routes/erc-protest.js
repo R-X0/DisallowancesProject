@@ -23,8 +23,27 @@ const upload = multer({ storage });
 // Submit ERC protest form
 router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) => {
   try {
-    const { businessName, ein, location, businessWebsite, naicsCode, timePeriod, additionalInfo } = req.body;
+    const { businessName, ein, location, businessWebsite, naicsCode, additionalInfo } = req.body;
+    let timePeriods = req.body.timePeriods;
     const files = req.files;
+    
+    // Parse timePeriods from JSON string (from FormData) if needed
+    if (typeof timePeriods === 'string') {
+      try {
+        timePeriods = JSON.parse(timePeriods);
+      } catch (e) {
+        console.error('Error parsing timePeriods:', e);
+        timePeriods = [timePeriods]; // Fallback to treating as single value in array
+      }
+    }
+    
+    // If timePeriods is still not an array, handle the error
+    if (!Array.isArray(timePeriods)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Time periods must be provided as an array'
+      });
+    }
     
     // Generate tracking ID
     const trackingId = `ERC-${uuidv4().substring(0, 8).toUpperCase()}`;
@@ -46,6 +65,9 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
       });
     }
     
+    // For display in the Google Sheet, join multiple time periods with a comma
+    const timePeriodsDisplay = timePeriods.join(', ');
+    
     // Save submission info
     const submissionInfo = {
       trackingId,
@@ -54,7 +76,8 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
       location,
       businessWebsite,
       naicsCode,
-      timePeriod,
+      timePeriods, // Store the full array
+      timePeriodsDisplay, // Add this for display purposes
       additionalInfo,
       files: fileInfo,
       timestamp: new Date().toISOString(),
@@ -84,12 +107,12 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
       await googleSheetsService.addSubmission({
         trackingId,
         businessName,
-        ein,                  // Pass all these fields
+        ein,
         location,
         businessWebsite,
         naicsCode,
-        timePeriod,
-        additionalInfo,       // Pass additional info
+        timePeriod: timePeriodsDisplay, // Use the joined string for the Google Sheet
+        additionalInfo,
         status: 'Gathering data',
         timestamp: new Date().toISOString(),
         googleDriveLink: submissionInfo.googleDriveLink || '',
@@ -141,7 +164,8 @@ router.get('/status/:trackingId', async (req, res) => {
         status: submissionInfo.status,
         timestamp: submissionInfo.timestamp,
         businessName: submissionInfo.businessName,
-        timePeriod: submissionInfo.timePeriod
+        timePeriods: submissionInfo.timePeriods || [submissionInfo.timePeriod], // Handle both formats
+        timePeriodsDisplay: submissionInfo.timePeriodsDisplay || submissionInfo.timePeriod
       });
     } catch (err) {
       // If file doesn't exist, check Google Sheet
@@ -150,12 +174,18 @@ router.get('/status/:trackingId', async (req, res) => {
         const submission = submissions.find(s => s.trackingId === trackingId);
         
         if (submission) {
+          // For backward compatibility, split by comma if it's a comma-separated string
+          const timePeriods = submission.timePeriod.includes(',') 
+            ? submission.timePeriod.split(',').map(t => t.trim())
+            : [submission.timePeriod];
+            
           res.status(200).json({
             success: true,
             status: submission.status,
             timestamp: submission.timestamp,
             businessName: submission.businessName,
-            timePeriod: submission.timePeriod
+            timePeriods: timePeriods,
+            timePeriodsDisplay: submission.timePeriod
           });
         } else {
           res.status(404).json({

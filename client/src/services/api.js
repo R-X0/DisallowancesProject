@@ -48,6 +48,12 @@ export const generateERCProtestLetter = async (letterData) => {
       throw new Error('ChatGPT conversation link is required');
     }
     
+    // Handle the case where allTimePeriods is provided
+    if (letterData.allTimePeriods && !Array.isArray(letterData.allTimePeriods)) {
+      // Convert to array if it's not already
+      letterData.allTimePeriods = [letterData.allTimePeriods];
+    }
+    
     // Call the ChatGPT scraper endpoint
     const response = await axios.post(
       `${API_URL}/erc-protest/chatgpt/process-chatgpt`,
