@@ -74,23 +74,55 @@ const COVIDPromptGenerator = ({ formData }) => {
       let basePrompt = '';
       
       if (promptType === 'covidOrders') {
-        // Base template prompt for COVID orders research
-        basePrompt = `Please provide all state, city, and county COVID-related government orders, proclamations, and public health orders in place during 2020-2021 that would affect a "${businessType}" business located in ${city}, ${state}. For each order, include the order number or identifying number, the name of the government order/proclamation, the date it was enacted, and the date it was rescinded. If rescinded by subsequent orders, list subsequent order and dates. Additionally, please provide a detailed summary of 3-5 sentences for each order, explaining what the order entailed and how it specifically impacted a ${businessType} in ${formData.timePeriod}. Provide possible reasons how ${formData.timePeriod} Covid Orders would have affected the business in that quarter.`;
+        // Improved template prompt for COVID orders research with better structure
+        basePrompt = `Please provide all federal, state, county, and city COVID-related government orders that would affect a "${businessType}" business located in ${city}, ${state} during ${formData.timePeriod}.
+
+For each order, provide the following information using this EXACT format:
+
+• Order Name: [Full name of the order/proclamation]
+• Order Number: [Official number or identifier]
+• Date Enacted: [MM/DD/YYYY]
+• Date Rescinded: [MM/DD/YYYY or "Still in effect during ${formData.timePeriod}" if applicable]
+• Order Summary: [2-3 sentence description of what the order mandated]
+• Impact on Quarter: [How this specifically affected a ${businessType} during ${formData.timePeriod}]
+
+For each level of government (federal, state, county, city), organize the orders chronologically. Only include orders that were in effect during ${formData.timePeriod} or that had a continuing impact on business operations during that quarter.
+
+For each order, explain:
+1. Exactly what restrictions were imposed (capacity limits, mask requirements, social distancing, etc.)
+2. How these restrictions specifically impacted a ${businessType}
+3. Whether the business would have experienced a "more than nominal" effect (at least 10% impact on operations or revenue)
+
+Please be as specific and detailed as possible about the impact on normal business operations during ${formData.timePeriod}.
+
+IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to any business internal records or documentation.`;
       } else {
-        // Base template prompt for Form 886-A
-        basePrompt = `Review the following information about ${formData.businessName}. Provide a general overview summary of the business operations. With the information found regarding the business operations, review all federal, state, city, county government orders that would have been in place and affected ${formData.businessName} located in ${city}, ${state} from Q2 2020 – Q3 2021. 
+        // Improved template prompt for Form 886-A
+        basePrompt = `Please help me create a comprehensive Form 886-A response for ${formData.businessName}, a ${businessType} located in ${city}, ${state}, regarding their Employee Retention Credit (ERC) claim for ${formData.timePeriod}.
 
-Provide the order name, order number, the date enacted, the date rescinded, a 2-3 sentence summary of the order, a summary of how the order would have affected the business and for what period of time (which quarters). 
+First, provide a general overview of the business operations for ${formData.businessName}.
 
-With the information gained regarding operations and government orders in place, I need help creating a Form 886-A IRS response. Create a comprehensive document exclusively for ERC claims related to COVID-19 with the following structure:
+Then, research and list ALL federal, state, county, and city government orders that would have affected this ${businessType} from Q2 2020 through Q3 2021, with particular focus on ${formData.timePeriod}.
 
-Issue:
-Facts:
-Law:
-Argument:
-Conclusion:
+For each government order, use this EXACT format:
 
-The document should provide detailed IRS-style explanations, prioritize official IRS and government sources and all federal, state, city, county applicable government orders that would have affected the business, allow for flexible formatting, adapt to different claim periods, and provide document-ready outputs. ${formData.businessName} qualified for ERC from their applicable quarters due to full and partial shutdowns due to government orders.`;
+• Order Name: [Full name of the order/proclamation]
+• Order Number: [Official number or identifier]
+• Date Enacted: [MM/DD/YYYY]
+• Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
+• Order Summary: [2-3 sentence description of what the order mandated]
+• Impact on Quarter: [How this specifically affected the business and for what period of time]
+
+Finally, create a Form 886-A document with the following structure:
+1. Issue - Define the question of whether the business was fully or partially suspended by government orders
+2. Facts - Detail the business operations and how they were affected by specific government orders
+3. Law - Explain the ERC provisions, IRS Notice 2021-20, and other relevant guidance
+4. Argument - Present the case for why the business qualifies quarter by quarter
+5. Conclusion - Summarize the eligibility determination
+
+The document should prioritize official IRS and government sources and all applicable government orders that would have affected the business. Make a strong case that ${formData.businessName} qualified for ERC due to full or partial shutdowns from government orders during ${formData.timePeriod}.
+
+IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to any business internal records or documentation. Use consistent bullet point formatting (•) throughout the document.`;
       }
       
       // Use OpenAI API to generate a customized prompt based on the business info
@@ -125,9 +157,9 @@ The document should provide detailed IRS-style explanations, prioritize official
       const businessType = getNaicsDescription(formData.naicsCode);
       
       if (promptType === 'covidOrders') {
-        setPrompt(`Please provide all state, city, and county COVID-related government orders, proclamations, and public health orders in place during ${formData.timePeriod} that would affect a "${businessType}" business located in ${city}, ${state}. For each order, include the order number, the date it was enacted, and the date it was rescinded. Additionally, please explain how each order specifically impacted a ${businessType}.`);
+        setPrompt(`Please provide all COVID-related government orders affecting a "${businessType}" business in ${city}, ${state} during ${formData.timePeriod}. For each order, include: Order Name, Order Number, Date Enacted, Date Rescinded, Order Summary, and Impact on Quarter. Do NOT include web links or URLs in your response.`);
       } else {
-        setPrompt(`Please help create a Form 886-A response for ${formData.businessName}, a ${businessType} located in ${city}, ${state}, regarding their ERC claim for ${formData.timePeriod}. Include sections for Issue, Facts, Law, Argument, and Conclusion.`);
+        setPrompt(`Please help create a Form 886-A response for ${formData.businessName}, a ${businessType} in ${city}, ${state}, regarding their ERC claim for ${formData.timePeriod}. Include sections for Issue, Facts, Law, Argument, and Conclusion. Do NOT include web links or URLs in your response.`);
       }
     } finally {
       setGenerating(false);

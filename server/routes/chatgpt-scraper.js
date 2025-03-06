@@ -334,6 +334,19 @@ Business Type: ${businessInfo.businessType || 'business'}
 COVID-19 RESEARCH DATA:
 ${covidData}
 
+IMPORTANT FORMATTING INSTRUCTIONS:
+1. DO NOT include direct links or URLs in the document content - they may not work and should be omitted
+2. DO NOT reference "business internal records" or documentation that has not been explicitly provided
+3. Use CONSISTENT formatting throughout - use bullet points (•) for all lists, not dashes or mixed formats
+4. For each government order mentioned, use the EXACT following format:
+
+• Order Name: [Full Name of Order]
+• Order Number: [Official Number/Identifier]
+• Date Enacted: [MM/DD/YYYY]
+• Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
+• Order Summary: [2-3 sentence description of what the order mandated]
+• Impact on Quarter: [How this specifically affected the business during the relevant quarter]
+
 FORMAT: Create a comprehensive Form 886-A document with the following structure:
 1. Issue - Define the question of whether the business was fully or partially suspended by government orders
 2. Facts - Detail the business operations and how they were affected by specific government orders
@@ -358,13 +371,26 @@ Location: ${businessInfo.location}
 Time Period: ${businessInfo.timePeriod}
 Business Type: ${businessInfo.businessType || 'business'}
 
-COVID-19 RESEARCH DATA FROM CHATGPT, THIS IS THE DATA THAT IS ACTUALLY RELEVANT TO OUR PROTEST LETTER:
+COVID-19 RESEARCH DATA FROM CHATGPT:
 ${covidData}
 
-FORMAT EXAMPLE (FOLLOW THIS EXACT FORMAT AND STYLE), MAKE SURE TO INCLUDE THE LINKS WE FOUND IN OUR RESEARCH DATA SIMILAR TO HOW IT'S INCLUDED IN THE EXAMPLE:
+IMPORTANT FORMATTING INSTRUCTIONS:
+1. DO NOT include direct links or URLs in the letter body - they may not work and should be omitted
+2. DO NOT reference "business internal records" or documentation that has not been explicitly provided
+3. Use CONSISTENT formatting throughout - use bullet points (•) for all lists, not dashes or mixed formats
+4. For each government order mentioned, use the EXACT following format:
+
+• Order Name: [Full Name of Order]
+• Order Number: [Official Number/Identifier]
+• Date Enacted: [MM/DD/YYYY]
+• Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
+• Order Summary: [2-3 sentence description of what the order mandated]
+• Impact on Quarter: [How this specifically affected the business during the relevant quarter]
+
+FORMAT EXAMPLE (FOLLOW THIS EXACT FORMAT AND STRUCTURE):
 ${templateContent}
 
-Create a comprehensive protest letter using the business information and COVID data above, following the exact format and structure of the example letter. Make it specific to the time period and location of the business. Use today's date: ${new Date().toLocaleDateString()}`;
+Create a comprehensive protest letter using the business information and COVID data above, following the format and structure of the example letter. Make it specific to the time period and location of the business. Use today's date: ${new Date().toLocaleDateString()}`;
     }
     
     const response = await openai.chat.completions.create({

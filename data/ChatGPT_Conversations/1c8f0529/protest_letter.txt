@@ -1,0 +1,74 @@
+03/06/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 23-51235  
+Taxpayer Name: West Coast Marble and granite  
+RE: Formal Protest to Letter ______ – ERC Disallowance for Q3  
+Tax Period: 3rd Quarter 2020 (202009)  
+Claim Amount: $125,000  
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing West Coast Marble and granite’s Employee Retention Credit (ERC) claim for the third quarter of 2020. The disallowance asserts that no government orders were in effect during July 1 to September 30, 2020 that caused a suspension of our routine business operations. We respectfully disagree. Multiple federal, state, county, and city government orders were active during Q3 2020 that imposed COVID-19–related restrictions and significantly altered our normal operating procedures. In this letter, we provide a detailed timeline of the pertinent government orders, demonstrate their impact on our business activities, and show that these orders meet the IRS “partial suspension” criteria for ERC eligibility.
+
+Timeline of COVID-19 Government Orders Active in Q3 2020
+
+• Order Name: National Emergency Concerning COVID-19  
+• Order Number: Proclamation 9994  
+• Date Enacted: 03/13/2020  
+• Date Rescinded: Still in effect  
+• Order Summary: This proclamation declared a national emergency in response to the COVID-19 outbreak, activating federal emergency powers and establishing the legal basis for state and local restrictions. It did not directly mandate the closure of businesses but provided the framework and authority for subsequent orders that imposed significant limitations.  
+• Impact on Quarter: The national emergency status underpinned later orders that restricted normal operations during Q3 2020, ultimately affecting our ability to serve customers in our usual capacity.
+
+• Order Name: Executive Order N-33-20 – Statewide “Stay-at-Home” Order  
+• Order Number: N-33-20  
+• Date Enacted: 03/19/2020  
+• Date Rescinded: 06/15/2021  
+• Order Summary: This order required all California residents to remain at home except for essential activities, effectively mandating the closure of non-essential businesses. It established broad restrictions that persisted even as limited reopenings began.  
+• Impact on Quarter: Although some reopening measures were introduced later, the lingering effects of this stay-at-home order in Q3 2020 continued to restrict our in-person business operations and scheduling, reducing overall service capacity.
+
+• Order Name: State Public Health Officer Order – Statewide Rollback of Reopening  
+• Order Number: Not Applicable  
+• Date Enacted: 07/13/2020  
+• Date Rescinded: 08/31/2020  
+• Order Summary: In response to a surge in COVID-19 cases, this order re-imposed closures on indoor operations for multiple sectors, including non-essential services. It mandated that businesses limit or completely suspend indoor activities to curb the spread of the virus.  
+• Impact on Quarter: This rollback directly forced the suspension of several indoor service operations during Q3 2020, thereby significantly reducing the number of hours and services our business could offer to customers.
+
+• Order Name: “Blueprint for a Safer Economy” Framework – Color-Tier Reopening System  
+• Order Number: Not Applicable  
+• Date Enacted: 08/28/2020  
+• Date Rescinded: 06/15/2021  
+• Order Summary: This framework introduced a color-coded tier system based on local COVID-19 metrics, which dictated capacity restrictions and operational limitations for businesses. It maintained strict limitations on indoor operations in counties placed in the most restrictive tier.  
+• Impact on Quarter: During the early fall portion of Q3 2020, our operations were constrained by stringent capacity limits and restrictions on indoor activities, further reducing our normal output and customer engagement.
+
+• Order Name: Ventura County July 2020 Order – Local Implementation of State Rollback  
+• Order Number: Not Applicable  
+• Date Enacted: 07/13/2020  
+• Date Rescinded: 10/06/2020  
+• Order Summary: This county order enforced additional local restrictions in alignment with the statewide rollback by directing closures and reducing operating capacities in affected sectors such as personal services and in-person customer interactions.  
+• Impact on Quarter: For businesses in Camarillo, including ours, this order resulted in a direct limitation on client interactions and curtailed onsite activities, thereby reducing overall business volume during the quarter.
+
+• Order Name: Local Emergency Proclamation (Camarillo)  
+• Order Number: EOC Director Order No. 20-1  
+• Date Enacted: 03/13/2020  
+• Date Rescinded: Still in effect  
+• Order Summary: The City of Camarillo declared a local emergency to activate municipal resources and implement rapid-response measures, including adjustments to permitting and operational guidelines. It provided the authority for additional local restrictions necessary to address the evolving public health crisis.  
+• Impact on Quarter: This proclamation imposed local compliance measures that required us to adjust our operational procedures and adhere to evolving restrictions, further impeding our capacity to operate at pre-pandemic levels during Q3 2020.
+
+Conclusion and Request
+
+As demonstrated above, West Coast Marble and granite was subject to a series of overlapping government orders at the federal, state, county, and city levels during the third quarter of 2020. These orders imposed partial suspensions on our normal business operations through mandatory closures, capacity limits, and other operational restrictions. Under IRS guidelines, a partial suspension—where more than a nominal portion of business activities is curtailed—qualifies an employer for the Employee Retention Credit. We maintain that the cumulative impact of these orders during Q3 2020 meets the requirements for a partial suspension, thereby entitling our business to the ERC claimed.
+
+We respectfully request that the IRS reconsider and reverse the disallowance of our ERC claim for Q3 2020. The credit we claimed is fully supported by the operational disruptions mandated by the aforementioned government orders. Should you require further information or clarification regarding the orders and their impact on our operations during Q3 2020, please do not hesitate to contact us.
+
+Attestation: “Under penalties of perjury, I declare that I submitted this protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated herein is true, correct, and complete.”
+
+Sincerely,
+
+[Signature]
+
+Authorized Representative  
+West Coast Marble and granite  
+
+Enclosures: Copies of COVID-19 Government Orders and Relevant Excerpts; ERC Calculations for Q3 2020; Supporting IRS Guidance Documents
