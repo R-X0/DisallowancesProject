@@ -166,19 +166,69 @@ ${rawHtml}`
 }
 
 /**
- * Extract URLs from the letter and download them as PDFs
+ * Extract URLs from the conversation (not the letter) and download them as PDFs
  */
 async function extractAndDownloadUrls(letter, outputDir) {
-  // Regular expression to match URLs in the letter
-  const urlRegex = /(https?:\/\/[^\s\)]+)/g;
-  const urls = [...new Set(letter.match(urlRegex) || [])];
+  console.log("==== URL EXTRACTION DEBUG ====");
+  
+  // We'll extract URLs from the conversation.txt file instead of the letter
+  let urls = [];
+  let conversationContent = "";
+  
+  try {
+    const conversationPath = path.join(outputDir, 'conversation.txt');
+    if (!fsSync.existsSync(conversationPath)) {
+      console.log("No conversation.txt file found, cannot extract URLs");
+      return { letter, attachments: [] };
+    }
+    
+    conversationContent = await fs.readFile(conversationPath, 'utf8');
+    console.log(`Read conversation content: ${conversationContent.length} characters`);
+    
+    // Store for debugging
+    await fs.writeFile(path.join(outputDir, 'conversation_for_url_extraction.txt'), conversationContent, 'utf8');
+    
+    // Comprehensive regex for URL detection
+    const urlRegex = /(?:https?:\/\/)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
+    
+    // Find all matches in the conversation content
+    const matches = conversationContent.match(urlRegex) || [];
+    console.log(`Raw URL matches found in conversation: ${matches.length}`);
+    
+    // Post-process matches to normalize and filter
+    urls = [...new Set(matches)]
+      .filter(url => {
+        // Basic filtering to remove false positives
+        return url.includes('.') && 
+               !url.startsWith('...') && 
+               url.length > 4 &&
+               !/^[0-9.]+$/.test(url); // Avoid IP-like numbers
+      })
+      .map(url => {
+        // Normalize the URL by adding protocol if missing
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          return `https://${url}`;
+        }
+        return url;
+      });
+    
+    console.log(`Found ${urls.length} unique URLs to process from conversation`);
+    console.log('URLs to process:', urls);
+    
+  } catch (err) {
+    console.error("Error reading conversation file:", err);
+    return { letter, attachments: [] };
+  }
+  
   const attachments = [];
   
-  console.log(`Found ${urls.length} unique URLs to process`);
-  
-  if (urls.length === 0) return { letter, attachments };
+  if (urls.length === 0) {
+    console.log("WARNING: No URLs found in conversation for processing.");
+    return { letter, attachments };
+  }
   
   // Launch browser for downloading
+  console.log("Launching browser to process URLs...");
   const browser = await puppeteer.launch({
     headless: 'new',
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
@@ -235,8 +285,16 @@ async function extractAndDownloadUrls(letter, outputDir) {
           path: pdfPath
         });
         
-        // Replace URL in letter with reference to attachment
-        letter = letter.replace(new RegExp(url, 'g'), `[See Attachment ${i+1}: ${filename}]`);
+        // For each URL found in the conversation, we'll add a reference to it in the letter
+        // But we'll check if the URL itself appears in the letter first
+        if (letter.includes(url)) {
+          // If the URL is actually in the letter, replace it with the attachment reference
+          letter = letter.replace(new RegExp(url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), 
+                                `[See Attachment ${i+1}: ${filename}]`);
+        } else {
+          // If the URL isn't in the letter, we don't need to modify the letter
+          console.log(`URL ${url} not found in letter, not replacing`);
+        }
         
       } catch (err) {
         console.error(`Error capturing PDF for ${url}:`, err);
@@ -249,6 +307,7 @@ async function extractAndDownloadUrls(letter, outputDir) {
     await browser.close();
   }
   
+  console.log(`Processed ${attachments.length} attachments from ${urls.length} URLs`);
   return { letter, attachments };
 }
 
@@ -345,8 +404,8 @@ COVID-19 RESEARCH DATA:
 ${covidData}
 
 IMPORTANT FORMATTING INSTRUCTIONS:
-1. DO NOT include direct links or URLs in the document content - they may not work and should be omitted
-2. DO NOT reference "business internal records" or documentation that has not been explicitly provided
+1. DO NOT include direct links or URLs in the document - they will be processed separately and added as attachments
+2. Instead of URLs, reference orders and sources by their names and dates
 3. Use CONSISTENT formatting throughout - use bullet points (•) for all lists, not dashes or mixed formats
 4. For each government order mentioned, use the EXACT following format:
 
@@ -385,8 +444,8 @@ COVID-19 RESEARCH DATA FROM CHATGPT:
 ${covidData}
 
 IMPORTANT FORMATTING INSTRUCTIONS:
-1. DO NOT include direct links or URLs in the letter body - they may not work and should be omitted
-2. DO NOT reference "business internal records" or documentation that has not been explicitly provided
+1. DO NOT include direct links or URLs in the letter body - they will be processed separately and added as attachments
+2. Instead of URLs, reference orders and sources by their names and dates
 3. Use CONSISTENT formatting throughout - use bullet points (•) for all lists, not dashes or mixed formats
 4. For each government order mentioned, use the EXACT following format:
 
