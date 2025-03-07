@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Box, Button, Paper, Typography, TextField, CircularProgress,
   Divider, Alert, Snackbar, IconButton, ButtonGroup, Tooltip,
@@ -47,8 +47,8 @@ const COVIDPromptGenerator = ({ formData }) => {
   const [promptType, setPromptType] = useState('covidOrders'); // Default to COVID orders
   const [selectedTimePeriod, setSelectedTimePeriod] = useState(''); // For selecting which period to focus on
   
-  // Generate prompt function
-  const generatePrompt = async () => {
+  // Wrap generatePrompt in useCallback to prevent it from changing on every render
+  const generatePrompt = useCallback(async () => {
     setGenerating(true);
     
     try {
@@ -170,7 +170,7 @@ IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to an
     } finally {
       setGenerating(false);
     }
-  };
+  }, [formData, promptType, selectedTimePeriod]); // Added dependencies here
   
   useEffect(() => {
     if (formData && Object.keys(formData).length > 0) {
@@ -183,7 +183,7 @@ IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to an
         generatePrompt();
       }
     }
-  }, [formData, promptType, selectedTimePeriod, generatePrompt]); // Added generatePrompt as a dependency
+  }, [formData, promptType, selectedTimePeriod, generatePrompt]);
   
   // Handle time period selection change
   const handleTimePeriodChange = (event) => {
