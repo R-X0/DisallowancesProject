@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+client/node_modules
+client/build
+.env
+.git
+.gitignore
+README.md
+server/data/ChatGPT_Conversations
+server/data/ERC_Disallowances
+server/uploads/temp
+server/config/google-credentials.json

@@ -1,4 +1,4 @@
-// server/server.js (updated)
+// server/server.js (updated for production & development)
 
 const express = require('express');
 const path = require('path');
@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const ercProtestRouter = require('./routes/erc-protest');
 const adminRouter = require('./routes/admin');
 const chatgptScraperRouter = require('./routes/chatgpt-scraper');
@@ -20,6 +21,23 @@ dotenv.config();
 // Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Handle Google credentials from environment variable if provided
+if (process.env.GOOGLE_CREDENTIALS) {
+  try {
+    const credentialsDir = path.join(__dirname, 'config');
+    if (!fsSync.existsSync(credentialsDir)) {
+      fsSync.mkdirSync(credentialsDir, { recursive: true });
+    }
+    fsSync.writeFileSync(
+      path.join(credentialsDir, 'google-credentials.json'),
+      process.env.GOOGLE_CREDENTIALS
+    );
+    console.log('Google credentials written from environment variable');
+  } catch (error) {
+    console.error('Error writing Google credentials file:', error);
+  }
+}
 
 // Security middleware
 app.use(helmet({
@@ -39,9 +57,6 @@ app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
 });
-
-// Static files
-app.use(express.static(path.join(__dirname, '../client/build')));
 
 // API routes
 app.use('/api/erc-protest', ercProtestRouter);
@@ -89,22 +104,32 @@ async function initializeServices() {
   }
 }
 
-// COMMENTED OUT: Front-end catch-all route to prevent 404 errors during testing
-// app.get('*', (req, res) => {
-//   res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
-// });
+// Serve static files in production
+const isProduction = process.env.NODE_ENV === 'production';
+if (isProduction) {
+  // Serve static files from React build
+  app.use(express.static(path.join(__dirname, '../client/build')));
 
-// Add a more helpful 404 handler instead
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found. If you need React routes, build the client first with: cd client && npm run build'
+  // For any other request, send back React's index.html file
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
   });
-});
+} else {
+  // Dev environment - provide a more helpful 404 for API routes
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({
+        success: false,
+        message: 'API route not found'
+      });
+    }
+    next();
+  });
+}
 
 // Start the server
 app.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT} in ${isProduction ? 'production' : 'development'} mode`);
   await createDirectories();
   await initializeServices();
   console.log(`API endpoints:
