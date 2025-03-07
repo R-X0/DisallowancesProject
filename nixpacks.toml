@@ -37,7 +37,14 @@ aptPkgs = [
   "libnss3",
   "lsb-release",
   "xdg-utils",
-  "wget"
+  "wget",
+  # Add these additional dependencies for Chrome/Puppeteer
+  "libgbm1",
+  "libxshmfence1",
+  "libdrm2",
+  "libatk-bridge2.0-0",
+  "libxkbcommon0",
+  "libgtk2.0-0"
 ]
 
 [phases.build]
