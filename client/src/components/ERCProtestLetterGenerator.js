@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Box, Button, Paper, Typography, TextField, CircularProgress,
-  Divider, Alert, Snackbar, IconButton, Dialog, DialogTitle,
+  Box, Button, Paper, Typography, TextField, 
+  Divider, Alert, Dialog, DialogTitle,
   DialogContent, DialogActions, LinearProgress,
-  FormControlLabel, Switch, ButtonGroup, Tooltip,
+  ButtonGroup, Tooltip,
   Select, MenuItem, FormControl, InputLabel
 } from '@mui/material';
 import { ContentCopy, CheckCircle, Description, Link, FileDownload, SwapHoriz } from '@mui/icons-material';
@@ -30,7 +30,7 @@ const getNaicsDescription = (naicsCode) => {
   return naicsMap[naicsCode] || 'business';
 };
 
-const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
+const ERCProtestLetterGenerator = ({ formData }) => {
   const [generating, setGenerating] = useState(false);
   const [protestLetter, setProtestLetter] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -45,7 +45,7 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
   const [selectedTimePeriod, setSelectedTimePeriod] = useState(''); // For selecting which period to focus on for protest letter
 
   // Initialize selected time period when form data changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (formData && formData.timePeriods && formData.timePeriods.length > 0 && !selectedTimePeriod) {
       setSelectedTimePeriod(formData.timePeriods[0]);
     }
@@ -315,13 +315,14 @@ const ERCProtestLetterGenerator = ({ formData, disallowanceInfo }) => {
         >
           <DialogTitle>
             {documentType === 'protestLetter' ? 'ERC Protest Package' : 'Form 886-A Document'}
-            <IconButton
+            <Button
               aria-label="copy"
               onClick={copyToClipboard}
               sx={{ position: 'absolute', right: 16, top: 8 }}
+              startIcon={copied ? <CheckCircle color="success" /> : <ContentCopy />}
             >
-              {copied ? <CheckCircle color="success" /> : <ContentCopy />}
-            </IconButton>
+              {copied ? 'Copied' : 'Copy'}
+            </Button>
           </DialogTitle>
           <DialogContent dividers sx={{ flexGrow: 1, overflow: 'auto' }}>
             {packageData && (

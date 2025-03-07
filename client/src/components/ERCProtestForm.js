@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Container, Box, TextField, MenuItem, Button, 
   Typography, Paper, Grid, Divider, CircularProgress,
-  Stepper, Step, StepLabel, StepContent, Alert, Chip,
+  Stepper, Step, StepLabel, StepContent, Chip,
   Select, FormControl, InputLabel, OutlinedInput, Checkbox, ListItemText
 } from '@mui/material';
 import { FileUpload } from '@mui/icons-material';
@@ -435,4 +435,4 @@ const ERCProtestForm = () => {
   );
 };
 
-export default ERCProtestForm
+export default ERCProtestForm;

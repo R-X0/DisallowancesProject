@@ -47,24 +47,7 @@ const COVIDPromptGenerator = ({ formData }) => {
   const [promptType, setPromptType] = useState('covidOrders'); // Default to COVID orders
   const [selectedTimePeriod, setSelectedTimePeriod] = useState(''); // For selecting which period to focus on
   
-  useEffect(() => {
-    if (formData && Object.keys(formData).length > 0) {
-      // Set default selected time period when form data changes
-      if (formData.timePeriods && formData.timePeriods.length > 0 && !selectedTimePeriod) {
-        setSelectedTimePeriod(formData.timePeriods[0]);
-      }
-      
-      if (selectedTimePeriod) {
-        generatePrompt();
-      }
-    }
-  }, [formData, promptType, selectedTimePeriod]);
-  
-  // Handle time period selection change
-  const handleTimePeriodChange = (event) => {
-    setSelectedTimePeriod(event.target.value);
-  };
-  
+  // Generate prompt function
   const generatePrompt = async () => {
     setGenerating(true);
     
@@ -187,6 +170,24 @@ IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to an
     } finally {
       setGenerating(false);
     }
+  };
+  
+  useEffect(() => {
+    if (formData && Object.keys(formData).length > 0) {
+      // Set default selected time period when form data changes
+      if (formData.timePeriods && formData.timePeriods.length > 0 && !selectedTimePeriod) {
+        setSelectedTimePeriod(formData.timePeriods[0]);
+      }
+      
+      if (selectedTimePeriod) {
+        generatePrompt();
+      }
+    }
+  }, [formData, promptType, selectedTimePeriod, generatePrompt]); // Added generatePrompt as a dependency
+  
+  // Handle time period selection change
+  const handleTimePeriodChange = (event) => {
+    setSelectedTimePeriod(event.target.value);
   };
   
   const copyToClipboard = () => {
