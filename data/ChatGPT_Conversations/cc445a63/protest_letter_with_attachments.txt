@@ -1,0 +1,82 @@
+03/07/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 34234  
+Taxpayer Name: 342  
+RE: Formal Protest to Letter 105 – ERC Disallowance for Q3  
+Tax Period: 3rd Quarter 2020 (2020Q3)  
+Claim Amount: [Insert Amount]
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing 342’s Employee Retention Credit (ERC) claim for the third quarter of 2020. The disallowance was based on an assertion that no government orders were in effect from July 1 to September 30, 2020 that caused a suspension of our operations. We respectfully disagree. Multiple federal, state, county, and city government orders were active during Q3 2020, imposing restrictions that partially suspended our normal business operations. In this letter, we provide a detailed timeline of the relevant government orders, demonstrate their impact on 342’s activities, and reference applicable IRS guidance demonstrating why 342 qualifies for the ERC under the “partial suspension” provisions.
+
+Timeline of COVID‑19 Government Orders Active in Q3 2020
+
+• Order Name: Proclamation 9994 – National Emergency Concerning COVID‑19  
+  • Order Number: 9994  
+  • Date Enacted: 03/13/2020  
+  • Date Rescinded: Still in effect  
+  • Order Summary: This proclamation declared a national emergency to address COVID‑19 and activated federal emergency powers that provided the framework for subsequent state and local restrictions. Although it did not directly mandate business closures, it underpinned the regulatory environment affecting all business operations.  
+  • Impact on Quarter: In Q3 2020, the continued federal emergency justified and supported state and local mandates that limited 342’s operational capacity.
+
+• Order Name: EO N‑33‑20 – “Stay‑at‑Home” Order  
+  • Order Number: N‑33‑20  
+  • Date Enacted: 03/19/2020  
+  • Date Rescinded: 06/15/2021  
+  • Order Summary: This order required Californians to remain at home except for essential activities, forcing non‑essential businesses to shut down or operate at significantly reduced capacity. It imposed limitations on in‑person services and mandated strict compliance with public health guidelines throughout the state.  
+  • Impact on Quarter: During Q3 2020, even as gradual reopenings were attempted, 342 was subject to capacity limitations and operational restrictions that directly reduced the scale of its normal business activities.
+
+• Order Name: July 13, 2020 State Public Health Officer Order (Rollback of Reopening)  
+  • Order Number: N/A  
+  • Date Enacted: 07/13/2020  
+  • Date Rescinded: 08/31/2020  
+  • Order Summary: In response to a surge in COVID‑19 cases, this order mandated a rollback of state reopenings by imposing strict limits on indoor operations for many businesses deemed high‑risk. It compelled businesses that had begun to reopen to revert to more restrictive operational modes.  
+  • Impact on Quarter: 342 experienced an abrupt curtailment of its indoor operations during the summer, resulting in an immediate reduction in customer access and overall revenue.
+
+• Order Name: Blueprint for a Safer Economy – Color‑Tier Reopening System  
+  • Order Number: N/A  
+  • Date Enacted: 08/31/2020  
+  • Date Rescinded: 06/15/2021  
+  • Order Summary: This order established a risk‑based tier system that categorized counties by color. Ventura County, including Camarillo, was assigned to the most restrictive “Purple” tier, which limited indoor operations severely and permitted only minimal reopening under strict safety protocols.  
+  • Impact on Quarter: Under these guidelines in Q3 2020, 342’s in‑person operations were significantly curtailed, further limiting service capacity and contributing to economic stress.
+
+• Order Name: Stay Well at Home Order  
+  • Order Number: N/A  
+  • Date Enacted: 03/20/2020  
+  • Date Rescinded: 06/11/2021  
+  • Order Summary: Issued by Ventura County, this order required residents to remain in their homes except for essential activities, effectively mandating the closure of non‑essential businesses. It set the stage for the county-level approach to restrict and modify local business operations.  
+  • Impact on Quarter: The enduring effects of this order into Q3 2020 meant that 342 operated under limited conditions, with continued restrictions on customer visits and reduced staffing levels.
+
+• Order Name: Camarillo Local Emergency Proclamation  
+  • Order Number: EOC Director Order No. 20‑1  
+  • Date Enacted: 03/13/2020  
+  • Date Rescinded: Still in effect  
+  • Order Summary: The City of Camarillo declared a local emergency to coordinate the municipal response to COVID‑19. This proclamation enabled the city to implement further public health directives and measures impacting local businesses without directly ordering a full shutdown.  
+  • Impact on Quarter: This local emergency declaration signaled mandatory adherence to subsequent county and state orders, indirectly forcing 342 to modify its operational practices during Q3 2020.
+
+• Order Name: Camarillo Temporary Outdoor Dining Program – Resolution No. 2020‑63  
+  • Order Number: 2020‑63  
+  • Date Enacted: 06/10/2020  
+  • Date Rescinded: 06/15/2021 (Effective end date)  
+  • Order Summary: This resolution allowed for the creation of temporary outdoor dining areas by waiving standard zoning requirements and fees. While primarily aimed at assisting restaurants in adapting to indoor dining bans, it represented a broader shift in the city’s approach to mitigating the impacts of COVID‑19 on local economic activity.  
+  • Impact on Quarter: Although more directly relevant to the food service sector, this measure exemplified how municipal policies required businesses in Camarillo, including 342, to adjust to unconventional operating modalities during a period of widespread restrictions.
+
+Based on this chronology, it is clear that 342 was subject to numerous government orders in Q3 2020 that imposed significant limitations on its operations. The combined effect of these orders resulted in a partial suspension of our normal business activities, satisfying the criteria for ERC eligibility under the “partial suspension” provisions outlined in applicable IRS guidance.
+
+Conclusion and Request
+
+In light of the above facts and supporting evidence, we respectfully request that the IRS reconsider and reverse the disallowance of our Q3 2020 Employee Retention Credit. The government orders described herein, at the federal, state, county, and municipal levels, directly impacted 342’s ability to conduct its regular operations and thus qualify as a partial suspension under IRS rules. Enclosed, please find copies of the relevant government orders and excerpts, along with our detailed ERC calculations.
+
+Attestation: “Under penalties of perjury, I declare that I submitted the protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated in the protest and accompanying documents is true, correct, and complete.”
+
+Sincerely,
+
+Alejandra Astudillo, EA  
+Authorized Representative for 342
+
+Enclosures:  
+• Copies of Government Orders and Relevant Excerpts  
+• ERC Calculations for Q3 2020  
+• Applicable IRS Guidance Notices for ERC Eligibility

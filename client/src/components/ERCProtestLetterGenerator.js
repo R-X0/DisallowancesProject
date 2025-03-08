@@ -30,7 +30,7 @@ const getNaicsDescription = (naicsCode) => {
   return naicsMap[naicsCode] || 'business';
 };
 
-const ERCProtestLetterGenerator = ({ formData }) => {
+const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [generating, setGenerating] = useState(false);
   const [protestLetter, setProtestLetter] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -120,12 +120,24 @@ const ERCProtestLetterGenerator = ({ formData }) => {
       
       if (response.success) {
         setProtestLetter(response.letter);
-        setPackageData({
+        
+        // Create package data object
+        const newPackageData = {
           pdfPath: response.pdfPath,
           zipPath: response.zipPath,
           attachments: response.attachments || [],
           packageFilename: response.packageFilename || 'complete_package.zip'
-        });
+        };
+        
+        console.log('Setting package data:', newPackageData);
+        setPackageData(newPackageData);
+        
+        // Immediately call the onGenerated callback with the package data
+        console.log('Calling onGenerated with package data:', newPackageData);
+        if (onGenerated) {
+          onGenerated(newPackageData);
+        }
+        
         setDialogOpen(true);
         setProcessing(false);
       } else {
@@ -152,6 +164,12 @@ const ERCProtestLetterGenerator = ({ formData }) => {
   };
   
   const handleCloseDialog = () => {
+    // Make sure we're still calling onGenerated with the package data when closing the dialog
+    if (packageData && onGenerated) {
+      console.log("Sending package data to parent on dialog close:", packageData);
+      onGenerated(packageData);
+    }
+    
     setDialogOpen(false);
   };
   
@@ -166,6 +184,8 @@ const ERCProtestLetterGenerator = ({ formData }) => {
 
   const downloadProtestPackage = () => {
     if (packageData && packageData.zipPath) {
+      console.log("Downloading protest package with path:", packageData.zipPath);
+      
       // Check if it's a Google Drive URL (starts with http/https)
       if (packageData.zipPath.startsWith('http')) {
         // Open it directly in a new tab
@@ -174,6 +194,14 @@ const ERCProtestLetterGenerator = ({ formData }) => {
         // Use the API endpoint for local file downloads
         window.open(`/api/erc-protest/admin/download?path=${encodeURIComponent(packageData.zipPath)}`, '_blank');
       }
+      
+      // Also trigger the onGenerated callback again to ensure the parent has the data
+      if (onGenerated) {
+        console.log("Triggering onGenerated again during download", packageData);
+        onGenerated(packageData);
+      }
+    } else {
+      console.warn("No package data or zipPath available for download");
     }
   };
   

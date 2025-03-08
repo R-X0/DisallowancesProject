@@ -23,9 +23,28 @@ const upload = multer({ storage });
 // Submit ERC protest form
 router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) => {
   try {
-    const { businessName, ein, location, businessWebsite, naicsCode, additionalInfo, protestPackagePath, protestLetterPath } = req.body;
+    let { businessName, ein, location, businessWebsite, naicsCode, additionalInfo, protestPackagePath, protestLetterPath } = req.body;
     let timePeriods = req.body.timePeriods;
     const files = req.files;
+    
+    // DEBUG: Log received paths
+    console.log('=== DEBUG PATH INFO ===');
+    console.log('Received protestPackagePath:', protestPackagePath);
+    console.log('Received protestLetterPath:', protestLetterPath);
+    console.log('=====================');
+    
+    // Normalize paths to handle Windows backslashes
+    if (protestPackagePath) {
+      // Try to normalize the path
+      protestPackagePath = protestPackagePath.replace(/\\/g, '/');
+      console.log('Normalized protestPackagePath:', protestPackagePath);
+    }
+    
+    if (protestLetterPath) {
+      // Try to normalize the path
+      protestLetterPath = protestLetterPath.replace(/\\/g, '/');
+      console.log('Normalized protestLetterPath:', protestLetterPath);
+    }
     
     // Parse timePeriods from JSON string (from FormData) if needed
     if (typeof timePeriods === 'string') {
@@ -125,42 +144,100 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
         }
       }
       
-      // Check if we have protest package zip path to upload
-      if (protestPackagePath && fs.existsSync(protestPackagePath)) {
-        console.log(`Uploading protest package ZIP from: ${protestPackagePath}`);
-        try {
-          const uploadedZip = await googleDriveService.uploadFile(
-            protestPackagePath,
-            `${trackingId}_Complete_Package.zip`,
-            driveFolder.folderId,
-            'application/zip'
-          );
-          
-          console.log(`Successfully uploaded protest package ZIP with ID: ${uploadedZip.id}`);
-          submissionInfo.zipPath = uploadedZip.webViewLink;
-          
-          // Update status since we have a complete package
-          submissionInfo.status = 'PDF done';
-        } catch (zipUploadError) {
-          console.error(`Error uploading protest package ZIP:`, zipUploadError);
+      // Check if we have protest package zip path to upload - with enhanced file checking
+      if (protestPackagePath) {
+        // Try multiple path formats to find the file
+        const pathsToCheck = [
+          protestPackagePath,
+          path.normalize(protestPackagePath),
+          // Try removing leading slash if it exists
+          protestPackagePath.startsWith('/') ? protestPackagePath.substring(1) : protestPackagePath,
+          // Try adding data directory prefix if it's a relative path
+          path.join(__dirname, '../data', protestPackagePath)
+        ];
+        
+        let foundZipPath = null;
+        for (const pathToCheck of pathsToCheck) {
+          console.log(`Checking if ZIP exists at: ${pathToCheck}`);
+          try {
+            const fsSync = require('fs');
+            if (fsSync.existsSync(pathToCheck)) {
+              console.log(`Found ZIP file at: ${pathToCheck}`);
+              foundZipPath = pathToCheck;
+              break;
+            }
+          } catch (checkErr) {
+            console.error(`Error checking path ${pathToCheck}:`, checkErr);
+          }
+        }
+        
+        if (foundZipPath) {
+          console.log(`Uploading protest package ZIP from: ${foundZipPath}`);
+          try {
+            const uploadedZip = await googleDriveService.uploadFile(
+              foundZipPath,
+              `${trackingId}_Complete_Package.zip`,
+              driveFolder.folderId,
+              'application/zip'
+            );
+            
+            console.log(`Successfully uploaded protest package ZIP with ID: ${uploadedZip.id}`);
+            submissionInfo.zipPath = uploadedZip.webViewLink;
+            
+            // Update status since we have a complete package
+            submissionInfo.status = 'PDF done';
+          } catch (zipUploadError) {
+            console.error(`Error uploading protest package ZIP:`, zipUploadError);
+          }
+        } else {
+          console.error(`ZIP file not found at any of the attempted paths`);
         }
       }
       
-      // Check if we have protest letter PDF to upload
-      if (protestLetterPath && fs.existsSync(protestLetterPath)) {
-        console.log(`Uploading protest letter PDF from: ${protestLetterPath}`);
-        try {
-          const uploadedPdf = await googleDriveService.uploadFile(
-            protestLetterPath,
-            `${trackingId}_Protest_Letter.pdf`,
-            driveFolder.folderId,
-            'application/pdf'
-          );
-          
-          console.log(`Successfully uploaded protest letter PDF with ID: ${uploadedPdf.id}`);
-          submissionInfo.protestLetterPath = uploadedPdf.webViewLink;
-        } catch (pdfUploadError) {
-          console.error(`Error uploading protest letter PDF:`, pdfUploadError);
+      // Check if we have protest letter PDF to upload - with enhanced file checking
+      if (protestLetterPath) {
+        // Try multiple path formats to find the file
+        const pathsToCheck = [
+          protestLetterPath,
+          path.normalize(protestLetterPath),
+          // Try removing leading slash if it exists
+          protestLetterPath.startsWith('/') ? protestLetterPath.substring(1) : protestLetterPath,
+          // Try adding data directory prefix if it's a relative path
+          path.join(__dirname, '../data', protestLetterPath)
+        ];
+        
+        let foundPdfPath = null;
+        for (const pathToCheck of pathsToCheck) {
+          console.log(`Checking if PDF exists at: ${pathToCheck}`);
+          try {
+            const fsSync = require('fs');
+            if (fsSync.existsSync(pathToCheck)) {
+              console.log(`Found PDF file at: ${pathToCheck}`);
+              foundPdfPath = pathToCheck;
+              break;
+            }
+          } catch (checkErr) {
+            console.error(`Error checking path ${pathToCheck}:`, checkErr);
+          }
+        }
+        
+        if (foundPdfPath) {
+          console.log(`Uploading protest letter PDF from: ${foundPdfPath}`);
+          try {
+            const uploadedPdf = await googleDriveService.uploadFile(
+              foundPdfPath,
+              `${trackingId}_Protest_Letter.pdf`,
+              driveFolder.folderId,
+              'application/pdf'
+            );
+            
+            console.log(`Successfully uploaded protest letter PDF with ID: ${uploadedPdf.id}`);
+            submissionInfo.protestLetterPath = uploadedPdf.webViewLink;
+          } catch (pdfUploadError) {
+            console.error(`Error uploading protest letter PDF:`, pdfUploadError);
+          }
+        } else {
+          console.error(`PDF file not found at any of the attempted paths`);
         }
       }
       

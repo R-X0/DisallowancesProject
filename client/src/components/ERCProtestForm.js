@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Container, Box, TextField, MenuItem, Button, 
   Typography, Paper, Grid, Divider, CircularProgress,
@@ -48,6 +48,11 @@ const ERCProtestForm = () => {
     'Q1 2021', 'Q2 2021', 'Q3 2021', 'Q4 2021'
   ];
   
+  // Debug effect - log whenever protestLetterData changes
+  useEffect(() => {
+    console.log("protestLetterData changed:", protestLetterData);
+  }, [protestLetterData]);
+  
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -74,8 +79,8 @@ const ERCProtestForm = () => {
   
   // This function would be passed to ERCProtestLetterGenerator to get protest letter data
   const onProtestLetterGenerated = (data) => {
+    console.log("onProtestLetterGenerated called with data:", data);
     setProtestLetterData(data);
-    console.log("Protest letter data received:", data);
   };
   
   // Handle form submission
@@ -84,6 +89,9 @@ const ERCProtestForm = () => {
     setIsSubmitting(true);
     
     try {
+      // Debug log before form submission
+      console.log("Form submission - protestLetterData:", protestLetterData);
+      
       // Create FormData object for file upload
       const submitData = new FormData();
       
@@ -104,9 +112,21 @@ const ERCProtestForm = () => {
       
       // If we have a ZIP package from the protest letter generator, include it
       if (protestLetterData && protestLetterData.zipPath) {
-        console.log('Including protest package in submission:', protestLetterData.zipPath);
-        submitData.append('protestPackagePath', protestLetterData.zipPath);
-        submitData.append('protestLetterPath', protestLetterData.pdfPath || '');
+        // Normalize paths to use forward slashes only
+        const normalizedZipPath = protestLetterData.zipPath.replace(/\\/g, '/');
+        const normalizedPdfPath = protestLetterData.pdfPath ? protestLetterData.pdfPath.replace(/\\/g, '/') : '';
+        
+        console.log('Including protest package in submission (normalized):', normalizedZipPath);
+        submitData.append('protestPackagePath', normalizedZipPath);
+        submitData.append('protestLetterPath', normalizedPdfPath);
+        
+        // Debug log to verify the data was added to FormData
+        console.log('FormData after adding paths:', { 
+          packagePath: submitData.get('protestPackagePath'), 
+          letterPath: submitData.get('protestLetterPath')
+        });
+      } else {
+        console.warn('No protest letter data available for submission');
       }
       
       // Send to backend API
@@ -129,6 +149,7 @@ const ERCProtestForm = () => {
         throw new Error(result.message || 'Submission failed');
       }
     } catch (error) {
+      console.error("Form submission error:", error);
       setSubmissionStatus({
         success: false,
         message: `Error: ${error.message}`
@@ -390,6 +411,14 @@ const ERCProtestForm = () => {
                 >
                   Back
                 </Button>
+              </Box>
+              
+              {/* Debug section to show current protestLetterData */}
+              <Box mt={3} p={2} bgcolor="grey.100" borderRadius={1}>
+                <Typography variant="subtitle2">Debug - Current Document Data:</Typography>
+                <pre style={{ overflow: 'auto', maxHeight: '100px' }}>
+                  {protestLetterData ? JSON.stringify(protestLetterData, null, 2) : 'No data yet'}
+                </pre>
               </Box>
             </StepContent>
           </Step>
