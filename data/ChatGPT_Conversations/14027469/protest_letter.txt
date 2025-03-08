@@ -1,0 +1,105 @@
+03/07/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: dsad  
+Taxpayer Name: d  
+RE: Formal Protest to Letter 105 – ERC Disallowance for Q2  
+Tax Period: 2nd Quarter 2020 (202004)  
+Claim Amount: [Enter Claim Amount]
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing d’s Employee Retention Credit (ERC) claim for the second quarter of 2020. The disallowance is based on the assertion that no COVID-19 related government orders caused a suspension or partial limitation of our business operations during Q2 2020. We respectfully disagree. Multiple federal, state, county, and city government orders were active during this period—and they imposed restrictions that directly affected our ability to operate at full capacity. In this letter, we provide a detailed timeline of relevant government orders, demonstrate their operational impact on our business, and cite applicable IRS guidance supporting our ERC eligibility based on the “partial suspension” criteria.
+
+Timeline of COVID-19 Government Orders Active in Q2 2020
+
+Below is a chronological timeline of the key orders that were in effect during Q2 2020:
+
+• Order Name: National Emergency Concerning COVID-19  
+• Order Number: Proclamation 9994  
+• Date Enacted: 03/13/2020  
+• Date Rescinded: Still in effect  
+• Order Summary: This proclamation declared a nationwide emergency in response to COVID-19. It activated federal emergency powers and established the legal framework for subsequent government mandates impacting business operations.  
+• Impact on Quarter: Although it did not directly mandate business closures, this proclamation created the environment in which all subsequent orders—mandating stay-at-home practices and capacity restrictions—were justified and enforced, thereby affecting our normal operations.
+
+• Order Name: California COVID-19 State of Emergency  
+• Order Number: N/A (Governor’s Proclamation)  
+• Date Enacted: 03/04/2020  
+• Date Rescinded: Still in effect  
+• Order Summary: Governor Newsom’s declaration granted state authorities broad powers to implement emergency measures, including business restrictions and regulatory relief.  
+• Impact on Quarter: This proclamation provided the legal authority for later restrictive orders and ensured that our business remained subject to mandatory capacity and operational limitations during Q2 2020.
+
+• Order Name: Statewide Stay-at-Home Order  
+• Order Number: Executive Order N-33-20  
+• Date Enacted: 03/19/2020  
+• Date Rescinded: 06/15/2021  
+• Order Summary: The order mandated that Californians remain at home except for essential activities, forcing non-essential businesses to close or limit operations.  
+• Impact on Quarter: This order significantly curtailed our business activities during Q2 2020 by limiting on-site operations and restricting services to essential functions only.
+
+• Order Name: Stage 2 Reopening Order  
+• Order Number: N/A (State Public Health Officer Order)  
+• Date Enacted: 05/07/2020  
+• Date Rescinded: 06/15/2021  
+• Order Summary: This order allowed selected lower-risk businesses to begin reopening under strict health guidelines while still maintaining capacity restrictions and safety protocols.  
+• Impact on Quarter: Although it permitted a limited reopening, our business was still bound by reduced capacity and stringent safety measures, affecting our overall revenue and operations during the quarter.
+
+• Order Name: Ventura County Local Health Emergency  
+• Order Number: N/A  
+• Date Enacted: 03/12/2020  
+• Date Rescinded: Still in effect  
+• Order Summary: The declaration of a local health emergency empowered Ventura County to issue and enforce additional public health directives to manage COVID-19 risks.  
+• Impact on Quarter: The local emergency set the groundwork for subsequent county directives that limited non-essential activities, thereby directly impacting our standard business operations.
+
+• Order Name: Stay Well at Home Order  
+• Order Number: N/A  
+• Date Enacted: 03/20/2020  
+• Date Rescinded: 06/15/2021  
+• Order Summary: This county order required residents to remain at home except for essential activities, mirroring state mandates by closing non-essential businesses and restricting movement.  
+• Impact on Quarter: The order enforced strict restrictions on our business operations throughout Q2 2020, reducing customer foot traffic and mandating operational adjustments to comply with public health guidelines.
+
+• Order Name: Safely Reopening Ventura County Order  
+• Order Number: N/A  
+• Date Enacted: 05/07/2020  
+• Date Rescinded: 08/31/2020 (superseded by subsequent county/state orders)  
+• Order Summary: This order allowed for the cautious reopening of certain business sectors under clearly defined health protocols and social distancing rules.  
+• Impact on Quarter: While it signaled a shift toward reopening, the lingering limitations and mandatory safety protocols continued to suppress our operational capacity and adversely affected revenue in Q2 2020.
+
+• Order Name: Camarillo Local Emergency Proclamation  
+• Order Number: EOC Director Order No. 20-1  
+• Date Enacted: 03/13/2020  
+• Date Rescinded: Still in effect  
+• Order Summary: The city’s proclamation activated local emergency measures, including the cancellation of public events and the closure of municipal facilities, to mitigate COVID-19 risks.  
+• Impact on Quarter: This order placed our business within a municipal framework of restrictions that contributed to operational disruptions in Q2 2020.
+
+• Order Name: Camarillo Eviction Moratorium Orders  
+• Order Number: EOC Director Order No. 20-2 and Amendment  
+• Date Enacted: 03/18/2020; amended 04/23/2020  
+• Date Rescinded: In effect for the duration of the local emergency  
+• Order Summary: These orders provided protection against evictions to support both residential and commercial tenants affected by COVID-19 economic impacts.  
+• Impact on Quarter: By preventing evictions, these orders acknowledged the severe economic disruption businesses experienced and indirectly underscored the operational challenges we faced during Q2 2020.
+
+• Order Name: Temporary Outdoor Dining Program  
+• Order Number: Camarillo Resolution No. 2020-63  
+• Date Enacted: 06/10/2020 (approximately)  
+• Date Rescinded: Expired automatically with the reinstatement of normal zoning rules  
+• Order Summary: This resolution allowed restaurants and similar businesses to operate outdoor dining areas in lieu of indoor service, amid continuing indoor capacity restrictions.  
+• Impact on Quarter: For businesses relying on in-person customer service, the program alleviated some operational limitations; however, the necessity of outdoor-only service still limited full operational capacity and revenue potential during Q2 2020.
+
+Conclusion and Request
+
+In light of the detailed timeline above, it is clear that multiple COVID-19 government orders imposed a partial suspension of our normal operations during the second quarter of 2020. These orders—from the federal declaration of emergency to state, county, and city directives—necessitated capacity restrictions, modified operating procedures, and significant adjustments to our business operations. This cumulative impact satisfies the IRS criteria for a partial suspension under the ERC provisions.
+
+We respectfully request that the IRS reconsider and reverse the disallowance of our Q2 2020 ERC. The credit claimed is fully supported by the documented governmental orders and the demonstrated impact they had on our business. We have enclosed copies of the relevant government orders and additional documentation detailing the operational limitations imposed during this period.
+
+Attestation: “Under penalties of perjury, I declare that I submitted the protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated in the protest and accompanying documents is true, correct, and complete.”
+
+Sincerely,
+
+[Authorized Representative Name]  
+Authorized Representative for d
+
+Enclosures:  
+• Copies of Relevant Government Orders and Summaries  
+• ERC Calculations and Supporting Documentation  
+• Applicable IRS Guidance Documents

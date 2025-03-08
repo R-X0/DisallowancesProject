@@ -202,6 +202,76 @@ class GoogleDriveService {
       throw error;
     }
   }
+
+  /**
+   * Upload a file to Google Drive
+   * @param {string} filePath - Local path to the file
+   * @param {string} fileName - Name to give the file in Google Drive
+   * @param {string} folderId - ID of the folder to upload to
+   * @param {string} mimeType - MIME type of the file
+   * @returns {Object} - File data including id and webViewLink
+   */
+  async uploadFile(filePath, fileName, folderId, mimeType) {
+    await this.ensureInitialized();
+    
+    try {
+      console.log(`Uploading file ${fileName} from ${filePath} to folder ${folderId}`);
+      
+      // Create file metadata
+      const fileMetadata = {
+        name: fileName,
+        parents: [folderId]
+      };
+      
+      // Create a readable stream from the file
+      const fileStream = fs.createReadStream(filePath);
+      
+      // Upload the file
+      const media = {
+        mimeType: mimeType,
+        body: fileStream
+      };
+      
+      const response = await this.drive.files.create({
+        resource: fileMetadata,
+        media: media,
+        fields: 'id, webViewLink'
+      });
+      
+      console.log(`File uploaded successfully: ${fileName}, ID: ${response.data.id}`);
+      
+      // Make the file accessible by anyone with the link with reader permissions
+      await this.drive.permissions.create({
+        fileId: response.data.id,
+        requestBody: {
+          role: 'reader',
+          type: 'anyone'
+        }
+      });
+      console.log(`Set permissions for file ${fileName} to "anyone" with "reader" role`);
+      
+      // Share with specified email
+      try {
+        await this.drive.permissions.create({
+          fileId: response.data.id,
+          requestBody: {
+            role: 'writer',
+            type: 'user',
+            emailAddress: this.shareWithEmail
+          },
+          sendNotificationEmail: false
+        });
+        console.log(`Shared file ${fileName} with ${this.shareWithEmail}`);
+      } catch (shareError) {
+        console.log(`Warning: Could not share file with ${this.shareWithEmail}, but file is still accessible: ${shareError.message}`);
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error(`Error uploading file ${fileName}:`, error);
+      throw error;
+    }
+  }
   
 /**
  * Upload protest letter and zip package for a submission
@@ -296,67 +366,6 @@ async uploadProtestFiles(trackingId, businessName, pdfPath, zipPath) {
       };
     } catch (error) {
       console.error(`Error creating submission folder for ${trackingId}:`, error);
-      throw error;
-    }
-  }
-  
-  /**
-   * Upload protest letter and zip package for a submission
-   * @param {string} trackingId - Tracking ID
-   * @param {string} businessName - Business name
-   * @param {string} pdfPath - Path to the PDF letter
-   * @param {string} zipPath - Path to the ZIP package
-   */
-  async uploadProtestFiles(trackingId, businessName, pdfPath, zipPath) {
-    try {
-      await this.ensureInitialized();
-      
-      // Verify files exist before proceeding
-      console.log('Verifying files exist:');
-      console.log(`PDF path: ${pdfPath}`);
-      console.log(`ZIP path: ${zipPath}`);
-      
-      if (!fs.existsSync(pdfPath)) {
-        throw new Error(`PDF file does not exist at path: ${pdfPath}`);
-      }
-      
-      if (!fs.existsSync(zipPath)) {
-        throw new Error(`ZIP file does not exist at path: ${zipPath}`);
-      }
-      
-      console.log('Files verified, creating folder...');
-      
-      // Create folder for this submission
-      const folderResult = await this.createSubmissionFolder(trackingId, businessName);
-      console.log(`Created folder for ${trackingId} with ID: ${folderResult.folderId}`);
-      
-      // Upload the PDF letter
-      console.log(`Uploading PDF letter from ${pdfPath}...`);
-      const pdfFile = await this.uploadFile(
-        pdfPath,
-        `${trackingId}_Protest_Letter.pdf`,
-        folderResult.folderId,
-        'application/pdf'
-      );
-      console.log(`PDF letter uploaded with ID: ${pdfFile.id}`);
-      
-      // Upload the ZIP package
-      console.log(`Uploading ZIP package from ${zipPath}...`);
-      const zipFile = await this.uploadFile(
-        zipPath,
-        `${trackingId}_Complete_Package.zip`,
-        folderResult.folderId,
-        'application/zip'
-      );
-      console.log(`ZIP package uploaded with ID: ${zipFile.id}`);
-      
-      return {
-        folderLink: folderResult.folderLink,
-        protestLetterLink: pdfFile.webViewLink,
-        zipPackageLink: zipFile.webViewLink
-      };
-    } catch (error) {
-      console.error(`Error uploading protest files for ${trackingId}:`, error);
       throw error;
     }
   }
