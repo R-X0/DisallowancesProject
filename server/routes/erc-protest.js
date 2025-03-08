@@ -23,7 +23,7 @@ const upload = multer({ storage });
 // Submit ERC protest form
 router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) => {
   try {
-    const { businessName, ein, location, businessWebsite, naicsCode, additionalInfo } = req.body;
+    const { businessName, ein, location, businessWebsite, naicsCode, additionalInfo, protestPackagePath, protestLetterPath } = req.body;
     let timePeriods = req.body.timePeriods;
     const files = req.files;
     
@@ -125,6 +125,45 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
         }
       }
       
+      // Check if we have protest package zip path to upload
+      if (protestPackagePath && fs.existsSync(protestPackagePath)) {
+        console.log(`Uploading protest package ZIP from: ${protestPackagePath}`);
+        try {
+          const uploadedZip = await googleDriveService.uploadFile(
+            protestPackagePath,
+            `${trackingId}_Complete_Package.zip`,
+            driveFolder.folderId,
+            'application/zip'
+          );
+          
+          console.log(`Successfully uploaded protest package ZIP with ID: ${uploadedZip.id}`);
+          submissionInfo.zipPath = uploadedZip.webViewLink;
+          
+          // Update status since we have a complete package
+          submissionInfo.status = 'PDF done';
+        } catch (zipUploadError) {
+          console.error(`Error uploading protest package ZIP:`, zipUploadError);
+        }
+      }
+      
+      // Check if we have protest letter PDF to upload
+      if (protestLetterPath && fs.existsSync(protestLetterPath)) {
+        console.log(`Uploading protest letter PDF from: ${protestLetterPath}`);
+        try {
+          const uploadedPdf = await googleDriveService.uploadFile(
+            protestLetterPath,
+            `${trackingId}_Protest_Letter.pdf`,
+            driveFolder.folderId,
+            'application/pdf'
+          );
+          
+          console.log(`Successfully uploaded protest letter PDF with ID: ${uploadedPdf.id}`);
+          submissionInfo.protestLetterPath = uploadedPdf.webViewLink;
+        } catch (pdfUploadError) {
+          console.error(`Error uploading protest letter PDF:`, pdfUploadError);
+        }
+      }
+      
     } catch (driveError) {
       console.error('Error creating Google Drive folder or uploading files:', driveError);
       // Continue anyway, not a critical error
@@ -146,11 +185,11 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
         naicsCode,
         timePeriod: timePeriodsDisplay, // Use the joined string for the Google Sheet
         additionalInfo,
-        status: 'Gathering data',
+        status: submissionInfo.status, // Use the possibly updated status
         timestamp: new Date().toISOString(),
         googleDriveLink: submissionInfo.googleDriveLink || '',
-        protestLetterPath: '',
-        zipPath: ''
+        protestLetterPath: submissionInfo.protestLetterPath || '',
+        zipPath: submissionInfo.zipPath || ''
       });
       
       console.log('Added submission to Google Sheet with all fields');

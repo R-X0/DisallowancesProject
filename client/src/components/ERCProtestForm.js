@@ -40,6 +40,7 @@ const ERCProtestForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionStatus, setSubmissionStatus] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
+  const [protestLetterData, setProtestLetterData] = useState(null);
   
   // Available quarters for selection
   const quarters = [
@@ -71,6 +72,12 @@ const ERCProtestForm = () => {
     setPdfFiles(files);
   };
   
+  // This function would be passed to ERCProtestLetterGenerator to get protest letter data
+  const onProtestLetterGenerated = (data) => {
+    setProtestLetterData(data);
+    console.log("Protest letter data received:", data);
+  };
+  
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -90,10 +97,17 @@ const ERCProtestForm = () => {
         }
       });
       
-      // Append files
+      // Append disallowance notice files
       pdfFiles.forEach(file => {
         submitData.append('disallowanceNotices', file);
       });
+      
+      // If we have a ZIP package from the protest letter generator, include it
+      if (protestLetterData && protestLetterData.zipPath) {
+        console.log('Including protest package in submission:', protestLetterData.zipPath);
+        submitData.append('protestPackagePath', protestLetterData.zipPath);
+        submitData.append('protestLetterPath', protestLetterData.pdfPath || '');
+      }
       
       // Send to backend API
       const response = await fetch('/api/erc-protest/submit', {
@@ -350,6 +364,7 @@ const ERCProtestForm = () => {
                     ...formData,
                     trackingId: submissionStatus?.data?.trackingId
                   }}
+                  onGenerated={onProtestLetterGenerated}
                 />
               </Box>
               
@@ -421,6 +436,8 @@ const ERCProtestForm = () => {
                     });
                     // Reset files
                     setPdfFiles([]);
+                    // Reset protest letter data
+                    setProtestLetterData(null);
                     // Reset submission status
                     setSubmissionStatus(null);
                     // Go to first step
