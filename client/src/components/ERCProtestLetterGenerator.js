@@ -166,8 +166,14 @@ const ERCProtestLetterGenerator = ({ formData }) => {
 
   const downloadProtestPackage = () => {
     if (packageData && packageData.zipPath) {
-      // Create a download link
-      window.open(`/api/erc-protest/admin/download?path=${packageData.zipPath}`, '_blank');
+      // Check if it's a Google Drive URL (starts with http/https)
+      if (packageData.zipPath.startsWith('http')) {
+        // Open it directly in a new tab
+        window.open(packageData.zipPath, '_blank');
+      } else {
+        // Use the API endpoint for local file downloads
+        window.open(`/api/erc-protest/admin/download?path=${encodeURIComponent(packageData.zipPath)}`, '_blank');
+      }
     }
   };
   

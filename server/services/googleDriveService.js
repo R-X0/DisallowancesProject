@@ -247,29 +247,22 @@ class GoogleDriveService {
       console.log(`Uploading file ${fileName} to folder ID: ${parentFolderId || this.rootFolderId}`);
       console.log(`File path: ${filePath}, MIME type: ${mimeType}`);
       
-      // Create readable stream and check it's working
-      const readStream = fs.createReadStream(filePath);
-      readStream.on('error', (err) => {
-        console.error(`Error reading file ${filePath} for upload:`, err);
-      });
+      // Read the file into a buffer instead of using streaming
+      // This avoids potential stream issues with Google Drive API
+      const fileBuffer = await fs.promises.readFile(filePath);
+      console.log(`File read into buffer: ${fileBuffer.length} bytes`);
       
-      const media = {
-        mimeType: mimeType,
-        body: readStream
-      };
-      
-      // Use a timeout to ensure the upload doesn't hang indefinitely
-      const uploadPromise = this.drive.files.create({
+      // Upload the file using the buffer
+      const response = await this.drive.files.create({
         resource: fileMetadata,
-        media: media,
+        media: {
+          mimeType: mimeType,
+          body: fileBuffer
+        },
         fields: 'id, webViewLink',
+        // Increase the timeout to handle larger files (5 minutes)
+        timeout: 300000
       });
-      
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error(`Upload timeout for ${fileName}`)), 60000); // 60 second timeout
-      });
-      
-      const response = await Promise.race([uploadPromise, timeoutPromise]);
       
       console.log(`Successfully uploaded file: ${fileName} with ID: ${response.data.id}`);
       
@@ -277,7 +270,7 @@ class GoogleDriveService {
       await this.drive.permissions.create({
         fileId: response.data.id,
         requestBody: {
-          role: 'writer', // Changed from 'reader' to 'writer'
+          role: 'writer',
           type: 'anyone'
         }
       });
@@ -292,7 +285,7 @@ class GoogleDriveService {
             type: 'user',
             emailAddress: this.shareWithEmail
           },
-          sendNotificationEmail: false // Changed from true to avoid notification spam
+          sendNotificationEmail: false
         });
         console.log(`Shared file ${fileName} with ${this.shareWithEmail}`);
       } catch (shareError) {
