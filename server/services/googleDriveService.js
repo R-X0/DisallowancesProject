@@ -203,108 +203,138 @@ class GoogleDriveService {
     }
   }
   
-  /**
-   * Upload a file to Google Drive
-   * @param {string} filePath - Path to the file
-   * @param {string} fileName - Name to use for the file
-   * @param {string} parentFolderId - ID of the parent folder
-   * @param {string} mimeType - MIME type of the file
-   */
-  async uploadFile(filePath, fileName, parentFolderId, mimeType = null) {
-    await this.ensureInitialized();
-    
+/**
+ * Upload a file to Google Drive
+ * @param {string} filePath - Path to the file
+ * @param {string} fileName - Name to use for the file
+ * @param {string} parentFolderId - ID of the parent folder
+ * @param {string} mimeType - MIME type of the file
+ */
+async uploadFile(filePath, fileName, parentFolderId, mimeType = null) {
+  await this.ensureInitialized();
+  
+  try {
+    // First, verify the file exists and is readable
     try {
-      // First, verify the file exists and is readable
-      try {
-        await fs.promises.access(filePath, fs.constants.R_OK);
-        const stats = await fs.promises.stat(filePath);
-        console.log(`File exists and is readable: ${filePath} (${stats.size} bytes)`);
-      } catch (fileError) {
-        throw new Error(`Cannot access file at ${filePath}: ${fileError.message}`);
+      await fs.promises.access(filePath, fs.constants.R_OK);
+      const stats = await fs.promises.stat(filePath);
+      console.log(`File exists and is readable: ${filePath} (${stats.size} bytes)`);
+    } catch (fileError) {
+      throw new Error(`Cannot access file at ${filePath}: ${fileError.message}`);
+    }
+    
+    // Determine mime type if not provided
+    if (!mimeType) {
+      if (filePath.endsWith('.pdf')) {
+        mimeType = 'application/pdf';
+      } else if (filePath.endsWith('.zip')) {
+        mimeType = 'application/zip';
+      } else {
+        mimeType = 'application/octet-stream';
       }
-      
-      // Determine mime type if not provided
-      if (!mimeType) {
-        if (filePath.endsWith('.pdf')) {
-          mimeType = 'application/pdf';
-        } else if (filePath.endsWith('.zip')) {
-          mimeType = 'application/zip';
-        } else {
-          mimeType = 'application/octet-stream';
-        }
-      }
-      
-      // Verify parent folder ID
-      if (!parentFolderId && !this.rootFolderId) {
-        throw new Error('No parent folder ID or root folder ID provided for uploading file');
-      }
-      
-      const fileMetadata = {
-        name: fileName,
-        parents: [parentFolderId || this.rootFolderId]
-      };
-      
-      console.log(`Uploading file ${fileName} to folder ID: ${parentFolderId || this.rootFolderId}`);
-      console.log(`File path: ${filePath}, MIME type: ${mimeType}`);
-      
-      // Read the file into a buffer instead of using streaming
-      // This avoids potential stream issues with Google Drive API
-      const fileBuffer = await fs.promises.readFile(filePath);
-      console.log(`File read into buffer: ${fileBuffer.length} bytes`);
-      
-      // Upload the file using the buffer
-      const response = await this.drive.files.create({
-        resource: fileMetadata,
-        media: {
-          mimeType: mimeType,
-          body: fileBuffer
-        },
-        fields: 'id, webViewLink',
-        // Increase the timeout to handle larger files (5 minutes)
-        timeout: 300000
+    }
+    
+    // Verify parent folder ID
+    if (!parentFolderId && !this.rootFolderId) {
+      throw new Error('No parent folder ID or root folder ID provided for uploading file');
+    }
+    
+    // Ensure parentFolderId is used if provided
+    const actualParentId = parentFolderId || this.rootFolderId;
+    
+    const fileMetadata = {
+      name: fileName,
+      parents: [actualParentId]  // Explicitly set the parent folder ID
+    };
+    
+    console.log(`Uploading file ${fileName} to folder ID: ${actualParentId}`);
+    console.log(`File path: ${filePath}, MIME type: ${mimeType}`);
+    
+    // Use a readable stream instead of a buffer - this fixes the pipe is not a function error
+    const response = await this.drive.files.create({
+      resource: fileMetadata,
+      media: {
+        mimeType: mimeType,
+        body: fs.createReadStream(filePath) // Use createReadStream instead of reading into a buffer
+      },
+      fields: 'id, webViewLink, parents',  // Request parents field to verify
+      // Increase the timeout to handle larger files (5 minutes)
+      timeout: 300000
+    });
+    
+    console.log(`Successfully uploaded file: ${fileName} with ID: ${response.data.id}`);
+    console.log(`File parents: ${JSON.stringify(response.data.parents)}`);
+    
+    // Verify the file is correctly placed in the folder
+    try {
+      console.log(`Verifying file placement in folder ${actualParentId}...`);
+      const fileCheck = await this.drive.files.get({
+        fileId: response.data.id,
+        fields: 'parents'
       });
       
-      console.log(`Successfully uploaded file: ${fileName} with ID: ${response.data.id}`);
+      const isInCorrectFolder = fileCheck.data.parents && 
+                              fileCheck.data.parents.includes(actualParentId);
       
-      // Make the file viewable by anyone with the link with writer permissions
+      console.log(`File parent verification: ${isInCorrectFolder ? 'SUCCESS' : 'FAILED'}`);
+      
+      if (!isInCorrectFolder) {
+        console.log(`File not in correct folder. Current parents: ${JSON.stringify(fileCheck.data.parents)}`);
+        console.log(`Attempting to move file to correct folder ${actualParentId}...`);
+        
+        // Try to move the file to the correct folder
+        await this.drive.files.update({
+          fileId: response.data.id,
+          addParents: actualParentId,
+          fields: 'id, parents'
+        });
+        
+        console.log(`File moved to correct folder ${actualParentId}`);
+      }
+    } catch (verifyError) {
+      console.error(`Error verifying file placement: ${verifyError.message}`);
+      // Continue anyway, this is just a verification step
+    }
+    
+    // Make the file viewable by anyone with the link with writer permissions
+    await this.drive.permissions.create({
+      fileId: response.data.id,
+      requestBody: {
+        role: 'writer',
+        type: 'anyone'
+      }
+    });
+    console.log(`Set permissions for file ${fileName} to "anyone" with "writer" role`);
+    
+    // Share with specified email - only if needed
+    try {
       await this.drive.permissions.create({
         fileId: response.data.id,
         requestBody: {
           role: 'writer',
-          type: 'anyone'
-        }
+          type: 'user',
+          emailAddress: this.shareWithEmail
+        },
+        sendNotificationEmail: false
       });
-      console.log(`Set permissions for file ${fileName} to "anyone" with "writer" role`);
-      
-      // Share with specified email - only if needed
-      try {
-        await this.drive.permissions.create({
-          fileId: response.data.id,
-          requestBody: {
-            role: 'writer',
-            type: 'user',
-            emailAddress: this.shareWithEmail
-          },
-          sendNotificationEmail: false
-        });
-        console.log(`Shared file ${fileName} with ${this.shareWithEmail}`);
-      } catch (shareError) {
-        console.log(`Warning: Could not share with ${this.shareWithEmail}, but file is still accessible: ${shareError.message}`);
-        // Continue anyway since the file is publicly accessible with the link
-      }
-      
-      return response.data;
-    } catch (error) {
-      console.error(`Error uploading file ${fileName} from ${filePath}:`, error);
-      
-      // Additional error details for debugging
-      if (error.response) {
-        console.error('API Error Response:', error.response.data);
-      }
-      
-      throw error;
+      console.log(`Shared file ${fileName} with ${this.shareWithEmail}`);
+    } catch (shareError) {
+      console.log(`Warning: Could not share with ${this.shareWithEmail}, but file is still accessible: ${shareError.message}`);
+      // Continue anyway since the file is publicly accessible with the link
     }
+    
+    return response.data;
+  } catch (error) {
+    console.error(`Error uploading file ${fileName} from ${filePath}:`, error);
+    
+    // Additional error details for debugging
+    if (error.response) {
+      console.error('API Error Response:', error.response.data);
+    }
+    
+    throw error;
   }
+}
   
   /**
    * Create a submission folder and upload files for an ERC submission

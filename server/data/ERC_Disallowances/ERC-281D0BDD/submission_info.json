@@ -1,0 +1,25 @@
+{
+  "trackingId": "ERC-281D0BDD",
+  "businessName": "w",
+  "ein": "3123",
+  "location": "123",
+  "businessWebsite": "12",
+  "naicsCode": "123",
+  "timePeriods": [
+    "Q3 2020"
+  ],
+  "timePeriodsDisplay": "Q3 2020",
+  "additionalInfo": "123",
+  "files": [
+    {
+      "originalName": "eStmt_2025-01-31 (1).pdf",
+      "path": "C:\\Users\\Bona\\Desktop\\NewestDisallowance\\server\\data\\ERC_Disallowances\\ERC-281D0BDD\\eStmt_2025-01-31 (1).pdf",
+      "mimetype": "application/pdf",
+      "size": 327677,
+      "googleDriveUrl": "https://drive.google.com/file/d/18APDOG4dyBOvVKw--Lwq8XBB7j0CDKi-/view?usp=drivesdk"
+    }
+  ],
+  "timestamp": "2025-03-08T01:49:10.095Z",
+  "status": "Gathering data",
+  "googleDriveLink": "https://drive.google.com/drive/folders/1YlJL9p6ROEMvUzmDCrp7Ej_zpT8nBu88"
+}

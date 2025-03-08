@@ -86,14 +86,47 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
     
     // Create a Google Drive folder for this submission
     try {
+      // Initialize Google Drive service if needed
+      if (!googleDriveService.initialized) {
+        console.log('Initializing Google Drive service before upload...');
+        await googleDriveService.initialize();
+      }
+      
       const driveFolder = await googleDriveService.createSubmissionFolder(trackingId, businessName);
       
       // Add Google Drive folder link to submission info
       submissionInfo.googleDriveLink = driveFolder.folderLink;
       
       console.log(`Created Google Drive folder for ${trackingId}: ${driveFolder.folderLink}`);
+      
+      // Upload the disallowance notice files to Google Drive
+      console.log(`Uploading ${fileInfo.length} disallowance notices to Google Drive...`);
+      
+      // Upload each PDF file to the Google Drive folder
+      for (const file of fileInfo) {
+        try {
+          console.log(`Uploading file: ${file.originalName} from path: ${file.path}`);
+          
+          // Use the drive service to upload the file to the folder
+          const uploadedFile = await googleDriveService.uploadFile(
+            file.path,
+            `${trackingId}_Disallowance_${file.originalName}`,
+            driveFolder.folderId,
+            file.mimetype
+          );
+          
+          console.log(`Successfully uploaded ${file.originalName} to Google Drive with ID: ${uploadedFile.id}`);
+          
+          // Add the Google Drive URL to the file info
+          file.googleDriveUrl = uploadedFile.webViewLink;
+        } catch (fileUploadError) {
+          console.error(`Error uploading file ${file.originalName} to Google Drive:`, fileUploadError);
+          // Continue with next file even if this one fails
+        }
+      }
+      
     } catch (driveError) {
-      console.error('Error creating Google Drive folder:', driveError);
+      console.error('Error creating Google Drive folder or uploading files:', driveError);
       // Continue anyway, not a critical error
     }
     

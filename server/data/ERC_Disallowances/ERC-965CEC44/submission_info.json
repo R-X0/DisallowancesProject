@@ -1,0 +1,25 @@
+{
+  "trackingId": "ERC-965CEC44",
+  "businessName": "324",
+  "ein": "2342",
+  "location": "3423",
+  "businessWebsite": "4234",
+  "naicsCode": "23",
+  "timePeriods": [
+    "Q2 2020"
+  ],
+  "timePeriodsDisplay": "Q2 2020",
+  "additionalInfo": "23423",
+  "files": [
+    {
+      "originalName": "eStmt_2025-01-31 (1).pdf",
+      "path": "C:\\Users\\Bona\\Desktop\\NewestDisallowance\\server\\data\\ERC_Disallowances\\ERC-965CEC44\\eStmt_2025-01-31 (1).pdf",
+      "mimetype": "application/pdf",
+      "size": 327677,
+      "googleDriveUrl": "https://drive.google.com/file/d/1g4JBhnT2vZeLHxfcx40-Dc18C2FTKWGR/view?usp=drivesdk"
+    }
+  ],
+  "timestamp": "2025-03-08T01:52:25.940Z",
+  "status": "Gathering data",
+  "googleDriveLink": "https://drive.google.com/drive/folders/15BlnRFqGN3JGsfIpR2NFFwFsOJ9sBUKN"
+}
