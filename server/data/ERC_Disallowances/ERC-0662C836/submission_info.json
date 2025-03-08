@@ -1,0 +1,24 @@
+{
+  "trackingId": "ERC-0662C836",
+  "businessName": "45",
+  "ein": "345",
+  "location": "345",
+  "businessWebsite": "3453",
+  "naicsCode": "3453",
+  "timePeriods": [
+    "Q2 2020"
+  ],
+  "timePeriodsDisplay": "Q2 2020",
+  "additionalInfo": "345",
+  "files": [
+    {
+      "originalName": "eStmt_2025-01-31 (1).pdf",
+      "path": "C:\\Users\\Bona\\Desktop\\NewestDisallowance\\server\\data\\ERC_Disallowances\\ERC-0662C836\\eStmt_2025-01-31 (1).pdf",
+      "mimetype": "application/pdf",
+      "size": 327677
+    }
+  ],
+  "timestamp": "2025-03-08T01:40:02.619Z",
+  "status": "Gathering data",
+  "googleDriveLink": "https://drive.google.com/drive/folders/1VSbAS6XZjt_VVBsuZYKVCW_WKe9lx1pE"
+}

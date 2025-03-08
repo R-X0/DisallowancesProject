@@ -5,7 +5,11 @@ import {
   Stepper, Step, StepLabel, StepContent, Chip,
   Select, FormControl, InputLabel, OutlinedInput, Checkbox, ListItemText
 } from '@mui/material';
-import { FileUpload } from '@mui/icons-material';
+import { 
+  FileUpload, 
+  AddCircleOutline as AddIcon, 
+  ArrowBack as ArrowBackIcon 
+} from '@mui/icons-material';
 import COVIDPromptGenerator from './COVIDPromptGenerator';
 import ERCProtestLetterGenerator from './ERCProtestLetterGenerator';
 
@@ -105,25 +109,6 @@ const ERCProtestForm = () => {
           message: 'Submission successful. Processing has begun.',
           data: result
         });
-
-        // Check if submission was added to Google Sheets after a short delay
-        setTimeout(async () => {
-          try {
-            const statusResponse = await fetch(`/api/erc-protest/status/${result.trackingId}`);
-            const statusData = await statusResponse.json();
-            
-            if (statusResponse.ok && statusData.success) {
-              console.log('Google Sheets status:', statusData.status);
-              setSubmissionStatus(prev => ({
-                ...prev,
-                googleSheetsStatus: statusData.status,
-                message: prev.message + ' Added to admin tracking dashboard.'
-              }));
-            }
-          } catch (statusError) {
-            console.error('Error checking Google Sheets status:', statusError);
-          }
-        }, 2000);
         
         setActiveStep(2); // Move to the final step
       } else {
@@ -394,39 +379,70 @@ const ERCProtestForm = () => {
             </StepContent>
           </Step>
           
-          {/* Step 3: Confirmation */}
+          {/* Step 3: Simplified Confirmation */}
           <Step>
             <StepLabel>Submission Complete</StepLabel>
             <StepContent>
               {submissionStatus && (
-                <Box p={2} bgcolor={submissionStatus.success ? 'success.light' : 'error.light'} borderRadius={1}>
-                  <Typography variant="body1">
-                    {submissionStatus.message}
-                  </Typography>
-                  {submissionStatus.success && submissionStatus.data?.trackingId && (
-                    <Typography variant="body2" mt={1}>
-                      Tracking ID: {submissionStatus.data.trackingId}
-                    </Typography>
-                  )}
-                  
-                  {submissionStatus.googleSheetsStatus && (
-                    <Typography variant="body2" mt={1}>
-                      Admin Dashboard Status: <Chip 
-                        size="small" 
-                        color="primary"
-                        label={submissionStatus.googleSheetsStatus} 
-                      />
-                    </Typography>
-                  )}
-                  
-                  {submissionStatus.success && (
-                    <Typography variant="body2" mt={2}>
-                      Your submission has been received. We will process your ERC protest using the information provided.
-                      You can track the status of your submission using the tracking ID above.
+                <Box p={3} bgcolor={submissionStatus.success ? 'success.light' : 'error.light'} borderRadius={1} textAlign="center">
+                  {submissionStatus.success ? (
+                    <>
+                      <Typography variant="h6" mb={2}>
+                        Submission Successful!
+                      </Typography>
+                      <Typography variant="body1" mb={3}>
+                        Your ERC protest has been submitted. You can now create another protest letter or start a new submission.
+                      </Typography>
+                    </>
+                  ) : (
+                    <Typography variant="body1">
+                      {submissionStatus.message || "An error occurred during submission. Please try again."}
                     </Typography>
                   )}
                 </Box>
               )}
+              
+              {/* Navigation buttons - centered and prominent */}
+              <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 3 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  onClick={() => {
+                    // Reset the form data
+                    setFormData({
+                      businessName: '',
+                      ein: '',
+                      location: '',
+                      businessWebsite: '',
+                      naicsCode: '',
+                      timePeriods: [],
+                      additionalInfo: ''
+                    });
+                    // Reset files
+                    setPdfFiles([]);
+                    // Reset submission status
+                    setSubmissionStatus(null);
+                    // Go to first step
+                    setActiveStep(0);
+                  }}
+                  startIcon={<AddIcon />}
+                >
+                  Start New Submission
+                </Button>
+                
+                <Button
+                  variant="outlined"
+                  size="large"
+                  onClick={() => {
+                    // Go back to document generation step
+                    setActiveStep(1);
+                  }}
+                  startIcon={<ArrowBackIcon />}
+                >
+                  Generate Another Letter
+                </Button>
+              </Box>
             </StepContent>
           </Step>
         </Stepper>
