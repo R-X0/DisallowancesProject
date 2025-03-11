@@ -7,11 +7,10 @@ class GoogleSheetsService {
     this.initialized = false;
     this.sheets = null;
     
-    // TEMPORARY FIX: Hardcoded spreadsheet ID
-    // In production, this should come from process.env.GOOGLE_SHEET_ID
-    this.spreadsheetId = '13zhAc2uKW5DOyW_LJuDiUxA7gV3rD_9yLFTveW9aRtM';
+    // Get spreadsheet ID from environment variable
+    this.spreadsheetId = process.env.GOOGLE_SHEET_ID;
     
-    console.log('GoogleSheetsService constructor - Using spreadsheetId:', this.spreadsheetId);
+    console.log('GoogleSheetsService constructor - Using spreadsheetId:', this.spreadsheetId || 'Not set yet (will check during initialization)');
   }
 
   async initialize() {
@@ -26,9 +25,9 @@ class GoogleSheetsService {
       const client = await auth.getClient();
       this.sheets = google.sheets({ version: 'v4', auth: client });
       
-      // Double-check spreadsheet ID is set
+      // Double-check spreadsheet ID is set - use fallback only if not set in env vars
       if (!this.spreadsheetId) {
-        console.log('No spreadsheetId found in env vars, using hardcoded value');
+        console.log('No spreadsheetId found in env vars, using fallback value');
         this.spreadsheetId = '13zhAc2uKW5DOyW_LJuDiUxA7gV3rD_9yLFTveW9aRtM';
       }
       
