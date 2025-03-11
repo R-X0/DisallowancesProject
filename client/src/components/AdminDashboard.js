@@ -222,7 +222,14 @@ const ERCAdminDashboard = () => {
                             <IconButton 
                               size="small" 
                               color="primary"
-                              onClick={() => window.open(`/api/erc-protest/admin/download?path=${submission.zipPath}`, '_blank')}
+                              onClick={() => {
+                                // Use public endpoint instead of admin endpoint
+                                if (submission.zipPath.startsWith('http')) {
+                                  window.open(submission.zipPath, '_blank');
+                                } else {
+                                  window.open(`/api/erc-protest/download?path=${encodeURIComponent(submission.zipPath)}`, '_blank');
+                                }
+                              }}
                             >
                               <CloudDownload />
                             </IconButton>
@@ -420,7 +427,14 @@ const ERCAdminDashboard = () => {
                           <IconButton
                             size="small"
                             color="primary"
-                            onClick={() => window.open(`/api/erc-protest/admin/download?path=${selectedSubmission.protestLetterPath}`, '_blank')}
+                            onClick={() => {
+                              // Use public endpoint instead of admin endpoint
+                              if (selectedSubmission.protestLetterPath.startsWith('http')) {
+                                window.open(selectedSubmission.protestLetterPath, '_blank');
+                              } else {
+                                window.open(`/api/erc-protest/download?path=${encodeURIComponent(selectedSubmission.protestLetterPath)}`, '_blank');
+                              }
+                            }}
                           >
                             <CloudDownload />
                           </IconButton>
@@ -435,7 +449,14 @@ const ERCAdminDashboard = () => {
                           <IconButton
                             size="small"
                             color="primary"
-                            onClick={() => window.open(`/api/erc-protest/admin/download?path=${selectedSubmission.zipPath}`, '_blank')}
+                            onClick={() => {
+                              // Use public endpoint instead of admin endpoint
+                              if (selectedSubmission.zipPath.startsWith('http')) {
+                                window.open(selectedSubmission.zipPath, '_blank');
+                              } else {
+                                window.open(`/api/erc-protest/download?path=${encodeURIComponent(selectedSubmission.zipPath)}`, '_blank');
+                              }
+                            }}
                           >
                             <CloudDownload />
                           </IconButton>

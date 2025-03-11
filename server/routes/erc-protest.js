@@ -20,6 +20,53 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+// Public download endpoint
+router.get('/download', async (req, res) => {
+  try {
+    const { path: filePath } = req.query;
+    
+    if (!filePath) {
+      return res.status(400).json({
+        success: false,
+        message: 'File path is required'
+      });
+    }
+    
+    console.log(`Public download requested for file: ${filePath}`);
+    
+    // Check if it's a Google Drive URL or a local path
+    if (filePath.startsWith('http')) {
+      console.log('Detected Google Drive URL, redirecting to it');
+      // If it's a URL (Google Drive link), redirect to it
+      return res.redirect(filePath);
+    }
+    
+    // Otherwise, handle it as a local file
+    console.log('Handling as local file download');
+    
+    // Check if file exists
+    try {
+      await fs.access(filePath);
+    } catch (error) {
+      console.error(`File not found at ${filePath}:`, error);
+      return res.status(404).json({
+        success: false,
+        message: 'File not found'
+      });
+    }
+    
+    console.log(`File exists, sending download: ${filePath}`);
+    // Send file
+    res.download(filePath);
+  } catch (error) {
+    console.error('Error downloading file:', error);
+    res.status(500).json({
+      success: false,
+      message: `Error downloading file: ${error.message}`
+    });
+  }
+});
+
 // Submit ERC protest form
 router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) => {
   try {

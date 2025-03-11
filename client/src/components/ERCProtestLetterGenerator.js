@@ -191,8 +191,8 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         // Open it directly in a new tab
         window.open(packageData.zipPath, '_blank');
       } else {
-        // Use the API endpoint for local file downloads
-        window.open(`/api/erc-protest/admin/download?path=${encodeURIComponent(packageData.zipPath)}`, '_blank');
+        // Use the public API endpoint for local file downloads (updated to use the new public endpoint)
+        window.open(`/api/erc-protest/download?path=${encodeURIComponent(packageData.zipPath)}`, '_blank');
       }
       
       // Also trigger the onGenerated callback again to ensure the parent has the data
