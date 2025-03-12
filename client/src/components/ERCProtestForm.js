@@ -33,7 +33,20 @@ const ERCProtestForm = () => {
     businessWebsite: '',
     naicsCode: '',
     timePeriods: [], // Changed from timePeriod (string) to timePeriods (array)
-    additionalInfo: ''
+    governmentOrdersInfo: '', // Additional info for Government Orders section
+    revenueReductionInfo: '', // Additional info for Revenue Reduction section
+    // Adding new quarterly revenue fields
+    q1_2019: '',
+    q2_2019: '',
+    q3_2019: '',
+    q4_2019: '',
+    q1_2020: '',
+    q2_2020: '',
+    q3_2020: '',
+    q4_2020: '',
+    q1_2021: '',
+    q2_2021: '',
+    q3_2021: ''
   });
   
   const [pdfFiles, setPdfFiles] = useState([]);
@@ -46,6 +59,13 @@ const ERCProtestForm = () => {
   const quarters = [
     'Q2 2020', 'Q3 2020', 'Q4 2020', 
     'Q1 2021', 'Q2 2021', 'Q3 2021', 'Q4 2021'
+  ];
+  
+  // Generate array of quarters for revenue reduction section
+  const revenueQuarters = [
+    'Q1 2019', 'Q2 2019', 'Q3 2019', 'Q4 2019',
+    'Q1 2020', 'Q2 2020', 'Q3 2020', 'Q4 2020',
+    'Q1 2021', 'Q2 2021', 'Q3 2021'
   ];
   
   // Debug effect - log whenever protestLetterData changes
@@ -161,12 +181,19 @@ const ERCProtestForm = () => {
 
   // Check if form is valid to proceed to next step
   const isFormValid = () => {
+    const hasGovernmentOrders = formData.timePeriods.length > 0;
+    const hasRevenueData = 
+      formData.q1_2019 || formData.q2_2019 || formData.q3_2019 || formData.q4_2019 ||
+      formData.q1_2020 || formData.q2_2020 || formData.q3_2020 || formData.q4_2020 ||
+      formData.q1_2021 || formData.q2_2021 || formData.q3_2021;
+    
     return (
       formData.businessName &&
       formData.ein &&
       formData.location &&
       formData.naicsCode &&
-      formData.timePeriods.length > 0 // Check for at least one selected time period
+      // Either time periods or quarterly revenue data should be provided
+      (hasGovernmentOrders || hasRevenueData)
     );
   };
   
@@ -270,16 +297,15 @@ const ERCProtestForm = () => {
                     />
                   </Grid>
                   
-                  {/* Time Period */}
+                  {/* Government Orders Section - No longer required */}
                   <Grid item xs={12}>
                     <Typography variant="h6" gutterBottom>
-                      Claim Information
+                      Government Orders
                     </Typography>
                   </Grid>
                   
                   <Grid item xs={12} md={6}>
-                    {/* Replaced single select with multi-select */}
-                    <FormControl fullWidth required>
+                    <FormControl fullWidth>
                       <InputLabel id="time-periods-label">Time Periods</InputLabel>
                       <Select
                         labelId="time-periods-label"
@@ -300,17 +326,61 @@ const ERCProtestForm = () => {
                       </Select>
                     </FormControl>
                   </Grid>
+
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={3}
+                      label="Additional Information (Government Orders)"
+                      name="governmentOrdersInfo"
+                      value={formData.governmentOrdersInfo}
+                      onChange={handleInputChange}
+                      placeholder="Enter any additional details about government orders affecting your business..."
+                    />
+                  </Grid>
+                  
+                  {/* Revenue Reduction Section */}
+                  <Grid item xs={12}>
+                    <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                      Revenue Reduction
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Enter quarterly revenue amounts (optional)
+                    </Typography>
+                  </Grid>
+                  
+                  {/* Create input fields for each quarter */}
+                  {revenueQuarters.map((quarter) => {
+                    const fieldName = quarter.toLowerCase().replace(' ', '_');
+                    return (
+                      <Grid item xs={6} md={3} key={quarter}>
+                        <TextField
+                          fullWidth
+                          label={`${quarter} Revenue`}
+                          name={fieldName}
+                          value={formData[fieldName]}
+                          onChange={handleInputChange}
+                          placeholder="0.00"
+                          type="number"
+                          InputProps={{
+                            startAdornment: <span style={{ marginRight: '4px' }}>$</span>,
+                          }}
+                        />
+                      </Grid>
+                    );
+                  })}
                   
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
                       multiline
-                      rows={4}
-                      label="Additional Information"
-                      name="additionalInfo"
-                      value={formData.additionalInfo}
+                      rows={3}
+                      label="Additional Information (Revenue Reduction)"
+                      name="revenueReductionInfo"
+                      value={formData.revenueReductionInfo}
                       onChange={handleInputChange}
-                      placeholder="Any additional details about the business operation during COVID..."
+                      placeholder="Enter any additional details about revenue reductions during COVID periods..."
                     />
                   </Grid>
                 </Grid>
@@ -461,7 +531,20 @@ const ERCProtestForm = () => {
                       businessWebsite: '',
                       naicsCode: '',
                       timePeriods: [],
-                      additionalInfo: ''
+                      governmentOrdersInfo: '',
+                      revenueReductionInfo: '',
+                      // Reset all quarterly revenue fields
+                      q1_2019: '',
+                      q2_2019: '',
+                      q3_2019: '',
+                      q4_2019: '',
+                      q1_2020: '',
+                      q2_2020: '',
+                      q3_2020: '',
+                      q4_2020: '',
+                      q1_2021: '',
+                      q2_2021: '',
+                      q3_2021: ''
                     });
                     // Reset files
                     setPdfFiles([]);
