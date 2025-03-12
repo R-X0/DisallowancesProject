@@ -287,7 +287,12 @@ ${qualifyingQuarters.length > 0 ? `Based on revenue decline thresholds (50%+ for
 
 Please be as specific and detailed as possible about the impact on normal business operations during ${timePeriod}.
 
-IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to any business internal records or documentation.`;
+IMPORTANT: 
+1. PRIORITIZE providing the official government orders themselves as your primary sources - include direct links to the actual order text when available (e.g., official government websites hosting the orders).
+2. For each order, include a link to the full text of the original order if possible.
+3. Only use news articles or secondary sources if the original government order text cannot be found.
+4. The best attachments will always be a copy of the order itself rather than an article about the order.
+5. Include comprehensive information about each order's impact on the specific business type.`;
       } else {
         // Improved template prompt for Form 886-A, now including all selected quarters
         basePrompt = `Please help me create a comprehensive Form 886-A response for ${formData.businessName}, a ${businessType} located in ${city}, ${state}, regarding their Employee Retention Credit (ERC) claim for the following quarters: ${allPeriods}.
@@ -336,7 +341,13 @@ Finally, create a Form 886-A document with the following structure:
 
 The document should prioritize official IRS and government sources and all applicable government orders that would have affected the business. Make a strong case that ${formData.businessName} qualified for ERC due to ${approachFocus === 'governmentOrders' ? 'full or partial shutdowns from government orders' : 'significant decline in gross receipts and/or full or partial shutdowns'} during each of the following quarters: ${allPeriods}.
 
-IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to any business internal records or documentation. Use consistent bullet point formatting (•) throughout the document.`;
+IMPORTANT: 
+1. PRIORITIZE citing official government orders as your primary sources - include direct links to the actual order text when available (e.g., official government websites hosting the orders).
+2. For each order referenced, provide a link to the full text of the original order if possible.
+3. Only use news articles or secondary sources if the original government order text cannot be found.
+4. The best attachments will always be a copy of the order itself rather than an article about the order.
+5. Use consistent bullet point formatting (•) throughout the document.
+6. Include comprehensive information about each order's impact on the specific business type.`;
       }
       
       // Use OpenAI API to generate a customized prompt based on the business info
@@ -372,17 +383,7 @@ IMPORTANT: Do NOT include web links or URLs in your response. Do NOT refer to an
       }
     } catch (error) {
       console.error('Error generating prompt:', error);
-      // In case of any error, just use a simpler version of the prompt
-      const { city, state } = extractCityState(formData.location || '');
-      const businessType = getNaicsDescription(formData.naicsCode);
-      const timePeriod = selectedTimePeriod;
-      const allPeriods = formData.timePeriods ? formData.timePeriods.join(', ') : timePeriod;
-      
-      if (promptType === 'covidOrders') {
-        setPrompt(`Please provide all COVID-related government orders affecting a "${businessType}" business in ${city}, ${state} during ${timePeriod}. For each order, include: Order Name, Order Number, Date Enacted, Date Rescinded, Order Summary, and Impact on Quarter. Do NOT include web links or URLs in your response.`);
-      } else {
-        setPrompt(`Please help create a Form 886-A response for ${formData.businessName}, a ${businessType} in ${city}, ${state}, regarding their ERC claim for the following quarters: ${allPeriods}. Include sections for Issue, Facts, Law, Argument, and Conclusion. Do NOT include web links or URLs in your response.`);
-      }
+      // Don't set any fallback prompt
     } finally {
       setGenerating(false);
     }
