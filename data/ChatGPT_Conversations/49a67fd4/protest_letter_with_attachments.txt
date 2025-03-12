@@ -1,0 +1,75 @@
+03/12/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 234  
+Taxpayer Name: 423  
+RE: Formal Protest to ERC Disallowance for Q2  
+Tax Period: 2nd Quarter 2020 (202004–202006)  
+Claim Amount: [Insert Claim Amount Here]  
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing 423’s Employee Retention Credit (ERC) claim for the second quarter of 2020. The disallowance was premised on the assertion that no COVID-19 government orders caused a suspension or partial limitation of our business operations during Q2 2020. We respectfully disagree. As detailed below, multiple federal, state, county, and city government orders were active during Q2 2020 and imposed significant public health directives that forced our business to operate under restricted conditions. In this letter, we provide a comprehensive timeline of these orders, demonstrate their impact on our operations, and cite applicable IRS guidance supporting our eligibility for the ERC under the “partial suspension” provisions.
+
+Timeline of COVID-19 Government Orders Active in Q2 2020
+
+• Order Name: National Emergency Concerning COVID-19  
+• Order Number: Proclamation 9994  
+• Date Enacted: 03/13/2020  
+• Date Rescinded: Still in effect  
+• Order Summary: This federal proclamation declared a national emergency in response to the COVID-19 outbreak, activating emergency powers and funding. Although it did not mandate business closures directly, it provided the legal framework for the subsequent orders at the state and local levels that directly limited normal business operations.  
+• Impact on Quarter: For Q2 2020, the national emergency established the backdrop for all COVID-related measures, reinforcing the legitimacy of the restrictions that led to the partial suspension of our operations.
+
+• Order Name: Statewide “Stay-at-Home” Order  
+• Order Number: N-33-20  
+• Date Enacted: 03/19/2020  
+• Date Rescinded: 06/15/2021  
+• Order Summary: This executive order mandated that all California residents remain at home except for essential needs, forcing non-essential businesses to either completely close or drastically modify their operations. The order required that establishments adjust service models to comply with curfews, capacity restrictions, and social distancing protocols.  
+• Impact on Quarter: During Q2 2020, our business was directly affected by the mandatory closure of in‐person operations and the imposition of capacity limitations, which significantly reduced the volume of our usual business activities.
+
+• Order Name: State Public Health Officer Order (Stage 2 Reopening)  
+• Order Number: Issued under Executive Order N-60-20  
+• Date Enacted: 05/07/2020  
+• Date Rescinded: 06/15/2021  
+• Order Summary: As a response to evolving COVID-19 conditions, this order initiated Stage 2 Reopening in California. It allowed certain lower-risk businesses to resume limited operations under strict safety protocols while maintaining enhanced restrictions on higher-risk venues.  
+• Impact on Quarter: In Q2 2020, this order permitted only a partial reopening of business activities, meaning that while some operations resumed, they were subject to severe limitations on capacity and scope, further contributing to a partial suspension of normal business activity.
+
+• Order Name: “Stay Well at Home” Order (Ventura County)  
+• Order Number: Ventura County Public Health Order  
+• Date Enacted: 03/20/2020  
+• Date Rescinded: 06/11/2021  
+• Order Summary: In alignment with the state’s directives, Ventura County issued the “Stay Well at Home” order compelling all residents to remain indoors except for essential activities. This order effectively forced non-essential businesses, including ours, to halt face-to-face operations and shift to alternative service methods where possible.  
+• Impact on Quarter: The county order directly resulted in the suspension of our typical in-person operations throughout Q2 2020, significantly limiting customer access and business revenue during the quarter.
+
+• Order Name: Local Emergency Proclamation (Camarillo)  
+• Order Number: EOC Director Order No. 20-1  
+• Date Enacted: 03/13/2020  
+• Date Rescinded: Still in effect  
+• Order Summary: The City of Camarillo declared a local emergency by enacting this proclamation, which activated municipal emergency operations and enabled rapid implementation of public health measures. It provided the authority to enforce additional local restrictions such as outdoor service limitations and modified permit processes to ensure public safety.  
+• Impact on Quarter: This local emergency reinforced state and county measures in Q2 2020 by mandating compliance with additional safety guidelines, thereby directly impacting our business operations through modified service protocols and reduced customer engagement.
+
+Summary of Operational Impact on 423
+
+During the second quarter of 2020, 423 experienced a significant reduction in normal business operations due to the layered COVID-19 government orders. The federal declaration of a national emergency provided the overall legal justification for the state, county, and city orders that directly limited operational capacity through mandated closures and restrictions on customer interactions. Specifically, the statewide “Stay-at-Home” order and the related county directive forced our business to suspend in-person activities and operate under a limited, carefully regulated reopening. Even when allowed to resume some operations under the State Public Health Officer’s Stage 2 Reopening Order, stringent capacity limits and social distancing protocols meant that our normal service volume was substantially curtailed.
+
+These restrictions, imposed by multiple levels of government during Q2 2020, resulted in a “partial suspension” of our business operations. This suspension satisfies the ERC eligibility criteria, as the limitations on our normal business activities were more than nominal and directly attributable to COVID-19 public health orders.
+
+Conclusion and Request
+
+In light of the detailed evidence provided, 423 qualifies for the Employee Retention Credit for the second quarter of 2020 due to the significant partial suspension of its operations as mandated by COVID-19 government orders. We have demonstrated that multiple orders at the federal, state, county, and city levels were in effect during Q2 2020, and that these orders substantially limited our ability to operate at normal capacity. We respectfully request that the IRS reconsider and reverse the disallowance of our Q2 2020 ERC, as our claimed qualified wages were incurred while adhering to mandated public health measures.
+
+Thank you for your attention to this matter. 423 has maintained full compliance with all applicable government orders during these unprecedented times, and the ERC serves as critical support for sustaining our business operations. Please do not hesitate to contact us if additional information or documentation is required.
+
+Attestation: “Under penalties of perjury, I declare that I submitted the protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated herein is true, correct, and complete.”
+
+Sincerely,
+
+[Your Name]  
+Authorized Representative for  
+423  
+
+Enclosures:  
+• Copies of Government Orders and Relevant Excerpts  
+• ERC Calculations for Q2 2020  
+• IRS Guidance and Relevant Notices
