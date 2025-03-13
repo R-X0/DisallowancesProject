@@ -8,15 +8,41 @@ import {
   Divider, 
   CircularProgress,
   Box,
-  Chip
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Tooltip
 } from '@mui/material';
-import { AccessTime, CheckCircle, HourglassEmpty } from '@mui/icons-material';
+import { 
+  AccessTime, 
+  CheckCircle, 
+  HourglassEmpty, 
+  ExpandMore,
+  Description,
+  CloudDownload,
+  Info
+} from '@mui/icons-material';
 
 // This component will display the queue of submissions waiting to be processed
 const QueueDisplay = () => {
   const [queueItems, setQueueItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   // Connect to our queue API endpoint
   useEffect(() => {
@@ -44,19 +70,56 @@ const QueueDisplay = () => {
               id: 'ERC-12345', 
               businessName: 'Acme Corporation', 
               timestamp: new Date().toISOString(),
-              status: 'waiting'
+              status: 'waiting',
+              submissionData: { 
+                id: 'ERC-12345',
+                receivedAt: new Date().toISOString(),
+                originalData: { 
+                  businessName: 'Acme Corporation',
+                  ein: '12-3456789',
+                  location: 'New York, NY'
+                }
+              },
+              files: [
+                { name: 'document1.pdf', path: '/uploads/document1.pdf', type: 'application/pdf', size: 12345 }
+              ]
             },
             { 
               id: 'ERC-67890', 
               businessName: 'Widget Industries', 
               timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
-              status: 'processing'
+              status: 'processing',
+              submissionData: { 
+                id: 'ERC-67890',
+                receivedAt: new Date(Date.now() - 15 * 60000).toISOString(),
+                originalData: { 
+                  businessName: 'Widget Industries',
+                  ein: '98-7654321',
+                  location: 'Chicago, IL'
+                }
+              },
+              files: [
+                { name: 'document2.pdf', path: '/uploads/document2.pdf', type: 'application/pdf', size: 67890 }
+              ]
             },
             { 
               id: 'ERC-ABCDE', 
               businessName: 'Tech Solutions Inc', 
               timestamp: new Date(Date.now() - 30 * 60000).toISOString(),
-              status: 'complete'
+              status: 'complete',
+              submissionData: { 
+                id: 'ERC-ABCDE',
+                receivedAt: new Date(Date.now() - 30 * 60000).toISOString(),
+                originalData: { 
+                  businessName: 'Tech Solutions Inc',
+                  ein: '56-7890123',
+                  location: 'Austin, TX'
+                }
+              },
+              files: [
+                { name: 'document3.pdf', path: '/uploads/document3.pdf', type: 'application/pdf', size: 54321 }
+              ],
+              reportPath: '/reports/ERC-ABCDE_report.xlsx'
             }
           ];
           
@@ -90,6 +153,7 @@ const QueueDisplay = () => {
   const getStatusChip = (status) => {
     switch(status) {
       case 'waiting':
+      case 'received':
         return <Chip 
           icon={<HourglassEmpty fontSize="small" />} 
           label="In Queue" 
@@ -113,6 +177,46 @@ const QueueDisplay = () => {
       default:
         return <Chip label={status} size="small" />;
     }
+  };
+
+  // Function to handle clicking on a queue item
+  const handleItemClick = (item) => {
+    setSelectedItem(item);
+    setDialogOpen(true);
+  };
+
+  // Function to close the dialog
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+  };
+
+  // Function to download a file
+  const handleDownloadFile = (filePath) => {
+    if (!filePath) return;
+    
+    // Check if it's a URL or a local path
+    if (filePath.startsWith('http')) {
+      window.open(filePath, '_blank');
+    } else {
+      window.open(`/api/erc-protest/download?path=${encodeURIComponent(filePath)}`, '_blank');
+    }
+  };
+
+  // Function to format file size
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Function to get filename from path
+  const getFilenameFromPath = (filePath) => {
+    if (!filePath) return '';
+    // Simple path handling that works in browser
+    const parts = filePath.split(/[\/\\]/);
+    return parts[parts.length - 1];
   };
 
   return (
@@ -146,7 +250,23 @@ const QueueDisplay = () => {
           {queueItems.map((item, index) => (
             <React.Fragment key={item.id}>
               {index > 0 && <Divider component="li" />}
-              <ListItem alignItems="flex-start">
+              <ListItem 
+                alignItems="flex-start"
+                secondaryAction={
+                  <Tooltip title="View Details">
+                    <IconButton edge="end" onClick={() => handleItemClick(item)}>
+                      <Info />
+                    </IconButton>
+                  </Tooltip>
+                }
+                sx={{ 
+                  cursor: 'pointer',
+                  '&:hover': {
+                    bgcolor: 'rgba(0, 0, 0, 0.04)'
+                  }
+                }}
+                onClick={() => handleItemClick(item)}
+              >
                 <ListItemText
                   primary={
                     <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -164,6 +284,11 @@ const QueueDisplay = () => {
                         {item.id}
                       </Typography>
                       {" — "}{formatTime(item.timestamp)}
+                      {item.files && item.files.length > 0 && (
+                        <Typography variant="caption" display="block">
+                          {item.files.length} file(s) attached
+                        </Typography>
+                      )}
                     </>
                   }
                 />
@@ -172,6 +297,160 @@ const QueueDisplay = () => {
           ))}
         </List>
       )}
+
+      {/* Dialog for displaying queue item details */}
+      <Dialog
+        open={dialogOpen}
+        onClose={handleCloseDialog}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{
+          sx: { maxHeight: '90vh' }
+        }}
+      >
+        {selectedItem && (
+          <>
+            <DialogTitle>
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="h6">
+                  Queue Item: {selectedItem.businessName}
+                </Typography>
+                {getStatusChip(selectedItem.status)}
+              </Box>
+            </DialogTitle>
+            <DialogContent dividers>
+              <Box mb={3}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Basic Information
+                </Typography>
+                <TableContainer component={Paper} variant="outlined">
+                  <Table size="small">
+                    <TableBody>
+                      <TableRow>
+                        <TableCell variant="head" width="30%">ID</TableCell>
+                        <TableCell>{selectedItem.id}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell variant="head">Business Name</TableCell>
+                        <TableCell>{selectedItem.businessName}</TableCell>
+                      </TableRow>
+                      {selectedItem.submissionData?.originalData?.ein && (
+                        <TableRow>
+                          <TableCell variant="head">EIN</TableCell>
+                          <TableCell>{selectedItem.submissionData.originalData.ein}</TableCell>
+                        </TableRow>
+                      )}
+                      {selectedItem.submissionData?.originalData?.location && (
+                        <TableRow>
+                          <TableCell variant="head">Location</TableCell>
+                          <TableCell>{selectedItem.submissionData.originalData.location}</TableCell>
+                        </TableRow>
+                      )}
+                      <TableRow>
+                        <TableCell variant="head">Status</TableCell>
+                        <TableCell>{selectedItem.status}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell variant="head">Timestamp</TableCell>
+                        <TableCell>{new Date(selectedItem.timestamp).toLocaleString()}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+
+              {/* Submission Data Accordion */}
+              <Accordion>
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Typography variant="subtitle1">Submission Data (JSON)</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Box 
+                    component="pre"
+                    sx={{ 
+                      p: 2, 
+                      bgcolor: 'grey.100', 
+                      borderRadius: 1,
+                      overflow: 'auto',
+                      fontSize: '0.875rem',
+                      maxHeight: '400px'
+                    }}
+                  >
+                    {JSON.stringify(selectedItem.submissionData, null, 2)}
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
+
+              {/* Files Section */}
+              {selectedItem.files && selectedItem.files.length > 0 && (
+                <Box mt={3}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Attached Files
+                  </Typography>
+                  <TableContainer component={Paper} variant="outlined">
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Filename</TableCell>
+                          <TableCell>Type</TableCell>
+                          <TableCell>Size</TableCell>
+                          <TableCell>Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {selectedItem.files.map((file, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{file.name}</TableCell>
+                            <TableCell>{file.type}</TableCell>
+                            <TableCell>{formatFileSize(file.size)}</TableCell>
+                            <TableCell>
+                              <Button
+                                size="small"
+                                startIcon={<CloudDownload />}
+                                onClick={() => handleDownloadFile(file.path)}
+                              >
+                                Download
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+              )}
+
+              {/* Report File */}
+              {selectedItem.reportPath && (
+                <Box mt={3}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Generated Excel Report
+                  </Typography>
+                  <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Box display="flex" alignItems="center">
+                        <Description sx={{ mr: 1 }} />
+                        <Typography>{getFilenameFromPath(selectedItem.reportPath)}</Typography>
+                      </Box>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<CloudDownload />}
+                        onClick={() => handleDownloadFile(selectedItem.reportPath)}
+                      >
+                        Download Report
+                      </Button>
+                    </Box>
+                  </Paper>
+                </Box>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseDialog}>Close</Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </Paper>
   );
 };
