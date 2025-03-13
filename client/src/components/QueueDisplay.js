@@ -24,11 +24,7 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Tooltip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem
+  Tooltip
 } from '@mui/material';
 import { 
   AccessTime, 
@@ -47,19 +43,14 @@ const QueueDisplay = () => {
   const [error, setError] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dataSource, setDataSource] = useState('legacy'); // 'mongodb' or 'legacy'
 
-  // Connect to our queue API endpoint
+  // Connect to MongoDB queue API endpoint
   const fetchQueue = async () => {
     try {
       setLoading(true);
       
       try {
-        // Choose endpoint based on data source
-        const endpoint = dataSource === 'mongodb' 
-          ? '/api/mongodb-queue' 
-          : '/api/erc-protest/queue';
-          
+        const endpoint = '/api/mongodb-queue';
         console.log(`Fetching queue from ${endpoint}`);
         const response = await fetch(endpoint);
         const data = await response.json();
@@ -93,7 +84,7 @@ const QueueDisplay = () => {
 
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
-  }, [dataSource]);
+  }, []);
 
   // Helper function to format the timestamp
   const formatTime = (timestamp) => {
@@ -150,11 +141,8 @@ const QueueDisplay = () => {
     if (filePath.startsWith('http')) {
       window.open(filePath, '_blank');
     } else {
-      // Use the appropriate endpoint based on data source
-      const endpoint = dataSource === 'mongodb'
-        ? `/api/mongodb-queue/download?path=${encodeURIComponent(filePath)}`
-        : `/api/erc-protest/download?path=${encodeURIComponent(filePath)}`;
-        
+      // Use the MongoDB endpoint
+      const endpoint = `/api/mongodb-queue/download?path=${encodeURIComponent(filePath)}`;
       window.open(endpoint, '_blank');
     }
   };
@@ -176,11 +164,6 @@ const QueueDisplay = () => {
     return parts[parts.length - 1];
   };
 
-  // Handle data source change
-  const handleDataSourceChange = (event) => {
-    setDataSource(event.target.value);
-  };
-
   return (
     <Paper elevation={3} sx={{ 
       p: 2, 
@@ -193,19 +176,6 @@ const QueueDisplay = () => {
           Processing Queue
         </Typography>
         <Box display="flex" alignItems="center">
-          <FormControl size="small" sx={{ mr: 1, minWidth: 120 }}>
-            <InputLabel id="data-source-label">Data Source</InputLabel>
-            <Select
-              labelId="data-source-label"
-              id="data-source-select"
-              value={dataSource}
-              label="Data Source"
-              onChange={handleDataSourceChange}
-            >
-              <MenuItem value="mongodb">MongoDB</MenuItem>
-              <MenuItem value="legacy">Legacy</MenuItem>
-            </Select>
-          </FormControl>
           <IconButton 
             size="small" 
             onClick={fetchQueue} 
