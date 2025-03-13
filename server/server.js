@@ -11,6 +11,7 @@ const fsSync = require('fs');
 const ercProtestRouter = require('./routes/erc-protest');
 const adminRouter = require('./routes/admin');
 const chatgptScraperRouter = require('./routes/chatgpt-scraper');
+const queueRouter = require('./routes/queue'); // New queue router
 const { authenticateUser, adminOnly } = require('./middleware/auth');
 const googleSheetsService = require('./services/googleSheetsService');
 const googleDriveService = require('./services/googleDriveService');
@@ -62,6 +63,7 @@ app.use((req, res, next) => {
 app.use('/api/erc-protest', ercProtestRouter);
 app.use('/api/erc-protest/admin', authenticateUser, adminOnly, adminRouter);
 app.use('/api/erc-protest/chatgpt', chatgptScraperRouter);
+app.use('/api/erc-protest/queue', queueRouter); // Added queue router
 
 // Debug route to check if the server is working
 app.get('/api/debug', (req, res) => {
@@ -136,5 +138,6 @@ app.listen(PORT, async () => {
   - /api/erc-protest
   - /api/erc-protest/admin
   - /api/erc-protest/chatgpt
+  - /api/erc-protest/queue
   - /api/debug`);
 });
