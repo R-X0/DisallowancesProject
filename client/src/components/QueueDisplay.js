@@ -71,67 +71,15 @@ const QueueDisplay = () => {
         }
       } catch (apiError) {
         console.error(`API error: ${apiError.message}`);
-        
-        // Fall back to mock data if API isn't ready
-        const mockData = [
-          { 
-            id: 'MOCK-12345', 
-            businessName: 'Mock Business Corp', 
-            timestamp: new Date().toISOString(),
-            status: 'waiting',
-            submissionData: { 
-              id: 'MOCK-12345',
-              receivedAt: new Date().toISOString(),
-              originalData: { 
-                formData: {
-                  requestedInfo: {
-                    business_name: 'Mock Business Corp'
-                  }
-                }
-              }
-            },
-            files: [
-              { name: 'document.pdf', path: '', type: 'application/pdf', size: 12345 }
-            ]
-          },
-          { 
-            id: 'MOCK-67890', 
-            businessName: 'Sample Industries', 
-            timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
-            status: 'processing',
-            submissionData: { 
-              id: 'MOCK-67890',
-              receivedAt: new Date(Date.now() - 15 * 60000).toISOString(),
-              originalData: {}
-            },
-            files: [
-              { name: 'sample.pdf', path: '', type: 'application/pdf', size: 67890 }
-            ]
-          },
-          { 
-            id: 'MOCK-ABCDE', 
-            businessName: 'Complete Tech Inc', 
-            timestamp: new Date(Date.now() - 30 * 60000).toISOString(),
-            status: 'complete',
-            submissionData: { 
-              id: 'MOCK-ABCDE',
-              receivedAt: new Date(Date.now() - 30 * 60000).toISOString(),
-              originalData: {}
-            },
-            files: [
-              { name: 'complete.pdf', path: '', type: 'application/pdf', size: 54321 }
-            ],
-            reportPath: ''
-          }
-        ];
-        
-        setQueueItems(mockData);
+        setError(`Failed to fetch queue data: ${apiError.message}`);
+        setQueueItems([]);
       }
       
       setLoading(false);
     } catch (err) {
       console.error('Error fetching queue:', err);
       setError('Failed to load queue data');
+      setQueueItems([]);
       setLoading(false);
     }
   };
