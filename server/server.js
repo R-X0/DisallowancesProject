@@ -11,10 +11,11 @@ const fsSync = require('fs');
 const ercProtestRouter = require('./routes/erc-protest');
 const adminRouter = require('./routes/admin');
 const chatgptScraperRouter = require('./routes/chatgpt-scraper');
-const queueRouter = require('./routes/queue'); // New queue router
+const mongodbQueueRouter = require('./routes/mongodb-queue'); // MongoDB queue router
 const { authenticateUser, adminOnly } = require('./middleware/auth');
 const googleSheetsService = require('./services/googleSheetsService');
 const googleDriveService = require('./services/googleDriveService');
+const { connectToDatabase } = require('./db-connection'); // Import database connection
 
 // Load environment variables
 dotenv.config();
@@ -63,7 +64,7 @@ app.use((req, res, next) => {
 app.use('/api/erc-protest', ercProtestRouter);
 app.use('/api/erc-protest/admin', authenticateUser, adminOnly, adminRouter);
 app.use('/api/erc-protest/chatgpt', chatgptScraperRouter);
-app.use('/api/erc-protest/queue', queueRouter); // Added queue router
+app.use('/api/mongodb-queue', mongodbQueueRouter); // MongoDB queue router
 
 // Debug route to check if the server is working
 app.get('/api/debug', (req, res) => {
@@ -89,9 +90,18 @@ async function createDirectories() {
   }
 }
 
-// Initialize Google Sheets service
+// Initialize services
 async function initializeServices() {
   try {
+    // Initialize MongoDB connection
+    console.log('Connecting to MongoDB...');
+    const mongoConnected = await connectToDatabase();
+    if (mongoConnected) {
+      console.log('MongoDB connected successfully');
+    } else {
+      console.log('MongoDB connection failed');
+    }
+
     // Initialize Google Sheets
     await googleSheetsService.initialize();
     console.log('Google Sheets service initialized successfully');
@@ -138,6 +148,6 @@ app.listen(PORT, async () => {
   - /api/erc-protest
   - /api/erc-protest/admin
   - /api/erc-protest/chatgpt
-  - /api/erc-protest/queue
+  - /api/mongodb-queue
   - /api/debug`);
 });

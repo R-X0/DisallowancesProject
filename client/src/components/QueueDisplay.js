@@ -24,7 +24,11 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Tooltip
+  Tooltip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import { 
   AccessTime, 
@@ -33,107 +37,107 @@ import {
   ExpandMore,
   Description,
   CloudDownload,
-  Info
+  Info,
+  Refresh
 } from '@mui/icons-material';
 
-// This component will display the queue of submissions waiting to be processed
 const QueueDisplay = () => {
   const [queueItems, setQueueItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dataSource, setDataSource] = useState('legacy'); // 'mongodb' or 'legacy'
 
   // Connect to our queue API endpoint
-  useEffect(() => {
-    const fetchQueue = async () => {
+  const fetchQueue = async () => {
+    try {
+      setLoading(true);
+      
       try {
-        setLoading(true);
+        // Choose endpoint based on data source
+        const endpoint = dataSource === 'mongodb' 
+          ? '/api/mongodb-queue' 
+          : '/api/erc-protest/queue';
+          
+        console.log(`Fetching queue from ${endpoint}`);
+        const response = await fetch(endpoint);
+        const data = await response.json();
         
-        try {
-          // Try to fetch from our API
-          const response = await fetch('/api/erc-protest/queue');
-          const data = await response.json();
-          
-          if (data.success) {
-            setQueueItems(data.queue);
-          } else {
-            // If the API returns an error, use mock data
-            throw new Error(data.message || 'Failed to fetch queue data');
-          }
-        } catch (apiError) {
-          console.warn('API not available yet, using mock data:', apiError);
-          
-          // Fall back to mock data if API isn't ready
-          const mockData = [
-            { 
-              id: 'ERC-12345', 
-              businessName: 'Acme Corporation', 
-              timestamp: new Date().toISOString(),
-              status: 'waiting',
-              submissionData: { 
-                id: 'ERC-12345',
-                receivedAt: new Date().toISOString(),
-                originalData: { 
-                  businessName: 'Acme Corporation',
-                  ein: '12-3456789',
-                  location: 'New York, NY'
-                }
-              },
-              files: [
-                { name: 'document1.pdf', path: '/uploads/document1.pdf', type: 'application/pdf', size: 12345 }
-              ]
-            },
-            { 
-              id: 'ERC-67890', 
-              businessName: 'Widget Industries', 
-              timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
-              status: 'processing',
-              submissionData: { 
-                id: 'ERC-67890',
-                receivedAt: new Date(Date.now() - 15 * 60000).toISOString(),
-                originalData: { 
-                  businessName: 'Widget Industries',
-                  ein: '98-7654321',
-                  location: 'Chicago, IL'
-                }
-              },
-              files: [
-                { name: 'document2.pdf', path: '/uploads/document2.pdf', type: 'application/pdf', size: 67890 }
-              ]
-            },
-            { 
-              id: 'ERC-ABCDE', 
-              businessName: 'Tech Solutions Inc', 
-              timestamp: new Date(Date.now() - 30 * 60000).toISOString(),
-              status: 'complete',
-              submissionData: { 
-                id: 'ERC-ABCDE',
-                receivedAt: new Date(Date.now() - 30 * 60000).toISOString(),
-                originalData: { 
-                  businessName: 'Tech Solutions Inc',
-                  ein: '56-7890123',
-                  location: 'Austin, TX'
-                }
-              },
-              files: [
-                { name: 'document3.pdf', path: '/uploads/document3.pdf', type: 'application/pdf', size: 54321 }
-              ],
-              reportPath: '/reports/ERC-ABCDE_report.xlsx'
-            }
-          ];
-          
-          setQueueItems(mockData);
+        if (data.success) {
+          setQueueItems(data.queue);
+        } else {
+          throw new Error(data.message || 'Failed to fetch queue data');
         }
+      } catch (apiError) {
+        console.error(`API error: ${apiError.message}`);
         
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching queue:', err);
-        setError('Failed to load queue data');
-        setLoading(false);
+        // Fall back to mock data if API isn't ready
+        const mockData = [
+          { 
+            id: 'MOCK-12345', 
+            businessName: 'Mock Business Corp', 
+            timestamp: new Date().toISOString(),
+            status: 'waiting',
+            submissionData: { 
+              id: 'MOCK-12345',
+              receivedAt: new Date().toISOString(),
+              originalData: { 
+                formData: {
+                  requestedInfo: {
+                    business_name: 'Mock Business Corp'
+                  }
+                }
+              }
+            },
+            files: [
+              { name: 'document.pdf', path: '', type: 'application/pdf', size: 12345 }
+            ]
+          },
+          { 
+            id: 'MOCK-67890', 
+            businessName: 'Sample Industries', 
+            timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
+            status: 'processing',
+            submissionData: { 
+              id: 'MOCK-67890',
+              receivedAt: new Date(Date.now() - 15 * 60000).toISOString(),
+              originalData: {}
+            },
+            files: [
+              { name: 'sample.pdf', path: '', type: 'application/pdf', size: 67890 }
+            ]
+          },
+          { 
+            id: 'MOCK-ABCDE', 
+            businessName: 'Complete Tech Inc', 
+            timestamp: new Date(Date.now() - 30 * 60000).toISOString(),
+            status: 'complete',
+            submissionData: { 
+              id: 'MOCK-ABCDE',
+              receivedAt: new Date(Date.now() - 30 * 60000).toISOString(),
+              originalData: {}
+            },
+            files: [
+              { name: 'complete.pdf', path: '', type: 'application/pdf', size: 54321 }
+            ],
+            reportPath: ''
+          }
+        ];
+        
+        setQueueItems(mockData);
       }
-    };
+      
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching queue:', err);
+      setError('Failed to load queue data');
+      setLoading(false);
+    }
+  };
 
+  // Initial data load
+  useEffect(() => {
     fetchQueue();
 
     // Set up polling for updates every 30 seconds
@@ -141,7 +145,7 @@ const QueueDisplay = () => {
 
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
-  }, []);
+  }, [dataSource]);
 
   // Helper function to format the timestamp
   const formatTime = (timestamp) => {
@@ -198,7 +202,12 @@ const QueueDisplay = () => {
     if (filePath.startsWith('http')) {
       window.open(filePath, '_blank');
     } else {
-      window.open(`/api/erc-protest/download?path=${encodeURIComponent(filePath)}`, '_blank');
+      // Use the appropriate endpoint based on data source
+      const endpoint = dataSource === 'mongodb'
+        ? `/api/mongodb-queue/download?path=${encodeURIComponent(filePath)}`
+        : `/api/erc-protest/download?path=${encodeURIComponent(filePath)}`;
+        
+      window.open(endpoint, '_blank');
     }
   };
 
@@ -219,6 +228,11 @@ const QueueDisplay = () => {
     return parts[parts.length - 1];
   };
 
+  // Handle data source change
+  const handleDataSourceChange = (event) => {
+    setDataSource(event.target.value);
+  };
+
   return (
     <Paper elevation={3} sx={{ 
       p: 2, 
@@ -226,9 +240,34 @@ const QueueDisplay = () => {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      <Typography variant="h6" gutterBottom>
-        Processing Queue
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h6">
+          Processing Queue
+        </Typography>
+        <Box display="flex" alignItems="center">
+          <FormControl size="small" sx={{ mr: 1, minWidth: 120 }}>
+            <InputLabel id="data-source-label">Data Source</InputLabel>
+            <Select
+              labelId="data-source-label"
+              id="data-source-select"
+              value={dataSource}
+              label="Data Source"
+              onChange={handleDataSourceChange}
+            >
+              <MenuItem value="mongodb">MongoDB</MenuItem>
+              <MenuItem value="legacy">Legacy</MenuItem>
+            </Select>
+          </FormControl>
+          <IconButton 
+            size="small" 
+            onClick={fetchQueue} 
+            title="Refresh Queue"
+          >
+            <Refresh />
+          </IconButton>
+        </Box>
+      </Box>
+      
       <Typography variant="body2" color="text.secondary" paragraph>
         Current submissions in the processing queue
       </Typography>
@@ -334,18 +373,6 @@ const QueueDisplay = () => {
                         <TableCell variant="head">Business Name</TableCell>
                         <TableCell>{selectedItem.businessName}</TableCell>
                       </TableRow>
-                      {selectedItem.submissionData?.originalData?.ein && (
-                        <TableRow>
-                          <TableCell variant="head">EIN</TableCell>
-                          <TableCell>{selectedItem.submissionData.originalData.ein}</TableCell>
-                        </TableRow>
-                      )}
-                      {selectedItem.submissionData?.originalData?.location && (
-                        <TableRow>
-                          <TableCell variant="head">Location</TableCell>
-                          <TableCell>{selectedItem.submissionData.originalData.location}</TableCell>
-                        </TableRow>
-                      )}
                       <TableRow>
                         <TableCell variant="head">Status</TableCell>
                         <TableCell>{selectedItem.status}</TableCell>
