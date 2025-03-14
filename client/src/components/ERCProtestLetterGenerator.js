@@ -30,6 +30,165 @@ const getNaicsDescription = (naicsCode) => {
   return naicsMap[naicsCode] || 'business';
 };
 
+// Calculate revenue declines between quarters
+const calculateRevenueDeclines = (formData) => {
+  const declines = [];
+  console.log("Calculating revenue declines with data:", formData);
+  
+  // Calculate 2020 vs 2019 declines
+  if (formData.q1_2020 && formData.q1_2019 && parseFloat(formData.q1_2019) > 0) {
+    const decline = (1 - parseFloat(formData.q1_2020) / parseFloat(formData.q1_2019)) * 100;
+    console.log(`Q1 2020 decline: ${decline.toFixed(2)}% (threshold: 50%)`);
+    if (decline > 0) {
+      declines.push({
+        quarter: 'Q1 2020',
+        baseQuarter: 'Q1 2019',
+        decline: decline.toFixed(2),
+        percentDecline: `${decline.toFixed(2)}%`,
+        qualifies: decline >= 50
+      });
+    }
+  }
+  
+  if (formData.q2_2020 && formData.q2_2019 && parseFloat(formData.q2_2019) > 0) {
+    const decline = (1 - parseFloat(formData.q2_2020) / parseFloat(formData.q2_2019)) * 100;
+    console.log(`Q2 2020 decline: ${decline.toFixed(2)}% (threshold: 50%)`);
+    if (decline > 0) {
+      declines.push({
+        quarter: 'Q2 2020',
+        baseQuarter: 'Q2 2019',
+        decline: decline.toFixed(2),
+        percentDecline: `${decline.toFixed(2)}%`,
+        qualifies: decline >= 50
+      });
+    }
+  }
+  
+  if (formData.q3_2020 && formData.q3_2019 && parseFloat(formData.q3_2019) > 0) {
+    const decline = (1 - parseFloat(formData.q3_2020) / parseFloat(formData.q3_2019)) * 100;
+    console.log(`Q3 2020 decline: ${decline.toFixed(2)}% (threshold: 50%)`);
+    if (decline > 0) {
+      declines.push({
+        quarter: 'Q3 2020',
+        baseQuarter: 'Q3 2019',
+        decline: decline.toFixed(2),
+        percentDecline: `${decline.toFixed(2)}%`,
+        qualifies: decline >= 50
+      });
+    }
+  }
+  
+  if (formData.q4_2020 && formData.q4_2019 && parseFloat(formData.q4_2019) > 0) {
+    const decline = (1 - parseFloat(formData.q4_2020) / parseFloat(formData.q4_2019)) * 100;
+    console.log(`Q4 2020 decline: ${decline.toFixed(2)}% (threshold: 50%)`);
+    if (decline > 0) {
+      declines.push({
+        quarter: 'Q4 2020',
+        baseQuarter: 'Q4 2019',
+        decline: decline.toFixed(2),
+        percentDecline: `${decline.toFixed(2)}%`,
+        qualifies: decline >= 50
+      });
+    }
+  }
+  
+  // Calculate 2021 vs 2019 declines
+  if (formData.q1_2021 && formData.q1_2019 && parseFloat(formData.q1_2019) > 0) {
+    const decline = (1 - parseFloat(formData.q1_2021) / parseFloat(formData.q1_2019)) * 100;
+    console.log(`Q1 2021 decline: ${decline.toFixed(2)}% (threshold: 20%)`);
+    if (decline > 0) {
+      declines.push({
+        quarter: 'Q1 2021',
+        baseQuarter: 'Q1 2019',
+        decline: decline.toFixed(2),
+        percentDecline: `${decline.toFixed(2)}%`,
+        qualifies: decline >= 20
+      });
+    }
+  }
+  
+  if (formData.q2_2021 && formData.q2_2019 && parseFloat(formData.q2_2019) > 0) {
+    const decline = (1 - parseFloat(formData.q2_2021) / parseFloat(formData.q2_2019)) * 100;
+    console.log(`Q2 2021 decline: ${decline.toFixed(2)}% (threshold: 20%)`);
+    if (decline > 0) {
+      declines.push({
+        quarter: 'Q2 2021',
+        baseQuarter: 'Q2 2019',
+        decline: decline.toFixed(2),
+        percentDecline: `${decline.toFixed(2)}%`,
+        qualifies: decline >= 20
+      });
+    }
+  }
+  
+  if (formData.q3_2021 && formData.q3_2019 && parseFloat(formData.q3_2019) > 0) {
+    const decline = (1 - parseFloat(formData.q3_2021) / parseFloat(formData.q3_2019)) * 100;
+    console.log(`Q3 2021 decline: ${decline.toFixed(2)}% (threshold: 20%)`);
+    if (decline > 0) {
+      declines.push({
+        quarter: 'Q3 2021',
+        baseQuarter: 'Q3 2019',
+        decline: decline.toFixed(2),
+        percentDecline: `${decline.toFixed(2)}%`,
+        qualifies: decline >= 20
+      });
+    }
+  }
+  
+  console.log("Calculated declines:", declines);
+  return declines;
+};
+
+// Determine which quarters qualify for ERC based on revenue decline
+const getQualifyingQuarters = (declines) => {
+  const qualifying = declines.filter(decline => decline.qualifies).map(decline => decline.quarter);
+  console.log("Qualifying quarters:", qualifying);
+  return qualifying;
+};
+
+// Determine which approach the user is focusing on - government orders or revenue reduction
+const determineUserApproach = (formData) => {
+  // FIRST: Check if we have qualifying revenue quarters - THIS TAKES PRIORITY
+  const revenueDeclines = calculateRevenueDeclines(formData);
+  const qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
+  
+  // If we have ANY qualifying quarters based on revenue decline, ALWAYS use revenue approach
+  if (qualifyingQuarters.length > 0) {
+    console.log("Using REVENUE REDUCTION approach - Found qualifying quarters:", qualifyingQuarters);
+    return 'revenueReduction';
+  }
+  
+  // Only if no qualifying quarters, use the scoring approach
+  console.log("No qualifying quarters found, using scoring method");
+  
+  const hasGovernmentOrderInfo = formData.timePeriods && formData.timePeriods.length > 0;
+  const hasGovernmentOrderNotes = formData.governmentOrdersInfo && formData.governmentOrdersInfo.trim().length > 0;
+  
+  const hasRevenueData = 
+    formData.q1_2019 || formData.q2_2019 || formData.q3_2019 || formData.q4_2019 ||
+    formData.q1_2020 || formData.q2_2020 || formData.q3_2020 || formData.q4_2020 ||
+    formData.q1_2021 || formData.q2_2021 || formData.q3_2021;
+  const hasRevenueNotes = formData.revenueReductionInfo && formData.revenueReductionInfo.trim().length > 0;
+  
+  // Calculate detail scores to determine which approach has more info
+  const governmentOrderScore = (hasGovernmentOrderInfo ? 2 : 0) + (hasGovernmentOrderNotes ? 3 : 0);
+  const revenueReductionScore = (hasRevenueData ? 2 : 0) + (hasRevenueNotes ? 3 : 0);
+  
+  console.log("Approach scores - Government:", governmentOrderScore, "Revenue:", revenueReductionScore);
+  
+  if (revenueReductionScore > governmentOrderScore) {
+    return 'revenueReduction';
+  } else if (governmentOrderScore > revenueReductionScore) {
+    return 'governmentOrders';
+  } else if (revenueReductionScore > 0) {
+    // If scores are tied but we have some revenue info, prefer that
+    return 'revenueReduction';
+  } else {
+    // Default if no meaningful data in either section
+    return 'governmentOrders';
+  }
+};
+
 const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [generating, setGenerating] = useState(false);
   const [protestLetter, setProtestLetter] = useState('');
@@ -43,11 +202,19 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [packageData, setPackageData] = useState(null);
   const [documentType, setDocumentType] = useState('protestLetter'); // State for toggling document type
   const [selectedTimePeriod, setSelectedTimePeriod] = useState(''); // For selecting which period to focus on for protest letter
+  const [approachFocus, setApproachFocus] = useState('governmentOrders'); // Default approach
 
   // Initialize selected time period when form data changes
   useEffect(() => {
     if (formData && formData.timePeriods && formData.timePeriods.length > 0 && !selectedTimePeriod) {
       setSelectedTimePeriod(formData.timePeriods[0]);
+    }
+    
+    // Determine approach whenever form data changes
+    if (formData) {
+      const approach = determineUserApproach(formData);
+      setApproachFocus(approach);
+      console.log("Set approach focus to:", approach);
     }
   }, [formData, selectedTimePeriod]);
 
@@ -78,6 +245,14 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         selectedTimePeriod : 
         timePeriodsText;
       
+      // Calculate revenue declines and determine approach
+      const revenueDeclines = calculateRevenueDeclines(formData);
+      const qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
+      
+      // CONFIRM we're using the correct approach - re-check right before API call
+      const currentApproach = determineUserApproach(formData);
+      console.log("Final approach check before API call:", currentApproach);
+      
       // Prepare data for API call
       const letterData = {
         businessName: formData.businessName,
@@ -87,8 +262,27 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         allTimePeriods: allTimePeriods,
         chatGptLink: chatGptLink,
         businessType: businessType,
-        trackingId: formData.trackingId || '', // Pass tracking ID if available
-        documentType: documentType // Pass the document type to the backend
+        trackingId: formData.trackingId || '',
+        documentType: documentType,
+        // Add revenue data
+        q1_2019: formData.q1_2019 || '',
+        q2_2019: formData.q2_2019 || '',
+        q3_2019: formData.q3_2019 || '',
+        q4_2019: formData.q4_2019 || '',
+        q1_2020: formData.q1_2020 || '',
+        q2_2020: formData.q2_2020 || '',
+        q3_2020: formData.q3_2020 || '',
+        q4_2020: formData.q4_2020 || '',
+        q1_2021: formData.q1_2021 || '',
+        q2_2021: formData.q2_2021 || '',
+        q3_2021: formData.q3_2021 || '',
+        // Also pass additional context
+        revenueReductionInfo: formData.revenueReductionInfo || '',
+        governmentOrdersInfo: formData.governmentOrdersInfo || '',
+        // Pass revenue decline metadata
+        revenueDeclines: revenueDeclines,
+        qualifyingQuarters: qualifyingQuarters,
+        approachFocus: currentApproach // Use the confirmed approach
       };
       
       // Update processing steps
@@ -208,6 +402,14 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   // Check if we have time periods data
   const hasTimePeriods = formData.timePeriods && formData.timePeriods.length > 0;
   
+  // Calculate revenue declines for display
+  const revenueDeclines = calculateRevenueDeclines(formData);
+  const qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
+  const hasQualifyingQuarters = qualifyingQuarters.length > 0;
+  
+  // Use the state variable for approach focus
+  const isRevenueApproach = approachFocus === 'revenueReduction';
+  
   return (
     <Box mt={3}>
       <Paper elevation={3} sx={{ p: 3 }}>
@@ -243,6 +445,21 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
             ? 'Generate a customized protest letter for your ERC claim using your ChatGPT research.'
             : 'Generate a Form 886-A document with Issue, Facts, Law, Argument, and Conclusion sections for enhanced substantiation.'}
         </Typography>
+        
+        {/* Display revenue approach info if relevant */}
+        {hasQualifyingQuarters && (
+          <Box mb={3} p={2} bgcolor="info.lighter" borderRadius={1}>
+            <Typography variant="subtitle2" gutterBottom>
+              <strong>Revenue Reduction Approach Detected</strong>
+            </Typography>
+            <Typography variant="body2">
+              Your data shows qualifying revenue reductions in the following quarters: {qualifyingQuarters.join(', ')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mt={1}>
+              This revenue reduction information will be prominently featured in your generated document as the primary basis for ERC qualification.
+            </Typography>
+          </Box>
+        )}
         
         {/* Time Period Selector (only show for Protest Letter type) */}
         {hasTimePeriods && documentType === 'protestLetter' && (
