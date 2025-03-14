@@ -181,26 +181,48 @@ CRITICAL AUDIT REQUIREMENT: The above figures MUST appear VERBATIM in a dedicate
         evidenceContent += `\nAdditional context about revenue reduction: ${businessInfo.revenueReductionInfo}\n`;
       }
       
-      // Only add the table if we have actual revenue data
+      // Only add the narrative format instructions if we have actual revenue data
       if (revenueDeclines.length > 0) {
+        // Get the primary time period being protested (first in the list if multiple)
+        const primaryTimePeriod = Array.isArray(allTimePeriods) && allTimePeriods.length > 0
+          ? allTimePeriods[0]
+          : timePeriods;
+        
+        // Find the decline data for the primary time period, if available
+        const primaryDecline = revenueDeclines.find(d => d.quarter.includes(primaryTimePeriod.replace('Q', '')));
+        
         evidenceContent += `
-CREATE A TABLE IN THE DOCUMENT THAT SHOWS:
-Quarter | 2019 Revenue | 2020/2021 Revenue | Decline $ | Decline % | Qualifies?
-`;
+FORMAT REVENUE DECLINE DATA AS FOLLOWS:
 
-        // Add a row for each quarter with data
-        for (const decline of revenueDeclines) {
-          const quarterKey = decline.quarter.toLowerCase().replace(' ', '_');
-          const baseQuarterKey = decline.baseQuarter.toLowerCase().replace(' ', '_');
-          const declineAmount = parseFloat(businessInfo[baseQuarterKey]) - parseFloat(businessInfo[quarterKey]);
-          
-          evidenceContent += `${decline.quarter} | $${businessInfo[baseQuarterKey]} | $${businessInfo[quarterKey]} | $${declineAmount.toFixed(2)} | ${decline.percentDecline} | ${decline.qualifies ? 'Yes' : 'No'}\n`;
-        }
+1. Create a header paragraph that introduces the revenue data:
+"In addition to these government orders, we are submitting detailed revenue data that unequivocally demonstrates the qualifying revenue reductions for [BUSINESS_NAME]. The following figures represent precise, dollar-for-dollar comparisons highlighting EXACT revenue amounts and percentage declines without rounding or generalization."
+
+2. If applicable, highlight the specific quarter being protested with a detailed paragraph:
+${primaryDecline ? 
+  `"For ${primaryDecline.quarter} specifically, [BUSINESS_NAME] recorded EXACTLY $${businessInfo[primaryDecline.baseQuarter.toLowerCase().replace(' ', '_')]} in revenue for the comparable quarter in ${primaryDecline.baseQuarter.split(' ')[1]}. In stark contrast, our ${primaryDecline.quarter} revenue was EXACTLY $${businessInfo[primaryDecline.quarter.toLowerCase().replace(' ', '_')]}, representing a decline of EXACTLY $${(parseFloat(businessInfo[primaryDecline.baseQuarter.toLowerCase().replace(' ', '_')]) - parseFloat(businessInfo[primaryDecline.quarter.toLowerCase().replace(' ', '_')])).toFixed(2)} or EXACTLY ${primaryDecline.percentDecline} decline. This substantial revenue reduction is a direct consequence of the COVID-19-related government orders detailed above and clearly qualifies our business for the ERC."` : 
+  `"For [PRIMARY_QUARTER] specifically, provide a detailed paragraph with the exact figures and percentage decline, connecting it directly to the government orders impact."`
+}
+
+3. List any additional quarters with bullet points:
+"Our other quarters show similar qualifying declines:
+${revenueDeclines.filter(d => primaryDecline && d.quarter !== primaryDecline.quarter || !primaryDecline)
+  .map(d => {
+    const quarterKey = d.quarter.toLowerCase().replace(' ', '_');
+    const baseQuarterKey = d.baseQuarter.toLowerCase().replace(' ', '_');
+    const declineAmount = (parseFloat(businessInfo[baseQuarterKey]) - parseFloat(businessInfo[quarterKey])).toFixed(2);
+    return `• ${d.quarter}: Revenue fell from EXACTLY $${businessInfo[baseQuarterKey]} (${d.baseQuarter.split(' ')[1]}) to EXACTLY $${businessInfo[quarterKey]} (${d.quarter.split(' ')[1]}), a decline of EXACTLY $${declineAmount} or ${d.percentDecline}`;
+  }).join('\n')}"
+
+4. Add a concluding sentence:
+"All quarters listed above with declines exceeding the applicable thresholds (50%+ for 2020, 20%+ for 2021) qualify for ERC. These substantial revenue reductions, in conjunction with the governmental order-induced partial suspension of operations, provide strong substantiation for [BUSINESS_NAME]'s ERC claim."
+
+DO NOT USE A TABLE FORMAT FOR THIS DATA. The narrative format above is required for better letter flow while still maintaining all exact figures needed for audit purposes.
+`;
 
         // If we have qualifying quarters, add a special instruction to emphasize this
         if (hasQualifyingQuarters) {
           evidenceContent += `
-IMPORTANT: Since this business has qualifying revenue reductions, this MUST be clearly stated in the document as a basis for ERC qualification. The above table with EXACT figures MUST be included in the document.
+IMPORTANT: Since this business has qualifying revenue reductions, this MUST be clearly stated in the document as a basis for ERC qualification. The exact figures MUST be included in the document using the narrative format described above.
 `;
         }
       }
@@ -268,18 +290,7 @@ IMPORTANT: Each order must be listed individually with ALL six fields above. Do 
         promptTemplate += `
 
 REVENUE DECLINE PRESENTATION FORMAT:
-When including revenue decline information, it MUST be presented in this format:
-
-1. Create a dedicated section with a clear heading "REVENUE DECLINE DATA" that includes:
-   • The table format shown above with the EXACT dollar amounts and percentages
-   • For each relevant quarter, clearly show:
-     - Original revenue figures for both comparison quarters (EXACT DOLLAR AMOUNTS as provided above)
-     - Percentage decline calculations (EXACT PERCENTAGES as calculated above)
-     - Clear indication of which quarters qualify based on thresholds (50% for 2020, 20% for 2021)
-
-2. In the appropriate sections:
-   • Reference both revenue decline and government orders as qualification methods when both apply
-   • Clearly state which quarters qualify under which method`;
+When including revenue decline information, it MUST be presented using the narrative format specified above. Avoid tables and maintain a narrative flow while including all EXACT dollar figures and percentages.`;
       }
 
       promptTemplate += `
@@ -299,7 +310,8 @@ FINAL CRITICAL INSTRUCTION:
 3. Do not abbreviate or simplify the government order format, even for minor orders
 4. If both revenue reduction and government orders information is available, include BOTH
 5. Format each government order with all six required fields (Name, Number, Dates, Summary, Impact)
-6. You MUST reproduce the EXACT revenue figures and percentages in a dedicated "REVENUE DECLINE DATA" section - this is a non-negotiable legal requirement`;
+6. You MUST reproduce the EXACT revenue figures and percentages in a dedicated section - this is a non-negotiable legal requirement
+7. DO NOT create a table for revenue figures - use the narrative format as instructed above`;
     
     } else {
       // Default to protest letter (original functionality)
@@ -348,20 +360,19 @@ IMPORTANT: Each order must be listed individually with ALL six fields above. Do 
         promptTemplate += `
 
 REVENUE DECLINE PRESENTATION FORMAT - LEGAL AUDIT REQUIREMENT:
-You MUST include a dedicated section titled "REVENUE DECLINE DATA" containing:
+You MUST include a dedicated section titled "REVENUE DECLINE DATA" containing the EXACT revenue figures in a narrative format (NOT A TABLE):
 
-1. The EXACT table format shown above with:
-   • EXACT revenue figures for each quarter (not rounded or generalized)
-   • Dollar-for-dollar comparison between quarters
-   • EXACT percentage calculations
-   • Clear indication of qualifying quarters
+1. Start with an introductory paragraph explaining the purpose of this section
+2. For the main quarter being protested, include a detailed paragraph with:
+   • EXACT revenue amounts for the current quarter and comparison quarter
+   • EXACT dollar amount of decline
+   • EXACT percentage decline
+   • Clear statement of qualification based on threshold
 
-2. This section MUST include a paragraph explicitly stating:
-   • The EXACT revenue amounts for each relevant quarter
-   • The EXACT percentage decline for each quarter
-   • Which quarters qualify based on thresholds (50% for 2020, 20%+ for 2021)
+3. For any additional quarters, use bullet points with the same EXACT figures
+4. End with a brief conclusion connecting revenue decline to ERC qualification
 
-This is a LEGAL REQUIREMENT - the letter will be rejected without these specific figures.`;
+This is a LEGAL REQUIREMENT - the letter will be rejected without these specific figures presented clearly.`;
       }
 
       promptTemplate += `
@@ -377,8 +388,8 @@ FINAL CRITICAL INSTRUCTION:
 3. Do not abbreviate or simplify the government order format, even for minor orders
 4. If both revenue reduction and government orders information is available, include BOTH
 5. Format each government order with all six required fields (Name, Number, Dates, Summary, Impact)
-6. You MUST include EXACT revenue figures and percentage declines exactly as provided above - this is a legal and audit requirement
-7. Add a separate section titled "REVENUE DECLINE DATA" containing the specific revenue figures and calculations`;
+6. You MUST include EXACT revenue figures and percentages exactly as provided above - this is a legal and audit requirement
+7. For revenue figures, create a narrative format with paragraph and bullet points - DO NOT USE TABLES`;
     }
     
     const response = await openai.chat.completions.create({
