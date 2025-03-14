@@ -1,0 +1,69 @@
+3/14/2025
+Internal Revenue Service
+Ogden, UT 84201
+
+EIN: 234523
+Taxpayer Name: 3245
+RE: Formal Protest to ERC Disallowance for Q2 2020
+Tax Period: 2nd Quarter 2020
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing 3245’s Employee Retention Credit (ERC) claim for the second quarter of 2020. The disallowance was based on the assertion that no government orders were in effect causing a suspension of our operations. We respectfully disagree. Multiple federal and state government orders were active during Q2 2020 that imposed COVID-19-related restrictions resulting in a full or partial suspension of our normal business activities. In this letter, we provide a detailed timeline of relevant government orders, demonstrate their impact on our organization’s operations during Q2 2020, and present precise revenue data that unequivocally substantiates our significant decline in revenue. Together, this evidence confirms that 3245 qualifies for the ERC under the governmental order-induced partial suspension provisions.
+
+Below is a chronological list of key government orders affecting our operations during Q2 2020. Each order is presented in the required format:
+
+• Order Name: National Emergency Concerning COVID‑19  
+  Order Number: Proclamation 9994  
+  Date Enacted: 03/13/2020  
+  Date Rescinded: Still in effect  
+  Order Summary: This proclamation declared a nationwide emergency due to COVID‑19, activating federal emergency powers and enabling state and local authorities to issue subsequent restrictive orders.  
+  Impact on Quarter: The proclamation provided the underlying federal authority that allowed for the imposition of further government orders, directly contributing to the partial suspension of normal business operations during Q2 2020.
+
+• Order Name: California COVID‑19 State of Emergency  
+  Order Number: N/A  
+  Date Enacted: 03/04/2020  
+  Date Rescinded: Still in effect  
+  Order Summary: Governor Newsom’s declaration established a state of emergency that empowered rapid action by health authorities to impose restrictions on business operations amid the pandemic.  
+  Impact on Quarter: This order maintained a heightened state of alert and was the legal basis for mandating closures and limits on business activities during Q2 2020, affecting our ability to operate at full capacity.
+
+• Order Name: Statewide ‘Stay‑at‑Home’ Order  
+  Order Number: Executive Order N‑33‑20  
+  Date Enacted: 03/19/2020  
+  Date Rescinded: 06/15/2021  
+  Order Summary: This order mandated that all Californians remain at home except for essential needs, forcing non‑essential businesses to either close completely or drastically reduce operations.  
+  Impact on Quarter: During Q2 2020, this mandate resulted in a direct partial suspension of our normal business activities as we were compelled to limit operations in strict compliance with the order.
+
+• Order Name: Modifying Stay‑at‑Home (Early Stage 2)  
+  Order Number: EO N‑60‑20  
+  Date Enacted: 05/07/2020  
+  Date Rescinded: 06/15/2021  
+  Order Summary: This order allowed certain lower‑risk businesses to reopen under strict safety guidelines while continuing to impose restrictions on higher‑risk operations to control the spread of COVID‑19.  
+  Impact on Quarter: Although it provided a phased approach to reopening, the order still enforced significant operational limitations during Q2 2020, thereby sustaining a partial suspension of our business activities.
+
+In addition to these government orders, we are submitting detailed revenue data that unequivocally demonstrates the qualifying revenue reductions for 3245. The following figures represent precise, dollar-for-dollar comparisons highlighting EXACT revenue amounts and percentage declines without rounding or generalization.
+
+For Q2 2020 specifically, 3245 recorded EXACTLY $5234 in revenue for the comparable quarter in 2019. In stark contrast, our Q2 2020 revenue was EXACTLY $353, representing a decline of EXACTLY $4881.00 or EXACTLY 93.26% decline. This substantial revenue reduction is a direct consequence of the COVID‑19-related government orders detailed above and clearly qualifies our business for the ERC.
+
+Our other quarters show similar qualifying declines:
+• Q1 2020: Revenue fell from EXACTLY $3245234 (2019) to EXACTLY $5435 (2020), a decline of EXACTLY $3239799.00 or 99.83%
+• Q4 2020: Revenue fell from EXACTLY $452345234 (2019) to EXACTLY $523454 (2020), a decline of EXACTLY $451821780.00 or 99.88%
+• Q2 2021: Revenue fell from EXACTLY $5234 (2019) to EXACTLY $3545 (2021), a decline of EXACTLY $1689.00 or 32.27%
+• Q3 2021: Revenue fell from EXACTLY $532453 (2019) to EXACTLY $45345 (2021), a decline of EXACTLY $487108.00 or 91.48%
+
+All quarters listed above with declines exceeding the applicable thresholds (50%+ for 2020, 20%+ for 2021) qualify for ERC. These substantial revenue reductions, in conjunction with the governmental order-induced partial suspension of operations, provide strong substantiation for 3245’s ERC claim.
+
+In light of the foregoing government orders and the precise revenue decline data provided, we respectfully request that the IRS reconsider and reverse the disallowance of our Q2 2020 ERC claim. Our documented compliance with each governmental order, coupled with our substantial and verifiable reduction in revenue, clearly meets the eligibility criteria for the Employee Retention Credit.
+
+Thank you for your attention to this matter. Please do not hesitate to contact us if you require any further information or clarification. We appreciate your prompt and fair reconsideration of our claim.
+
+Under penalties of perjury, I declare that I have submitted this protest and accompanying documentation, and to the best of my personal knowledge and belief, the information stated herein is true, correct, and complete.
+
+Sincerely,
+
+[Signature]
+
+Authorized Representative  
+3245
+
+Enclosures: Copies of Government Orders; Detailed Revenue Decline Data for Q2 2020 and Additional Quarters
