@@ -193,6 +193,7 @@ const COVIDPromptGenerator = ({ formData }) => {
   const generatePrompt = useCallback(async () => {
     // Don't generate if we don't have basic business info
     if (!formData.businessName || !formData.ein || !formData.location) {
+      console.log("Missing basic business info, skipping prompt generation");
       return;
     }
     
@@ -203,10 +204,12 @@ const COVIDPromptGenerator = ({ formData }) => {
       formData.timePeriods && 
       formData.timePeriods.length > 0
     ) {
+      console.log("No time period selected for COVID Orders, skipping prompt generation");
       return;
     }
     
     setGenerating(true);
+    console.log("Generating prompt...");
     
     try {
       const { city, state } = extractCityState(formData.location || '');
@@ -352,6 +355,7 @@ IMPORTANT:
       
       // Use OpenAI API to generate a customized prompt based on the business info
       try {
+        console.log("Calling API to generate customized prompt...");
         const response = await axios.post('/api/erc-protest/chatgpt/generate-prompt', {
           basePrompt,
           businessInfo: {
@@ -371,14 +375,17 @@ IMPORTANT:
         });
         
         if (response.data && response.data.prompt) {
+          console.log("Successfully received customized prompt from API");
           setPrompt(response.data.prompt);
         } else {
           // If API fails or isn't available, fall back to the base prompt
+          console.log("API response missing prompt, falling back to base prompt");
           setPrompt(basePrompt);
         }
       } catch (apiError) {
         console.error('Error calling GPT API:', apiError);
         // Fall back to the base prompt if API call fails
+        console.log("API call failed, falling back to base prompt");
         setPrompt(basePrompt);
       }
     } catch (error) {
@@ -390,11 +397,12 @@ IMPORTANT:
   }, [formData, promptType, selectedTimePeriod]); // Added dependencies here
   
   // Effect to set default selected time period when form data changes
+  // This needs to run FIRST before any prompt generation
   useEffect(() => {
-    if (formData && Object.keys(formData).length > 0) {
-      if (formData.timePeriods && formData.timePeriods.length > 0 && !selectedTimePeriod) {
-        setSelectedTimePeriod(formData.timePeriods[0]);
-      }
+    console.log("Effect for setting default time period running...");
+    if (formData && formData.timePeriods && formData.timePeriods.length > 0 && !selectedTimePeriod) {
+      console.log(`Setting default time period to ${formData.timePeriods[0]}`);
+      setSelectedTimePeriod(formData.timePeriods[0]);
     }
   }, [formData, selectedTimePeriod]);
   
@@ -403,14 +411,71 @@ IMPORTANT:
   // 2. The selected time period changes
   // 3. Essential form data changes
   useEffect(() => {
+    console.log("Effect for prompt generation running...");
+    console.log(`Current state: promptType=${promptType}, selectedTimePeriod=${selectedTimePeriod}`);
+    
     const hasBasicInfo = formData.businessName && formData.ein && formData.location;
-    const canGenerate = hasBasicInfo && 
-      (promptType === 'form886A' || (selectedTimePeriod && promptType === 'covidOrders'));
-      
-    if (canGenerate) {
-      generatePrompt();
+    
+    if (!hasBasicInfo) {
+      console.log("Missing basic business info, skipping prompt generation");
+      return;
     }
-  }, [promptType, selectedTimePeriod, generatePrompt, formData.businessName, formData.ein, formData.location]);
+    
+    // For form886A, we don't need a selected time period
+    if (promptType === 'form886A') {
+      console.log("Form 886A selected, generating prompt regardless of time period");
+      generatePrompt();
+      return;
+    }
+    
+    // Handle the case where we have timePeriods but no selectedTimePeriod is set yet
+    if (promptType === 'covidOrders') {
+      if (selectedTimePeriod) {
+        // If we already have a selected time period, generate the prompt
+        console.log(`Time period selected (${selectedTimePeriod}), generating prompt`);
+        generatePrompt();
+      } else if (formData.timePeriods && formData.timePeriods.length > 0) {
+        // If we don't have a selected time period but have available periods,
+        // set the first one and let the next effect cycle handle generation
+        console.log(`No time period selected but have options, setting to ${formData.timePeriods[0]}`);
+        setSelectedTimePeriod(formData.timePeriods[0]);
+        // Also generate using the first time period immediately instead of waiting for state update
+        const tempTimePeriod = formData.timePeriods[0];
+        console.log(`Immediately generating with first time period: ${tempTimePeriod}`);
+        const tempGeneratePrompt = async () => {
+          // Don't generate if we don't have basic business info
+          if (!formData.businessName || !formData.ein || !formData.location) {
+            return;
+          }
+          
+          setGenerating(true);
+          
+          try {
+            const { city, state } = extractCityState(formData.location || '');
+            const businessType = getNaicsDescription(formData.naicsCode);
+            
+            // Use the first time period for generating the prompt immediately
+            const timePeriod = tempTimePeriod;
+            
+            // Rest of your prompt generation logic...
+            // This is a simplified version that just sets a basic prompt
+            const basePrompt = `Please provide all federal, state, county, and city COVID-related government orders that would affect a "${businessType}" business located in ${city}, ${state} during ${timePeriod}.`;
+            
+            // Set the prompt directly
+            setPrompt(basePrompt);
+          } catch (error) {
+            console.error('Error in immediate prompt generation:', error);
+          } finally {
+            setGenerating(false);
+          }
+        };
+        
+        tempGeneratePrompt();
+      } else {
+        console.log("COVID Orders selected but no time periods available");
+      }
+    }
+  }, [promptType, selectedTimePeriod, generatePrompt, formData.businessName, formData.ein, formData.location, formData.naicsCode, formData.timePeriods]);
   
   // Handle time period selection change
   const handleTimePeriodChange = (event) => {
