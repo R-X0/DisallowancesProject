@@ -86,6 +86,19 @@ async function getTemplateContent(documentType) {
 async function generateERCDocument(businessInfo, covidData, templateContent) {
   try {
     console.log('Generating document using GPT...');
+    console.log('Business Info for Revenue Calculation:', {
+      q1_2019: businessInfo.q1_2019,
+      q2_2019: businessInfo.q2_2019,
+      q3_2019: businessInfo.q3_2019,
+      q4_2019: businessInfo.q4_2019,
+      q1_2020: businessInfo.q1_2020,
+      q2_2020: businessInfo.q2_2020,
+      q3_2020: businessInfo.q3_2020,
+      q4_2020: businessInfo.q4_2020,
+      q1_2021: businessInfo.q1_2021,
+      q2_2021: businessInfo.q2_2021,
+      q3_2021: businessInfo.q3_2021
+    });
     
     // Handle multiple time periods
     let timePeriods = businessInfo.timePeriod;
@@ -113,6 +126,9 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
       qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
     }
     
+    console.log('Calculated revenue declines:', revenueDeclines);
+    console.log('Qualifying quarters:', qualifyingQuarters);
+    
     // Check what evidence we have available
     const hasRevenueDeclines = revenueDeclines.length > 0;
     const hasQualifyingQuarters = qualifyingQuarters.length > 0;
@@ -127,22 +143,41 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
 
     // Always include revenue data if we have it
     if (hasRevenueDeclines) {
+      // Create a detailed revenue section with exact figures - FORCE INCLUSION WITH STRONGER LANGUAGE
       evidenceContent += `
-REVENUE REDUCTION INFORMATION:
-The business experienced the following revenue declines:
-${revenueDeclines.map(d => `• ${d.quarter}: ${d.percentDecline} decline compared to ${d.baseQuarter} ${d.qualifies ? '(Qualifies for ERC)' : '(Does not meet threshold)'}`).join('\n')}
+REVENUE REDUCTION INFORMATION - AUDIT-CRITICAL DATA (MUST REPRODUCE EXACTLY):
+
+${revenueDeclines.map(d => {
+  const quarterKey = d.quarter.toLowerCase().replace(' ', '_');
+  const baseQuarterKey = d.baseQuarter.toLowerCase().replace(' ', '_');
+  return `• ${d.quarter}: EXACTLY $${businessInfo[quarterKey]} compared to ${d.baseQuarter}: EXACTLY $${businessInfo[baseQuarterKey]} = EXACTLY ${d.percentDecline} decline ${d.qualifies ? '(Qualifies for ERC)' : '(Does not meet threshold)'}`;
+}).join('\n')}
+
+CRITICAL AUDIT REQUIREMENT: The above figures MUST appear VERBATIM in a dedicated "REVENUE DECLINE DATA" section in the document. These exact dollar amounts and percentages are required by the IRS for audit purposes. Do not paraphrase or summarize them.
 
 ${hasQualifyingQuarters ? 
       `Based on revenue decline thresholds (50%+ for 2020, 20%+ for 2021), the following quarters qualify for ERC: ${qualifyingQuarters.join(', ')}` : 
       'None of the quarters meet the ERC revenue decline thresholds (50%+ for 2020, 20%+ for 2021).'}
 
 ${businessInfo.revenueReductionInfo ? `\nAdditional context about revenue reduction: ${businessInfo.revenueReductionInfo}` : ''}
+
+CREATE A TABLE IN THE DOCUMENT THAT SHOWS:
+Quarter | 2019 Revenue | 2020/2021 Revenue | Decline $ | Decline % | Qualifies?
 `;
+
+      // Add a row for each quarter with data
+      for (const decline of revenueDeclines) {
+        const quarterKey = decline.quarter.toLowerCase().replace(' ', '_');
+        const baseQuarterKey = decline.baseQuarter.toLowerCase().replace(' ', '_');
+        const declineAmount = parseFloat(businessInfo[baseQuarterKey]) - parseFloat(businessInfo[quarterKey]);
+        
+        evidenceContent += `${decline.quarter} | $${businessInfo[baseQuarterKey]} | $${businessInfo[quarterKey]} | $${declineAmount.toFixed(2)} | ${decline.percentDecline} | ${decline.qualifies ? 'Yes' : 'No'}\n`;
+      }
 
       // If we have qualifying quarters, add a special instruction to emphasize this
       if (hasQualifyingQuarters) {
         evidenceContent += `
-IMPORTANT: Since this business has qualifying revenue reductions, this MUST be clearly stated in the document as a basis for ERC qualification. Include a dedicated section showing these revenue declines and explain how they meet the statutory requirements.
+IMPORTANT: Since this business has qualifying revenue reductions, this MUST be clearly stated in the document as a basis for ERC qualification. The above table with EXACT figures MUST be included in the document.
 `;
       }
     }
@@ -165,10 +200,13 @@ IMPORTANT: Include information about how government orders caused full or partia
     
     if (businessInfo.documentType === 'form886A') {
       // For Form 886-A document
-      systemPrompt = `You are an expert in creating IRS Form 886-A documents for Employee Retention Credit (ERC) substantiation. 
+      systemPrompt = `You are an expert in creating IRS Form 886-A documents for Employee Retention Credit (ERC) substantiation.
+      CRITICAL REQUIREMENT: This is a legal tax document that MUST include EXACT revenue figures provided, without rounding or generalizing.
       Create a comprehensive Form 886-A document with sections for Issue, Facts, Law, Argument, and Conclusion based on the specific business information and COVID-19 research data provided.`;
       
-      promptTemplate = `Please create a Form 886-A document for ERC substantiation using the following information:
+      promptTemplate = `CRITICAL LEGAL REQUIREMENT: This document MUST include the EXACT revenue figures provided below. Do not round, generalize, or summarize these numbers. They are required for IRS audit purposes.
+
+Please create a Form 886-A document for ERC substantiation using the following information:
 
 BUSINESS INFORMATION:
 Business Name: ${businessInfo.businessName}
@@ -206,13 +244,13 @@ IMPORTANT: Each order must be listed individually with ALL six fields above. Do 
         promptTemplate += `
 
 REVENUE DECLINE PRESENTATION FORMAT:
-When including revenue decline information, present it in this format:
+When including revenue decline information, it MUST be presented in this format:
 
-1. Include a dedicated section with these elements:
-   • Include a table or structured format showing quarterly comparisons
+1. Create a dedicated section with a clear heading "REVENUE DECLINE DATA" that includes:
+   • The table format shown above with the EXACT dollar amounts and percentages
    • For each relevant quarter, clearly show:
-     - Original revenue figures for both comparison quarters
-     - Percentage decline calculations
+     - Original revenue figures for both comparison quarters (EXACT DOLLAR AMOUNTS as provided above)
+     - Percentage decline calculations (EXACT PERCENTAGES as calculated above)
      - Clear indication of which quarters qualify based on thresholds (50% for 2020, 20% for 2021)
 
 2. In the appropriate sections:
@@ -236,15 +274,19 @@ FINAL CRITICAL INSTRUCTION:
 2. MAINTAIN the exact format for government orders specified above - this format is REQUIRED
 3. Do not abbreviate or simplify the government order format, even for minor orders
 4. If both revenue reduction and government orders information is available, include BOTH
-5. Format each government order with all six required fields (Name, Number, Dates, Summary, Impact)`;
+5. Format each government order with all six required fields (Name, Number, Dates, Summary, Impact)
+6. You MUST reproduce the EXACT revenue figures and percentages in a dedicated "REVENUE DECLINE DATA" section - this is a non-negotiable legal requirement`;
     
     } else {
       // Default to protest letter (original functionality)
-      systemPrompt = `You are an expert in creating IRS Employee Retention Credit (ERC) protest letters. 
-      Create a formal protest letter following the exact format and style of the example letter provided, 
+      systemPrompt = `You are an expert in creating IRS Employee Retention Credit (ERC) protest letters.
+      CRITICAL REQUIREMENT: This is a legal tax document that MUST include EXACT revenue figures provided, without rounding or generalizing.
+      Create a formal protest letter following the exact format and style of the example letter provided,
       using the specific business information and COVID-19 research data provided.`;
       
-      promptTemplate = `Please create an ERC protest letter using the following information:
+      promptTemplate = `CRITICAL LEGAL REQUIREMENT: This document MUST include the EXACT revenue figures provided below. Do not round, generalize, or summarize these numbers. They are required for IRS audit purposes.
+
+Please create an ERC protest letter using the following information:
 
 BUSINESS INFORMATION:
 Business Name: ${businessInfo.businessName}
@@ -281,19 +323,21 @@ IMPORTANT: Each order must be listed individually with ALL six fields above. Do 
       if (hasRevenueDeclines) {
         promptTemplate += `
 
-REVENUE DECLINE PRESENTATION FORMAT:
-If including revenue decline information, present it in this format:
+REVENUE DECLINE PRESENTATION FORMAT - LEGAL AUDIT REQUIREMENT:
+You MUST include a dedicated section titled "REVENUE DECLINE DATA" containing:
 
-1. Include a dedicated section titled "REVENUE DECLINE QUALIFICATION" with these elements:
-   • Include a table or structured format showing quarterly comparisons
-   • For each relevant quarter, show:
-     - Original revenue figures for both comparison quarters
-     - Percentage decline calculations
-     - Clear indication of which quarters qualify based on thresholds (50% for 2020, 20% for 2021)
+1. The EXACT table format shown above with:
+   • EXACT revenue figures for each quarter (not rounded or generalized)
+   • Dollar-for-dollar comparison between quarters
+   • EXACT percentage calculations
+   • Clear indication of qualifying quarters
 
-2. In the introduction and conclusion:
-   • Reference both revenue decline and government orders as qualification methods
-   • Clearly state which quarters qualify under which method`;
+2. This section MUST include a paragraph explicitly stating:
+   • The EXACT revenue amounts for each relevant quarter
+   • The EXACT percentage decline for each quarter
+   • Which quarters qualify based on thresholds (50% for 2020, 20% for 2021)
+
+This is a LEGAL REQUIREMENT - the letter will be rejected without these specific figures.`;
       }
 
       promptTemplate += `
@@ -308,7 +352,9 @@ FINAL CRITICAL INSTRUCTION:
 2. MAINTAIN the exact format for government orders specified above - this format is REQUIRED
 3. Do not abbreviate or simplify the government order format, even for minor orders
 4. If both revenue reduction and government orders information is available, include BOTH
-5. Format each government order with all six required fields (Name, Number, Dates, Summary, Impact)`;
+5. Format each government order with all six required fields (Name, Number, Dates, Summary, Impact)
+6. You MUST include EXACT revenue figures and percentage declines exactly as provided above - this is a legal and audit requirement
+7. Add a separate section titled "REVENUE DECLINE DATA" containing the specific revenue figures and calculations`;
     }
     
     const response = await openai.chat.completions.create({
@@ -342,12 +388,23 @@ FINAL CRITICAL INSTRUCTION:
  */
 function calculateRevenueDeclines(businessInfo) {
   const declines = [];
+  console.log('Calculating revenue declines from business info:', businessInfo);
   
   // Helper function to calculate decline
   const calculateDecline = (currentQuarter, baseQuarter, thresholdPercent) => {
     if (businessInfo[currentQuarter] && businessInfo[baseQuarter] && 
         parseFloat(businessInfo[baseQuarter]) > 0) {
-      const decline = (1 - parseFloat(businessInfo[currentQuarter]) / parseFloat(businessInfo[baseQuarter])) * 100;
+      const current = parseFloat(businessInfo[currentQuarter]);
+      const base = parseFloat(businessInfo[baseQuarter]);
+      const decline = (1 - current / base) * 100;
+      
+      console.log(`Calculating decline for ${currentQuarter} vs ${baseQuarter}:`, {
+        currentValue: current,
+        baseValue: base,
+        declinePercent: decline,
+        qualifies: decline >= thresholdPercent
+      });
+      
       if (decline > 0) {
         return {
           quarter: currentQuarter.toUpperCase().replace('_', ' '),
@@ -384,6 +441,7 @@ function calculateRevenueDeclines(businessInfo) {
   const q3_2021_decline = calculateDecline('q3_2021', 'q3_2019', 20);
   if (q3_2021_decline) declines.push(q3_2021_decline);
   
+  console.log('Final calculated declines:', declines);
   return declines;
 }
 
