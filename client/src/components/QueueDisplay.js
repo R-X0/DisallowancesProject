@@ -160,10 +160,10 @@ const QueueDisplay = () => {
   const getFilenameFromPath = (filePath) => {
     if (!filePath) return '';
     // Simple path handling that works in browser
-    const parts = filePath.split(/[\/\\]/);
+    const parts = filePath.split(/[/\\]/);
     return parts[parts.length - 1];
   };
-
+  
   return (
     <Paper elevation={3} sx={{ 
       p: 2, 
