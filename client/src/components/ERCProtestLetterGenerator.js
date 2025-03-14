@@ -407,9 +407,6 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
   const hasQualifyingQuarters = qualifyingQuarters.length > 0;
   
-  // Use the state variable for approach focus
-  const isRevenueApproach = approachFocus === 'revenueReduction';
-  
   return (
     <Box mt={3}>
       <Paper elevation={3} sx={{ p: 3 }}>
@@ -450,7 +447,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         {hasQualifyingQuarters && (
           <Box mb={3} p={2} bgcolor="info.lighter" borderRadius={1}>
             <Typography variant="subtitle2" gutterBottom>
-              <strong>Revenue Reduction Approach Detected</strong>
+              <strong>{approachFocus === 'revenueReduction' ? 'Revenue Reduction' : 'Government Orders'} Approach Detected</strong>
             </Typography>
             <Typography variant="body2">
               Your data shows qualifying revenue reductions in the following quarters: {qualifyingQuarters.join(', ')}
