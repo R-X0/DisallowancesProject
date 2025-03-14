@@ -109,21 +109,31 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
       ? allTimePeriods.join(', ') 
       : timePeriods;
     
+    // Check if we have any revenue data
+    const hasAnyRevenueData = 
+      businessInfo.q1_2019 || businessInfo.q2_2019 || businessInfo.q3_2019 || businessInfo.q4_2019 ||
+      businessInfo.q1_2020 || businessInfo.q2_2020 || businessInfo.q3_2020 || businessInfo.q4_2020 ||
+      businessInfo.q1_2021 || businessInfo.q2_2021 || businessInfo.q3_2021;
+    
     // Process revenue data if available
     let revenueDeclines = [];
     let qualifyingQuarters = [];
     let approachFocus = businessInfo.approachFocus || 'governmentOrders';
     
     // If revenue data is sent directly from client, use it
-    if (businessInfo.revenueDeclines && Array.isArray(businessInfo.revenueDeclines)) {
+    if (businessInfo.revenueDeclines && Array.isArray(businessInfo.revenueDeclines) && businessInfo.revenueDeclines.length > 0) {
+      console.log('Using pre-calculated revenue declines from client');
       revenueDeclines = businessInfo.revenueDeclines;
       if (businessInfo.qualifyingQuarters && Array.isArray(businessInfo.qualifyingQuarters)) {
         qualifyingQuarters = businessInfo.qualifyingQuarters;
       }
-    } else {
-      // Otherwise calculate from individual quarter data
+    } else if (hasAnyRevenueData) {
+      // Otherwise calculate from individual quarter data if we have some
+      console.log('Calculating revenue declines from individual quarter data');
       revenueDeclines = calculateRevenueDeclines(businessInfo);
       qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
+    } else {
+      console.log('No revenue data available, skipping revenue decline calculations');
     }
     
     console.log('Calculated revenue declines:', revenueDeclines);
@@ -134,16 +144,17 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
     const hasQualifyingQuarters = qualifyingQuarters.length > 0;
 
     // Check for government orders info
-    const hasGovernmentOrders = 
+    const hasGovernmentOrdersInfo = 
       (businessInfo.timePeriods && businessInfo.timePeriods.length > 0) || 
       (businessInfo.governmentOrdersInfo && businessInfo.governmentOrdersInfo.trim().length > 0);
 
     // Build content that includes ALL available evidence
     let evidenceContent = '';
 
-    // Always include revenue data if we have it
+    // Include revenue data in the evidence content ONLY if we have qualifying quarters
+    // or if we at least have some revenue data to show
     if (hasRevenueDeclines) {
-      // Create a detailed revenue section with exact figures - FORCE INCLUSION WITH STRONGER LANGUAGE
+      // Create a detailed revenue section with exact figures
       evidenceContent += `
 REVENUE REDUCTION INFORMATION - AUDIT-CRITICAL DATA (MUST REPRODUCE EXACTLY):
 
@@ -153,37 +164,50 @@ ${revenueDeclines.map(d => {
   return `• ${d.quarter}: EXACTLY $${businessInfo[quarterKey]} compared to ${d.baseQuarter}: EXACTLY $${businessInfo[baseQuarterKey]} = EXACTLY ${d.percentDecline} decline ${d.qualifies ? '(Qualifies for ERC)' : '(Does not meet threshold)'}`;
 }).join('\n')}
 
-CRITICAL AUDIT REQUIREMENT: The above figures MUST appear VERBATIM in a dedicated "REVENUE DECLINE DATA" section in the document. These exact dollar amounts and percentages are required by the IRS for audit purposes. Do not paraphrase or summarize them.
-
 ${hasQualifyingQuarters ? 
-      `Based on revenue decline thresholds (50%+ for 2020, 20%+ for 2021), the following quarters qualify for ERC: ${qualifyingQuarters.join(', ')}` : 
-      'None of the quarters meet the ERC revenue decline thresholds (50%+ for 2020, 20%+ for 2021).'}
+  `Based on revenue decline thresholds (50%+ for 2020, 20%+ for 2021), the following quarters qualify for ERC: ${qualifyingQuarters.join(', ')}` : 
+  'None of the quarters meet the ERC revenue decline thresholds (50%+ for 2020, 20%+ for 2021).'}
+`;
 
-${businessInfo.revenueReductionInfo ? `\nAdditional context about revenue reduction: ${businessInfo.revenueReductionInfo}` : ''}
-
+      // Only add this stronger phrasing if we have qualifying quarters
+      if (hasQualifyingQuarters) {
+        evidenceContent += `
+CRITICAL AUDIT REQUIREMENT: The above figures MUST appear VERBATIM in a dedicated "REVENUE DECLINE DATA" section in the document. These exact dollar amounts and percentages are required by the IRS for audit purposes. Do not paraphrase or summarize them.
+`;
+      }
+      
+      // Add any additional context provided by the user
+      if (businessInfo.revenueReductionInfo) {
+        evidenceContent += `\nAdditional context about revenue reduction: ${businessInfo.revenueReductionInfo}\n`;
+      }
+      
+      // Only add the table if we have actual revenue data
+      if (revenueDeclines.length > 0) {
+        evidenceContent += `
 CREATE A TABLE IN THE DOCUMENT THAT SHOWS:
 Quarter | 2019 Revenue | 2020/2021 Revenue | Decline $ | Decline % | Qualifies?
 `;
 
-      // Add a row for each quarter with data
-      for (const decline of revenueDeclines) {
-        const quarterKey = decline.quarter.toLowerCase().replace(' ', '_');
-        const baseQuarterKey = decline.baseQuarter.toLowerCase().replace(' ', '_');
-        const declineAmount = parseFloat(businessInfo[baseQuarterKey]) - parseFloat(businessInfo[quarterKey]);
-        
-        evidenceContent += `${decline.quarter} | $${businessInfo[baseQuarterKey]} | $${businessInfo[quarterKey]} | $${declineAmount.toFixed(2)} | ${decline.percentDecline} | ${decline.qualifies ? 'Yes' : 'No'}\n`;
-      }
+        // Add a row for each quarter with data
+        for (const decline of revenueDeclines) {
+          const quarterKey = decline.quarter.toLowerCase().replace(' ', '_');
+          const baseQuarterKey = decline.baseQuarter.toLowerCase().replace(' ', '_');
+          const declineAmount = parseFloat(businessInfo[baseQuarterKey]) - parseFloat(businessInfo[quarterKey]);
+          
+          evidenceContent += `${decline.quarter} | $${businessInfo[baseQuarterKey]} | $${businessInfo[quarterKey]} | $${declineAmount.toFixed(2)} | ${decline.percentDecline} | ${decline.qualifies ? 'Yes' : 'No'}\n`;
+        }
 
-      // If we have qualifying quarters, add a special instruction to emphasize this
-      if (hasQualifyingQuarters) {
-        evidenceContent += `
+        // If we have qualifying quarters, add a special instruction to emphasize this
+        if (hasQualifyingQuarters) {
+          evidenceContent += `
 IMPORTANT: Since this business has qualifying revenue reductions, this MUST be clearly stated in the document as a basis for ERC qualification. The above table with EXACT figures MUST be included in the document.
 `;
+        }
       }
     }
 
     // Also include government orders info if we have it
-    if (hasGovernmentOrders) {
+    if (hasGovernmentOrdersInfo) {
       evidenceContent += `
 GOVERNMENT ORDERS INFORMATION:
 This business was affected by governmental orders that caused a full or partial suspension of business operations.
@@ -230,12 +254,12 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 SPECIFIC FORMAT REQUIREMENTS FOR GOVERNMENT ORDERS:
 For each government order mentioned, you MUST use this EXACT detailed format:
 
-• Order Name: [Full Name of Order]
-• Order Number: [Official Number/Identifier]
-• Date Enacted: [MM/DD/YYYY]
-• Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
-• Order Summary: [2-3 sentence detailed description of what the order mandated]
-• Impact on Quarter: [Specific explanation of how this affected the business operations]
+- Order Name: [Full Name of Order]
+- Order Number: [Official Number/Identifier]
+- Date Enacted: [MM/DD/YYYY]
+- Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
+- Order Summary: [2-3 sentence detailed description of what the order mandated]
+- Impact on Quarter: [Specific explanation of how this affected the business operations]
 
 IMPORTANT: Each order must be listed individually with ALL six fields above. Do not abbreviate or simplify this format, even for minor orders.`;
 
@@ -310,12 +334,12 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 SPECIFIC FORMAT REQUIREMENTS FOR GOVERNMENT ORDERS:
 For each government order mentioned, you MUST use this EXACT detailed format:
 
-• Order Name: [Full Name of Order]
-• Order Number: [Official Number/Identifier]
-• Date Enacted: [MM/DD/YYYY]
-• Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
-• Order Summary: [2-3 sentence detailed description of what the order mandated]
-• Impact on Quarter: [Specific explanation of how this affected the business operations]
+- Order Name: [Full Name of Order]
+- Order Number: [Official Number/Identifier]
+- Date Enacted: [MM/DD/YYYY]
+- Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
+- Order Summary: [2-3 sentence detailed description of what the order mandated]
+- Impact on Quarter: [Specific explanation of how this affected the business operations]
 
 IMPORTANT: Each order must be listed individually with ALL six fields above. Do not abbreviate or simplify this format, even for minor orders.`;
 
@@ -335,7 +359,7 @@ You MUST include a dedicated section titled "REVENUE DECLINE DATA" containing:
 2. This section MUST include a paragraph explicitly stating:
    • The EXACT revenue amounts for each relevant quarter
    • The EXACT percentage decline for each quarter
-   • Which quarters qualify based on thresholds (50% for 2020, 20% for 2021)
+   • Which quarters qualify based on thresholds (50% for 2020, 20%+ for 2021)
 
 This is a LEGAL REQUIREMENT - the letter will be rejected without these specific figures.`;
       }

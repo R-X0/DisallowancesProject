@@ -52,7 +52,18 @@ router.post('/process-chatgpt', async (req, res) => {
       allTimePeriods,
       businessType,
       trackingId,
-      documentType = 'protestLetter' // Default to protest letter if not specified
+      documentType = 'protestLetter', // Default to protest letter if not specified
+      // Extract all revenue fields
+      q1_2019, q2_2019, q3_2019, q4_2019,
+      q1_2020, q2_2020, q3_2020, q4_2020,
+      q1_2021, q2_2021, q3_2021,
+      // Additional context information
+      revenueReductionInfo,
+      governmentOrdersInfo,
+      // Pre-calculated data if provided
+      revenueDeclines,
+      qualifyingQuarters,
+      approachFocus
     } = req.body;
 
     // Validate required inputs
@@ -93,7 +104,7 @@ router.post('/process-chatgpt', async (req, res) => {
       // 2. Get the appropriate template based on document type
       let templateContent = await documentGenerator.getTemplateContent(documentType);
 
-      // 3. Create business info object
+      // 3. Create business info object - now with ALL revenue data
       const businessInfo = {
         businessName,
         ein,
@@ -101,8 +112,35 @@ router.post('/process-chatgpt', async (req, res) => {
         timePeriod,
         allTimePeriods: allTimePeriods || [timePeriod],
         businessType: businessType || 'business',
-        documentType
+        documentType,
+        // Include all quarterly revenue data
+        q1_2019, q2_2019, q3_2019, q4_2019,
+        q1_2020, q2_2020, q3_2020, q4_2020,
+        q1_2021, q2_2021, q3_2021,
+        // Include additional context
+        revenueReductionInfo,
+        governmentOrdersInfo,
+        // Include pre-calculated data if available
+        revenueDeclines,
+        qualifyingQuarters,
+        // Include approach focus
+        approachFocus: approachFocus || 'governmentOrders'
       };
+
+      // Log revenue data that's being passed
+      console.log('Business Info for Revenue Calculation:', {
+        q1_2019: businessInfo.q1_2019,
+        q2_2019: businessInfo.q2_2019,
+        q3_2019: businessInfo.q3_2019,
+        q4_2019: businessInfo.q4_2019,
+        q1_2020: businessInfo.q1_2020,
+        q2_2020: businessInfo.q2_2020,
+        q3_2020: businessInfo.q3_2020,
+        q4_2020: businessInfo.q4_2020,
+        q1_2021: businessInfo.q1_2021,
+        q2_2021: businessInfo.q2_2021,
+        q3_2021: businessInfo.q3_2021
+      });
 
       // 4. Generate document using the conversation content and template
       console.log('Generating document...');
