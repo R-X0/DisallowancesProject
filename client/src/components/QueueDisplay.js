@@ -41,7 +41,9 @@ import {
   TableChartOutlined,
   Delete as DeleteIcon,
   PostAdd,
-  Edit
+  Edit,
+  GavelOutlined,
+  TrendingDownOutlined
 } from '@mui/icons-material';
 
 const QueueDisplay = () => {
@@ -189,20 +191,32 @@ const QueueDisplay = () => {
     setDialogOpen(true);
   };
 
-  // Function to handle generating a letter for a specific quarter
-  // Now immediately generates the letter without confirmation
-  const handleGenerateLetter = async (item, quarter) => {
+  // Function to handle generating a letter for a specific quarter with a specified approach
+  const handleGenerateLetter = async (item, quarter, approach = 'auto') => {
     setSelectedItem(item);
     setSelectedQuarter(quarter);
     
     try {
+      // Get the default approach based on whether the quarter qualifies
+      let approachToUse = approach;
+      
+      // If approach is 'auto', determine it based on quarter qualification
+      if (approach === 'auto') {
+        // Check if this quarter qualifies based on revenue
+        const qualifyingQuarters = item.submissionData?.report?.qualificationData?.qualifyingQuarters || [];
+        approachToUse = qualifyingQuarters.includes(quarter) ? 'revenueReduction' : 'governmentOrders';
+      }
+      
+      console.log(`Generating letter for ${quarter} using ${approachToUse} approach`);
+      
       // Redirect to the ERC Protest Form with pre-filled data
       // We'll navigate programmatically to the form with the data
       const businessData = {
         businessName: item.businessName,
         ein: item.submissionData?.originalData?.formData?.ein || '',
         location: item.submissionData?.originalData?.formData?.location || '',
-        timePeriods: [quarter]
+        timePeriods: [quarter],
+        approach: approachToUse  // Add the approach to the data
       };
       
       // Store this in localStorage for the form to pick up
@@ -235,18 +249,6 @@ const QueueDisplay = () => {
       
     } catch (error) {
       console.error('Error initiating letter generation:', error);
-    }
-  };
-
-  // This function is no longer needed since we generate letters directly
-  // But keeping a minimal version just in case it's referenced elsewhere
-  const proceedWithLetterGeneration = async () => {
-    if (!selectedItem || !selectedQuarter) return;
-    
-    try {
-      await handleGenerateLetter(selectedItem, selectedQuarter);
-    } catch (error) {
-      console.error('Error in proceedWithLetterGeneration:', error);
     }
   };
 
@@ -301,23 +303,6 @@ const QueueDisplay = () => {
     }
   };
 
-  // Function to format file size
-  const formatFileSize = (bytes) => {
-    if (!bytes) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  // Function to get filename from path
-  const getFilenameFromPath = (filePath) => {
-    if (!filePath) return '';
-    // Simple path handling that works in browser
-    const parts = filePath.split(/[/\\]/);
-    return parts[parts.length - 1];
-  };
-  
   // Function to open delete confirmation dialog
   const handleOpenDeleteDialog = (item, event) => {
     // Stop propagation to prevent the item click handler from firing
@@ -382,10 +367,16 @@ const QueueDisplay = () => {
     setDeleteError(null);
   };
   
-  // No longer needed as we removed the dialog
-  // But keeping a simplified version in case it's still referenced elsewhere
-  const handleCloseLetterDialog = () => {
-    setSelectedQuarter('');
+  // Helper function to get all quarters from quarter analysis
+  const getAllQuarters = (item) => {
+    const quarterAnalysis = item.submissionData?.report?.qualificationData?.quarterAnalysis || [];
+    return quarterAnalysis.map(q => q.quarter);
+  };
+
+  // Helper function to check if a quarter qualifies
+  const isQualifyingQuarter = (item, quarter) => {
+    const qualifyingQuarters = item.submissionData?.report?.qualificationData?.qualifyingQuarters || [];
+    return qualifyingQuarters.includes(quarter);
   };
   
   return (
@@ -487,34 +478,69 @@ const QueueDisplay = () => {
                       )}
                       {item.reportPath && (
                         <Typography variant="caption" display="block" color="primary">
-                          Report available: {getFilenameFromPath(item.reportPath)}
+                          Report available: {item.reportPath.split('/').pop()}
                         </Typography>
                       )}
-                      {item.submissionData?.report?.qualificationData?.qualifyingQuarters?.length > 0 && (
+                      
+                      {/* Show quarterly data if available */}
+                      {item.submissionData?.report?.qualificationData?.quarterAnalysis?.length > 0 && (
                         <Box>
-                          <Typography variant="caption" display="block" sx={{ color: 'green' }}>
-                            Qualifying Quarters: {item.submissionData.report.qualificationData.qualifyingQuarters.join(', ')}
-                          </Typography>
+                          {/* Qualifying Quarters */}
+                          {item.submissionData?.report?.qualificationData?.qualifyingQuarters?.length > 0 && (
+                            <Typography variant="caption" display="block" sx={{ color: 'green' }}>
+                              Qualifying by Revenue: {item.submissionData.report.qualificationData.qualifyingQuarters.join(', ')}
+                            </Typography>
+                          )}
                           
-                          {/* Generate Letter buttons for each qualifying quarter */}
+                          {/* All Quarters Row */}
                           <Box display="flex" flexWrap="wrap" gap={0.5} mt={0.5}>
-                            {item.submissionData.report.qualificationData.qualifyingQuarters.map(quarter => {
+                            {getAllQuarters(item).map(quarter => {
                               const isProcessed = item.submissionData?.processedQuarters?.includes(quarter);
+                              const isQualifying = isQualifyingQuarter(item, quarter);
+                              
                               return (
                                 <Chip
                                   key={quarter}
                                   label={quarter}
                                   size="small"
-                                  color={isProcessed ? "success" : "primary"}
-                                  icon={isProcessed ? <CheckCircle fontSize="small" /> : <PostAdd fontSize="small" />}
+                                  color={isProcessed ? "success" : (isQualifying ? "primary" : "default")}
+                                  icon={isProcessed ? 
+                                    <CheckCircle fontSize="small" /> : 
+                                    (isQualifying ? <TrendingDownOutlined fontSize="small" /> : <GavelOutlined fontSize="small" />)
+                                  }
                                   variant={isProcessed ? "outlined" : "filled"}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleGenerateLetter(item, quarter);
+                                    // Pass the appropriate approach based on whether the quarter qualifies
+                                    handleGenerateLetter(item, quarter, isQualifying ? 'revenueReduction' : 'governmentOrders');
+                                  }}
+                                  sx={{
+                                    // Style for non-qualifying quarters
+                                    ...((!isQualifying && !isProcessed) && {
+                                      backgroundColor: '#f5f5f5',
+                                      borderColor: '#757575',
+                                      color: '#757575'
+                                    })
                                   }}
                                 />
                               );
                             })}
+                          </Box>
+                          
+                          {/* Legend for the chips */}
+                          <Box mt={0.5} display="flex" gap={1} flexWrap="wrap">
+                            <Typography variant="caption" display="flex" alignItems="center">
+                              <TrendingDownOutlined fontSize="small" color="primary" sx={{ mr: 0.5 }} />
+                              Revenue
+                            </Typography>
+                            <Typography variant="caption" display="flex" alignItems="center">
+                              <GavelOutlined fontSize="small" sx={{ mr: 0.5, color: '#757575' }} />
+                              Gov Orders
+                            </Typography>
+                            <Typography variant="caption" display="flex" alignItems="center">
+                              <CheckCircle fontSize="small" color="success" sx={{ mr: 0.5 }} />
+                              Completed
+                            </Typography>
                           </Box>
                         </Box>
                       )}
@@ -629,20 +655,25 @@ const QueueDisplay = () => {
                   </Typography>
                   <Paper variant="outlined" sx={{ p: 2 }}>
                     <Typography variant="body2" gutterBottom>
-                      <strong>Qualifying Quarters:</strong> {
+                      <strong>Qualifying Quarters by Revenue:</strong> {
                         selectedItem.submissionData.report.qualificationData.qualifyingQuarters.length > 0 
                           ? selectedItem.submissionData.report.qualificationData.qualifyingQuarters.join(', ') 
                           : 'None'
                       }
                     </Typography>
                     
-                    {/* Buttons to generate letters for each qualifying quarter */}
-                    {selectedItem.submissionData.report.qualificationData.qualifyingQuarters.length > 0 && (
-                      <Box mt={2} mb={2}>
-                        <Typography variant="subtitle2" gutterBottom>
-                          Generate Letters:
+                    {/* Generate letters section with two groups */}
+                    <Box mt={2} mb={2}>
+                      <Typography variant="subtitle2" gutterBottom>
+                        Generate Letters:
+                      </Typography>
+                      
+                      {/* Group by approach type */}
+                      <Box>
+                        <Typography variant="body2" fontWeight="medium" mt={1}>
+                          Revenue Approach Quarters:
                         </Typography>
-                        <Box display="flex" flexWrap="wrap" gap={1}>
+                        <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
                           {selectedItem.submissionData.report.qualificationData.qualifyingQuarters.map(quarter => {
                             const isProcessed = selectedItem.submissionData?.processedQuarters?.includes(quarter);
                             return (
@@ -650,17 +681,50 @@ const QueueDisplay = () => {
                                 key={quarter}
                                 variant={isProcessed ? "outlined" : "contained"}
                                 color={isProcessed ? "success" : "primary"}
-                                startIcon={isProcessed ? <CheckCircle /> : <PostAdd />}
-                                onClick={() => handleGenerateLetter(selectedItem, quarter)}
+                                startIcon={isProcessed ? <CheckCircle /> : <TrendingDownOutlined />}
+                                onClick={() => handleGenerateLetter(selectedItem, quarter, 'revenueReduction')}
                                 size="small"
                               >
-                                {isProcessed ? `${quarter} - Done` : `Generate ${quarter} Letter`}
+                                {isProcessed ? `${quarter} - Done` : `${quarter} - Revenue`}
                               </Button>
                             );
                           })}
+                          {selectedItem.submissionData.report.qualificationData.qualifyingQuarters.length === 0 && (
+                            <Typography variant="body2" color="text.secondary">
+                              No quarters qualify by revenue
+                            </Typography>
+                          )}
+                        </Box>
+                        
+                        <Typography variant="body2" fontWeight="medium" mt={2}>
+                          Government Orders Approach Quarters:
+                        </Typography>
+                        <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
+                          {getAllQuarters(selectedItem)
+                            .filter(q => !isQualifyingQuarter(selectedItem, q))
+                            .map(quarter => {
+                              const isProcessed = selectedItem.submissionData?.processedQuarters?.includes(quarter);
+                              return (
+                                <Button
+                                  key={quarter}
+                                  variant={isProcessed ? "outlined" : "contained"}
+                                  color={isProcessed ? "success" : "default"}
+                                  startIcon={isProcessed ? <CheckCircle /> : <GavelOutlined />}
+                                  onClick={() => handleGenerateLetter(selectedItem, quarter, 'governmentOrders')}
+                                  size="small"
+                                >
+                                  {isProcessed ? `${quarter} - Done` : `${quarter} - Gov Orders`}
+                                </Button>
+                              );
+                            })}
+                          {getAllQuarters(selectedItem).filter(q => !isQualifyingQuarter(selectedItem, q)).length === 0 && (
+                            <Typography variant="body2" color="text.secondary">
+                              All quarters qualify by revenue
+                            </Typography>
+                          )}
                         </Box>
                       </Box>
-                    )}
+                    </Box>
                     
                     {selectedItem.submissionData.report.qualificationData.quarterAnalysis && (
                       <TableContainer component={Paper} variant="outlined" sx={{ mt: 2 }}>
@@ -692,22 +756,35 @@ const QueueDisplay = () => {
                                     />
                                   </TableCell>
                                   <TableCell>
-                                    {quarter.qualifies && (
-                                      isProcessed ? 
-                                        <Chip 
-                                          label="Letter Generated"
-                                          color="success"
-                                          size="small"
-                                          icon={<CheckCircle fontSize="small" />}
-                                        /> :
-                                        <Button
-                                          size="small"
-                                          variant="outlined"
-                                          startIcon={<PostAdd />}
-                                          onClick={() => handleGenerateLetter(selectedItem, quarter.quarter)}
-                                        >
-                                          Generate
-                                        </Button>
+                                    {isProcessed ? (
+                                      <Chip 
+                                        label="Letter Generated"
+                                        color="success"
+                                        size="small"
+                                        icon={<CheckCircle fontSize="small" />}
+                                      />
+                                    ) : (
+                                      <Box display="flex" gap={1}>
+                                        {quarter.qualifies ? (
+                                          <Button
+                                            size="small"
+                                            variant="outlined"
+                                            startIcon={<TrendingDownOutlined />}
+                                            onClick={() => handleGenerateLetter(selectedItem, quarter.quarter, 'revenueReduction')}
+                                          >
+                                            Revenue
+                                          </Button>
+                                        ) : (
+                                          <Button
+                                            size="small"
+                                            variant="outlined"
+                                            startIcon={<GavelOutlined />}
+                                            onClick={() => handleGenerateLetter(selectedItem, quarter.quarter, 'governmentOrders')}
+                                          >
+                                            Gov Orders
+                                          </Button>
+                                        )}
+                                      </Box>
                                     )}
                                   </TableCell>
                                 </TableRow>
@@ -731,7 +808,7 @@ const QueueDisplay = () => {
                     <Box display="flex" alignItems="center" justifyContent="space-between">
                       <Box display="flex" alignItems="center">
                         <TableChartOutlined sx={{ mr: 1, color: 'primary.main' }} />
-                        <Typography>{getFilenameFromPath(selectedItem.reportPath)}</Typography>
+                        <Typography>{selectedItem.reportPath.split('/').pop()}</Typography>
                       </Box>
                       <Button
                         variant="contained"
@@ -852,10 +929,17 @@ const QueueDisplay = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Letter Generation Dialog removed - letters are now generated immediately */}
     </Paper>
   );
+};
+
+// Missing helper function for formatting file size
+const formatFileSize = (bytes) => {
+  if (!bytes) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
 export default QueueDisplay;

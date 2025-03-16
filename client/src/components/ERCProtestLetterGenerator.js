@@ -203,14 +203,32 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [documentType, setDocumentType] = useState('protestLetter'); // State for toggling document type
   const [selectedTimePeriod, setSelectedTimePeriod] = useState(''); // For selecting which period to focus on for protest letter
   const [approachFocus, setApproachFocus] = useState('governmentOrders'); // Default approach
+  const [forcedApproach, setForcedApproach] = useState(null); // Store explicitly set approach
 
   // Initialize selected time period when form data changes
+  // Also check for explicitly set approach from the queue display
   useEffect(() => {
     if (formData && formData.timePeriods && formData.timePeriods.length > 0 && !selectedTimePeriod) {
       setSelectedTimePeriod(formData.timePeriods[0]);
     }
     
-    // Determine approach whenever form data changes
+    // Check if there's an explicit approach set from the queue display
+    const prefillData = localStorage.getItem('prefillData');
+    if (prefillData) {
+      try {
+        const parsedData = JSON.parse(prefillData);
+        if (parsedData.approach) {
+          console.log(`Using explicitly set approach from queue: ${parsedData.approach}`);
+          setForcedApproach(parsedData.approach);
+          setApproachFocus(parsedData.approach);
+          return;
+        }
+      } catch (error) {
+        console.error('Error parsing prefill data for approach:', error);
+      }
+    }
+    
+    // If no forced approach, determine automatically
     if (formData) {
       const approach = determineUserApproach(formData);
       setApproachFocus(approach);
@@ -250,7 +268,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
       const qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
       
       // CONFIRM we're using the correct approach - re-check right before API call
-      const currentApproach = determineUserApproach(formData);
+      const currentApproach = forcedApproach || determineUserApproach(formData);
       console.log("Final approach check before API call:", currentApproach);
       
       // Prepare data for API call
@@ -454,6 +472,20 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
             </Typography>
             <Typography variant="body2" color="text.secondary" mt={1}>
               This revenue reduction information will be prominently featured in your generated document as the primary basis for ERC qualification.
+            </Typography>
+          </Box>
+        )}
+        
+        {/* Display forced approach info if relevant */}
+        {forcedApproach && (
+          <Box mb={3} p={2} bgcolor="warning.lighter" borderRadius={1}>
+            <Typography variant="subtitle2" gutterBottom>
+              <strong>Using {forcedApproach === 'revenueReduction' ? 'Revenue Reduction' : 'Government Orders'} Approach</strong>
+            </Typography>
+            <Typography variant="body2">
+              {forcedApproach === 'revenueReduction' 
+                ? 'This letter will be generated using the Revenue Reduction approach, focusing on qualifying revenue declines.' 
+                : 'This letter will be generated using the Government Orders approach, focusing on how government orders caused a full or partial suspension of operations.'}
             </Typography>
           </Box>
         )}

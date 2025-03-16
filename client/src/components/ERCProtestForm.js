@@ -68,6 +68,53 @@ const ERCProtestForm = () => {
     'Q1 2021', 'Q2 2021', 'Q3 2021'
   ];
   
+  // Effect to check for prefill data from the queue display
+  useEffect(() => {
+    // Check for prefill data in localStorage
+    const prefillData = localStorage.getItem('prefillData');
+    if (prefillData) {
+      try {
+        const parsedData = JSON.parse(prefillData);
+        console.log('Found prefill data:', parsedData);
+        
+        // Update form data with prefill values
+        setFormData(prevData => ({
+          ...prevData,
+          businessName: parsedData.businessName || prevData.businessName,
+          ein: parsedData.ein || prevData.ein,
+          location: parsedData.location || prevData.location,
+          timePeriods: parsedData.timePeriods || prevData.timePeriods,
+        }));
+        
+        // If approach is specified, update the appropriate fields
+        if (parsedData.approach) {
+          if (parsedData.approach === 'governmentOrders') {
+            // For government orders approach, make sure we have the time period selected
+            // and set some sample government orders info
+            setFormData(prevData => ({
+              ...prevData,
+              governmentOrdersInfo: parsedData.governmentOrdersInfo || 
+                `This business was affected by government orders during ${parsedData.timePeriods?.[0] || ''}. Please provide details about specific orders that caused a full or partial suspension of operations.`
+            }));
+          } else if (parsedData.approach === 'revenueReduction') {
+            // For revenue reduction approach, prioritize revenue data fields
+            // This should auto-populate quarterly revenue data if available
+            setFormData(prevData => ({
+              ...prevData,
+              revenueReductionInfo: parsedData.revenueReductionInfo || 
+                `This business experienced a significant decline in revenue during ${parsedData.timePeriods?.[0] || ''}. Please provide quarterly revenue data to substantiate the claim.`
+            }));
+          }
+        }
+        
+        // Clear localStorage after using it to avoid reusing the same data
+        localStorage.removeItem('prefillData');
+      } catch (error) {
+        console.error('Error parsing prefill data:', error);
+      }
+    }
+  }, []); // Empty dependency array means this runs once on component mount
+  
   // Debug effect - log whenever protestLetterData changes
   useEffect(() => {
     console.log("protestLetterData changed:", protestLetterData);
