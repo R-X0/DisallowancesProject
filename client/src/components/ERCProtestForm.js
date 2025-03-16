@@ -283,20 +283,8 @@ const ERCProtestForm = () => {
 
   // Check if form is valid to proceed to next step
   const isFormValid = () => {
-    const hasGovernmentOrders = formData.timePeriods.length > 0;
-    const hasRevenueData = 
-      formData.q1_2019 || formData.q2_2019 || formData.q3_2019 || formData.q4_2019 ||
-      formData.q1_2020 || formData.q2_2020 || formData.q3_2020 || formData.q4_2020 ||
-      formData.q1_2021 || formData.q2_2021 || formData.q3_2021;
-    
-    return (
-      formData.businessName &&
-      formData.ein &&
-      formData.location &&
-      formData.naicsCode &&
-      // Either time periods or quarterly revenue data should be provided
-      (hasGovernmentOrders || hasRevenueData)
-    );
+    // All fields now optional - always return true
+    return true;
   };
   
   // Handle next step
@@ -334,7 +322,6 @@ const ERCProtestForm = () => {
                   <Grid item xs={12} md={6}>
                     <TextField
                       fullWidth
-                      required
                       label="Business Name"
                       name="businessName"
                       value={formData.businessName}
@@ -345,7 +332,6 @@ const ERCProtestForm = () => {
                   <Grid item xs={12} md={6}>
                     <TextField
                       fullWidth
-                      required
                       label="EIN"
                       name="ein"
                       value={formData.ein}
@@ -361,7 +347,6 @@ const ERCProtestForm = () => {
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      required
                       label="Business Location"
                       name="location"
                       value={formData.location}
@@ -373,7 +358,6 @@ const ERCProtestForm = () => {
                   <Grid item xs={12} md={6}>
                     <TextField
                       fullWidth
-                      required
                       label="Business Website"
                       name="businessWebsite"
                       value={formData.businessWebsite}
@@ -386,7 +370,6 @@ const ERCProtestForm = () => {
                   <Grid item xs={12} md={6}>
                     <TextField
                       fullWidth
-                      required
                       label="NAICS Code"
                       name="naicsCode"
                       value={formData.naicsCode}
