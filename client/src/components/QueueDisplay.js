@@ -39,7 +39,9 @@ import {
   Info,
   Refresh,
   TableChartOutlined,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  PostAdd,
+  Edit
 } from '@mui/icons-material';
 
 const QueueDisplay = () => {
@@ -52,6 +54,10 @@ const QueueDisplay = () => {
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  // State for the letter generation dialog
+  // We're still keeping selectedQuarter for other functions that might use it,
+  // but removing dialog-related state since we don't need confirmation
+  const [selectedQuarter, setSelectedQuarter] = useState('');
 
   // Connect to MongoDB queue API endpoint
   const fetchQueue = async () => {
@@ -102,34 +108,78 @@ const QueueDisplay = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Get status chip based on status
-  const getStatusChip = (status) => {
-    switch(status) {
-      case 'waiting':
-      case 'received':
-        return <Chip 
-          icon={<HourglassEmpty fontSize="small" />} 
-          label="In Queue" 
-          color="warning" 
-          size="small" 
-        />;
-      case 'processing':
-        return <Chip 
-          icon={<AccessTime fontSize="small" />} 
-          label="Processing" 
-          color="info" 
-          size="small" 
-        />;
-      case 'complete':
-        return <Chip 
-          icon={<CheckCircle fontSize="small" />} 
-          label="Complete" 
-          color="success" 
-          size="small" 
-        />;
-      default:
-        return <Chip label={status} size="small" />;
+  // Check if a letter has been generated for a specific quarter
+  const isLetterGenerated = (item, quarter) => {
+    // Check if item has a processed quarters array
+    return item.submissionData?.processedQuarters?.includes(quarter);
+  };
+
+  // Get status chip based on status and processed quarters
+  const getStatusChip = (item) => {
+    const status = item.status;
+    const qualifyingQuarters = item.submissionData?.report?.qualificationData?.qualifyingQuarters || [];
+    
+    // If no qualifying quarters, just show the basic status
+    if (qualifyingQuarters.length === 0) {
+      switch(status) {
+        case 'waiting':
+        case 'received':
+          return <Chip 
+            icon={<HourglassEmpty fontSize="small" />} 
+            label="In Queue" 
+            color="warning" 
+            size="small" 
+          />;
+        case 'processing':
+          return <Chip 
+            icon={<AccessTime fontSize="small" />} 
+            label="Processing" 
+            color="info" 
+            size="small" 
+          />;
+        case 'complete':
+          return <Chip 
+            icon={<CheckCircle fontSize="small" />} 
+            label="Complete" 
+            color="success" 
+            size="small" 
+          />;
+        default:
+          return <Chip label={status} size="small" />;
+      }
     }
+    
+    // Get count of processed quarters
+    const processedQuarters = item.submissionData?.processedQuarters || [];
+    const processedCount = processedQuarters.length;
+    
+    // If all quarters have letters
+    if (processedCount >= qualifyingQuarters.length) {
+      return <Chip 
+        icon={<CheckCircle fontSize="small" />} 
+        label="All Letters Generated" 
+        color="success" 
+        size="small" 
+      />;
+    }
+    
+    // If some but not all quarters have letters
+    if (processedCount > 0) {
+      return <Chip 
+        icon={<AccessTime fontSize="small" />} 
+        label={`${processedCount}/${qualifyingQuarters.length} Letters`} 
+        color="info" 
+        size="small" 
+      />;
+    }
+    
+    // If no quarters have letters yet
+    return <Chip 
+      icon={<HourglassEmpty fontSize="small" />} 
+      label="Needs Letters" 
+      color="warning" 
+      size="small" 
+    />;
   };
 
   // Function to handle clicking on a queue item
@@ -137,6 +187,93 @@ const QueueDisplay = () => {
     console.log('Clicked item:', item);
     setSelectedItem(item);
     setDialogOpen(true);
+  };
+
+  // Function to handle generating a letter for a specific quarter
+  // Now immediately generates the letter without confirmation
+  const handleGenerateLetter = async (item, quarter) => {
+    setSelectedItem(item);
+    setSelectedQuarter(quarter);
+    
+    try {
+      // Redirect to the ERC Protest Form with pre-filled data
+      // We'll navigate programmatically to the form with the data
+      const businessData = {
+        businessName: item.businessName,
+        ein: item.submissionData?.originalData?.formData?.ein || '',
+        location: item.submissionData?.originalData?.formData?.location || '',
+        timePeriods: [quarter]
+      };
+      
+      // Store this in localStorage for the form to pick up
+      localStorage.setItem('prefillData', JSON.stringify(businessData));
+      
+      // Navigate to the form (in a real implementation, you might use react-router here)
+      window.location.href = '/#letterGeneration';
+      
+      // Mark this quarter as processed
+      await updateProcessedQuarters(item.id, quarter);
+      
+      // Update the queue item in our state
+      const updatedQueueItems = queueItems.map(queueItem => {
+        if (queueItem.id === item.id) {
+          const processedQuarters = queueItem.submissionData?.processedQuarters || [];
+          if (!processedQuarters.includes(quarter)) {
+            return {
+              ...queueItem,
+              submissionData: {
+                ...queueItem.submissionData,
+                processedQuarters: [...processedQuarters, quarter]
+              }
+            };
+          }
+        }
+        return queueItem;
+      });
+      
+      setQueueItems(updatedQueueItems);
+      
+    } catch (error) {
+      console.error('Error initiating letter generation:', error);
+    }
+  };
+
+  // This function is no longer needed since we generate letters directly
+  // But keeping a minimal version just in case it's referenced elsewhere
+  const proceedWithLetterGeneration = async () => {
+    if (!selectedItem || !selectedQuarter) return;
+    
+    try {
+      await handleGenerateLetter(selectedItem, selectedQuarter);
+    } catch (error) {
+      console.error('Error in proceedWithLetterGeneration:', error);
+    }
+  };
+
+  // Function to update processed quarters in the backend
+  const updateProcessedQuarters = async (itemId, quarter) => {
+    try {
+      // API call to update processed quarters
+      const response = await fetch(`/api/mongodb-queue/update-processed-quarters`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          submissionId: itemId,
+          quarter
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update processed quarters');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating processed quarters:', error);
+      throw error;
+    }
   };
 
   // Function to close the dialog
@@ -245,6 +382,12 @@ const QueueDisplay = () => {
     setDeleteError(null);
   };
   
+  // No longer needed as we removed the dialog
+  // But keeping a simplified version in case it's still referenced elsewhere
+  const handleCloseLetterDialog = () => {
+    setSelectedQuarter('');
+  };
+  
   return (
     <Paper elevation={3} sx={{ 
       p: 2, 
@@ -324,7 +467,7 @@ const QueueDisplay = () => {
                   primary={
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                       <Typography variant="subtitle2">{item.businessName}</Typography>
-                      {getStatusChip(item.status)}
+                      {getStatusChip(item)}
                     </Box>
                   }
                   secondary={
@@ -348,9 +491,32 @@ const QueueDisplay = () => {
                         </Typography>
                       )}
                       {item.submissionData?.report?.qualificationData?.qualifyingQuarters?.length > 0 && (
-                        <Typography variant="caption" display="block" sx={{ color: 'green' }}>
-                          Qualifying Quarters: {item.submissionData.report.qualificationData.qualifyingQuarters.join(', ')}
-                        </Typography>
+                        <Box>
+                          <Typography variant="caption" display="block" sx={{ color: 'green' }}>
+                            Qualifying Quarters: {item.submissionData.report.qualificationData.qualifyingQuarters.join(', ')}
+                          </Typography>
+                          
+                          {/* Generate Letter buttons for each qualifying quarter */}
+                          <Box display="flex" flexWrap="wrap" gap={0.5} mt={0.5}>
+                            {item.submissionData.report.qualificationData.qualifyingQuarters.map(quarter => {
+                              const isProcessed = item.submissionData?.processedQuarters?.includes(quarter);
+                              return (
+                                <Chip
+                                  key={quarter}
+                                  label={quarter}
+                                  size="small"
+                                  color={isProcessed ? "success" : "primary"}
+                                  icon={isProcessed ? <CheckCircle fontSize="small" /> : <PostAdd fontSize="small" />}
+                                  variant={isProcessed ? "outlined" : "filled"}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleGenerateLetter(item, quarter);
+                                  }}
+                                />
+                              );
+                            })}
+                          </Box>
+                        </Box>
                       )}
                     </>
                   }
@@ -378,7 +544,7 @@ const QueueDisplay = () => {
                 <Typography variant="h6">
                   Queue Item: {selectedItem.businessName}
                 </Typography>
-                {getStatusChip(selectedItem.status)}
+                {getStatusChip(selectedItem)}
               </Box>
             </DialogTitle>
             <DialogContent dividers>
@@ -470,6 +636,32 @@ const QueueDisplay = () => {
                       }
                     </Typography>
                     
+                    {/* Buttons to generate letters for each qualifying quarter */}
+                    {selectedItem.submissionData.report.qualificationData.qualifyingQuarters.length > 0 && (
+                      <Box mt={2} mb={2}>
+                        <Typography variant="subtitle2" gutterBottom>
+                          Generate Letters:
+                        </Typography>
+                        <Box display="flex" flexWrap="wrap" gap={1}>
+                          {selectedItem.submissionData.report.qualificationData.qualifyingQuarters.map(quarter => {
+                            const isProcessed = selectedItem.submissionData?.processedQuarters?.includes(quarter);
+                            return (
+                              <Button
+                                key={quarter}
+                                variant={isProcessed ? "outlined" : "contained"}
+                                color={isProcessed ? "success" : "primary"}
+                                startIcon={isProcessed ? <CheckCircle /> : <PostAdd />}
+                                onClick={() => handleGenerateLetter(selectedItem, quarter)}
+                                size="small"
+                              >
+                                {isProcessed ? `${quarter} - Done` : `Generate ${quarter} Letter`}
+                              </Button>
+                            );
+                          })}
+                        </Box>
+                      </Box>
+                    )}
+                    
                     {selectedItem.submissionData.report.qualificationData.quarterAnalysis && (
                       <TableContainer component={Paper} variant="outlined" sx={{ mt: 2 }}>
                         <Table size="small">
@@ -480,24 +672,47 @@ const QueueDisplay = () => {
                               <TableCell>2021 Revenue</TableCell>
                               <TableCell>Decrease %</TableCell>
                               <TableCell>Qualifies</TableCell>
+                              <TableCell>Letter</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {selectedItem.submissionData.report.qualificationData.quarterAnalysis.map((quarter) => (
-                              <TableRow key={quarter.quarter}>
-                                <TableCell>{quarter.quarter}</TableCell>
-                                <TableCell>${quarter.revenues.revenue2019.toLocaleString()}</TableCell>
-                                <TableCell>${quarter.revenues.revenue2021.toLocaleString()}</TableCell>
-                                <TableCell>{quarter.percentDecrease}%</TableCell>
-                                <TableCell>
-                                  <Chip 
-                                    label={quarter.qualifies ? "Yes" : "No"}
-                                    color={quarter.qualifies ? "success" : "error"}
-                                    size="small"
-                                  />
-                                </TableCell>
-                              </TableRow>
-                            ))}
+                            {selectedItem.submissionData.report.qualificationData.quarterAnalysis.map((quarter) => {
+                              const isProcessed = selectedItem.submissionData?.processedQuarters?.includes(quarter.quarter);
+                              return (
+                                <TableRow key={quarter.quarter}>
+                                  <TableCell>{quarter.quarter}</TableCell>
+                                  <TableCell>${quarter.revenues.revenue2019.toLocaleString()}</TableCell>
+                                  <TableCell>${quarter.revenues.revenue2021.toLocaleString()}</TableCell>
+                                  <TableCell>{quarter.percentDecrease}%</TableCell>
+                                  <TableCell>
+                                    <Chip 
+                                      label={quarter.qualifies ? "Yes" : "No"}
+                                      color={quarter.qualifies ? "success" : "error"}
+                                      size="small"
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    {quarter.qualifies && (
+                                      isProcessed ? 
+                                        <Chip 
+                                          label="Letter Generated"
+                                          color="success"
+                                          size="small"
+                                          icon={<CheckCircle fontSize="small" />}
+                                        /> :
+                                        <Button
+                                          size="small"
+                                          variant="outlined"
+                                          startIcon={<PostAdd />}
+                                          onClick={() => handleGenerateLetter(selectedItem, quarter.quarter)}
+                                        >
+                                          Generate
+                                        </Button>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
                           </TableBody>
                         </Table>
                       </TableContainer>
@@ -637,6 +852,8 @@ const QueueDisplay = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Letter Generation Dialog removed - letters are now generated immediately */}
     </Paper>
   );
 };
