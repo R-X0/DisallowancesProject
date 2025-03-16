@@ -68,51 +68,106 @@ const ERCProtestForm = () => {
     'Q1 2021', 'Q2 2021', 'Q3 2021'
   ];
   
-  // Effect to check for prefill data from the queue display
+  // Effect to check for prefill data from the queue display - with enhanced reliability
   useEffect(() => {
-    // Check for prefill data in localStorage
-    const prefillData = localStorage.getItem('prefillData');
-    if (prefillData) {
-      try {
-        const parsedData = JSON.parse(prefillData);
-        console.log('Found prefill data:', parsedData);
-        
-        // Update form data with prefill values
-        setFormData(prevData => ({
-          ...prevData,
-          businessName: parsedData.businessName || prevData.businessName,
-          ein: parsedData.ein || prevData.ein,
-          location: parsedData.location || prevData.location,
-          timePeriods: parsedData.timePeriods || prevData.timePeriods,
-        }));
-        
-        // If approach is specified, update the appropriate fields
-        if (parsedData.approach) {
-          if (parsedData.approach === 'governmentOrders') {
-            // For government orders approach, make sure we have the time period selected
-            // and set some sample government orders info
-            setFormData(prevData => ({
-              ...prevData,
-              governmentOrdersInfo: parsedData.governmentOrdersInfo || 
-                `This business was affected by government orders during ${parsedData.timePeriods?.[0] || ''}. Please provide details about specific orders that caused a full or partial suspension of operations.`
-            }));
-          } else if (parsedData.approach === 'revenueReduction') {
-            // For revenue reduction approach, prioritize revenue data fields
-            // This should auto-populate quarterly revenue data if available
-            setFormData(prevData => ({
-              ...prevData,
-              revenueReductionInfo: parsedData.revenueReductionInfo || 
-                `This business experienced a significant decline in revenue during ${parsedData.timePeriods?.[0] || ''}. Please provide quarterly revenue data to substantiate the claim.`
-            }));
+    const loadPrefillData = () => {
+      // Check both sessionStorage and localStorage
+      const prefillData = sessionStorage.getItem('prefillData') || localStorage.getItem('prefillData');
+      
+      if (prefillData) {
+        try {
+          const parsedData = JSON.parse(prefillData);
+          console.log('Found prefill data:', parsedData);
+          
+          // Check if this is fresh data (within last 10 seconds)
+          const dataTimestamp = parsedData.timestamp || 0;
+          const now = new Date().getTime();
+          const isRecent = (now - dataTimestamp) < 10000; // 10 seconds
+          
+          if (!isRecent) {
+            console.log('Prefill data is stale, ignoring:', (now - dataTimestamp) / 1000, 'seconds old');
+            // Clear stale data
+            localStorage.removeItem('prefillData');
+            sessionStorage.removeItem('prefillData');
+            return;
           }
+          
+          console.log('Processing fresh prefill data...');
+          
+          // More robust form data update
+          setFormData(prevData => {
+            // Start with previous data
+            const newData = { ...prevData };
+            
+            // Update basic business information
+            newData.businessName = parsedData.businessName || prevData.businessName;
+            newData.ein = parsedData.ein || prevData.ein;
+            newData.location = parsedData.location || prevData.location;
+            
+            // Handle time periods array properly
+            if (parsedData.timePeriods && Array.isArray(parsedData.timePeriods)) {
+              newData.timePeriods = parsedData.timePeriods;
+            } else if (parsedData.timePeriods) {
+              newData.timePeriods = [parsedData.timePeriods]; // Convert string to array if needed
+            }
+            
+            // Apply approach-specific data
+            if (parsedData.approach === 'governmentOrders') {
+              newData.governmentOrdersInfo = parsedData.governmentOrdersInfo || 
+                `This business was affected by government orders during ${parsedData.timePeriods?.[0] || ''}. Please provide details about specific orders that caused a full or partial suspension of operations.`;
+            } else if (parsedData.approach === 'revenueReduction') {
+              newData.revenueReductionInfo = parsedData.revenueReductionInfo || 
+                `This business experienced a significant decline in revenue during ${parsedData.timePeriods?.[0] || ''}. Please provide quarterly revenue data to substantiate the claim.`;
+            }
+            
+            // Include any revenue data if provided
+            if (parsedData.q1_2019) newData.q1_2019 = parsedData.q1_2019;
+            if (parsedData.q2_2019) newData.q2_2019 = parsedData.q2_2019;
+            if (parsedData.q3_2019) newData.q3_2019 = parsedData.q3_2019;
+            if (parsedData.q4_2019) newData.q4_2019 = parsedData.q4_2019;
+            if (parsedData.q1_2020) newData.q1_2020 = parsedData.q1_2020;
+            if (parsedData.q2_2020) newData.q2_2020 = parsedData.q2_2020;
+            if (parsedData.q3_2020) newData.q3_2020 = parsedData.q3_2020;
+            if (parsedData.q4_2020) newData.q4_2020 = parsedData.q4_2020;
+            if (parsedData.q1_2021) newData.q1_2021 = parsedData.q1_2021;
+            if (parsedData.q2_2021) newData.q2_2021 = parsedData.q2_2021;
+            if (parsedData.q3_2021) newData.q3_2021 = parsedData.q3_2021;
+            
+            console.log('Updated form data with prefill values:', newData);
+            
+            // Clear out the storage after a delay
+            setTimeout(() => {
+              localStorage.removeItem('prefillData');
+              sessionStorage.removeItem('prefillData');
+              console.log('Removed prefill data from storage after successful update');
+            }, 2000);
+            
+            return newData;
+          });
+        } catch (error) {
+          console.error('Error parsing prefill data:', error);
+          // Clear bad data
+          localStorage.removeItem('prefillData');
+          sessionStorage.removeItem('prefillData');
         }
-        
-        // Clear localStorage after using it to avoid reusing the same data
-        localStorage.removeItem('prefillData');
-      } catch (error) {
-        console.error('Error parsing prefill data:', error);
       }
-    }
+    };
+    
+    // Load data immediately on mount
+    loadPrefillData();
+    
+    // Also set up an interval to check again in case the navigation happens before data is saved
+    const interval = setInterval(loadPrefillData, 500); // Check every half second
+    
+    // Clean up interval after 5 seconds
+    const cleanup = setTimeout(() => {
+      clearInterval(interval);
+    }, 5000);
+    
+    return () => {
+      clearInterval(interval);
+      clearTimeout(cleanup);
+    };
   }, []); // Empty dependency array means this runs once on component mount
   
   // Debug effect - log whenever protestLetterData changes
