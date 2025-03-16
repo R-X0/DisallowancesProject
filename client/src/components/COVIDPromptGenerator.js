@@ -400,11 +400,16 @@ IMPORTANT:
   // This needs to run FIRST before any prompt generation
   useEffect(() => {
     console.log("Effect for setting default time period running...");
-    if (formData && formData.timePeriods && formData.timePeriods.length > 0 && !selectedTimePeriod) {
-      console.log(`Setting default time period to ${formData.timePeriods[0]}`);
-      setSelectedTimePeriod(formData.timePeriods[0]);
+    if (formData && formData.timePeriods && formData.timePeriods.length > 0) {
+      // Only set if not already set or if it's not in the available time periods
+      if (!selectedTimePeriod || !formData.timePeriods.includes(selectedTimePeriod)) {
+        console.log(`Setting default time period to ${formData.timePeriods[0]}`);
+        setSelectedTimePeriod(formData.timePeriods[0]);
+      } else {
+        console.log(`Keeping existing selected time period: ${selectedTimePeriod}`);
+      }
     }
-  }, [formData, selectedTimePeriod]);
+  }, [formData, formData.timePeriods, selectedTimePeriod]);
   
   // Effect to trigger prompt generation when:
   // 1. The prompt type changes
@@ -421,61 +426,38 @@ IMPORTANT:
       return;
     }
     
-    // For form886A, we don't need a selected time period
-    if (promptType === 'form886A') {
-      console.log("Form 886A selected, generating prompt regardless of time period");
-      generatePrompt();
+    // IMPORTANT FIX: Don't attempt to generate prompt until selectedTimePeriod is set
+    if (promptType === 'covidOrders' && !selectedTimePeriod && formData.timePeriods && formData.timePeriods.length > 0) {
+      console.log("Time period not yet selected, waiting...");
       return;
     }
     
-    // Handle the case where we have timePeriods but no selectedTimePeriod is set yet
-    if (promptType === 'covidOrders') {
-      if (selectedTimePeriod) {
-        // If we already have a selected time period, generate the prompt
-        console.log(`Time period selected (${selectedTimePeriod}), generating prompt`);
+    // Add a small delay to ensure all state updates have settled
+    const timeoutId = setTimeout(() => {
+      console.log("Delayed prompt generation starting...");
+      
+      // For form886A, we don't need a selected time period
+      if (promptType === 'form886A') {
+        console.log("Form 886A selected, generating prompt");
         generatePrompt();
-      } else if (formData.timePeriods && formData.timePeriods.length > 0) {
-        // If we don't have a selected time period but have available periods,
-        // set the first one and let the next effect cycle handle generation
-        console.log(`No time period selected but have options, setting to ${formData.timePeriods[0]}`);
-        setSelectedTimePeriod(formData.timePeriods[0]);
-        // Also generate using the first time period immediately instead of waiting for state update
-        const tempTimePeriod = formData.timePeriods[0];
-        console.log(`Immediately generating with first time period: ${tempTimePeriod}`);
-        const tempGeneratePrompt = async () => {
-          // Don't generate if we don't have basic business info
-          if (!formData.businessName || !formData.ein || !formData.location) {
-            return;
-          }
-          
-          setGenerating(true);
-          
-          try {
-            const { city, state } = extractCityState(formData.location || '');
-            const businessType = getNaicsDescription(formData.naicsCode);
-            
-            // Use the first time period for generating the prompt immediately
-            const timePeriod = tempTimePeriod;
-            
-            // Rest of your prompt generation logic...
-            // This is a simplified version that just sets a basic prompt
-            const basePrompt = `Please provide all federal, state, county, and city COVID-related government orders that would affect a "${businessType}" business located in ${city}, ${state} during ${timePeriod}.`;
-            
-            // Set the prompt directly
-            setPrompt(basePrompt);
-          } catch (error) {
-            console.error('Error in immediate prompt generation:', error);
-          } finally {
-            setGenerating(false);
-          }
-        };
-        
-        tempGeneratePrompt();
-      } else {
-        console.log("COVID Orders selected but no time periods available");
+        return;
       }
-    }
-  }, [promptType, selectedTimePeriod, generatePrompt, formData.businessName, formData.ein, formData.location, formData.naicsCode, formData.timePeriods]);
+      
+      // For COVID orders, verify we have a time period selected
+      if (promptType === 'covidOrders') {
+        if (selectedTimePeriod) {
+          // If we already have a selected time period, generate the prompt
+          console.log(`Time period selected (${selectedTimePeriod}), generating prompt`);
+          generatePrompt();
+        } else {
+          console.log("No time period selected for COVID Orders, skipping prompt generation");
+        }
+      }
+    }, 300); // Small delay to ensure state is settled
+    
+    // Clean up timeout if component unmounts or effect runs again
+    return () => clearTimeout(timeoutId);
+  }, [promptType, selectedTimePeriod, formData.businessName, formData.ein, formData.location, formData.naicsCode, formData.timePeriods, generatePrompt]);
   
   // Handle time period selection change
   const handleTimePeriodChange = (event) => {

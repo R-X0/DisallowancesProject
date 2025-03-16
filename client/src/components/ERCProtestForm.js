@@ -103,6 +103,8 @@ const ERCProtestForm = () => {
             newData.businessName = parsedData.businessName || prevData.businessName;
             newData.ein = parsedData.ein || prevData.ein;
             newData.location = parsedData.location || prevData.location;
+            newData.businessWebsite = parsedData.businessWebsite || prevData.businessWebsite;
+            newData.naicsCode = parsedData.naicsCode || prevData.naicsCode || '541110'; // Default to law firm if missing
             
             // Handle time periods array properly
             if (parsedData.timePeriods && Array.isArray(parsedData.timePeriods)) {
@@ -135,15 +137,21 @@ const ERCProtestForm = () => {
             
             console.log('Updated form data with prefill values:', newData);
             
-            // Clear out the storage after a delay
-            setTimeout(() => {
-              localStorage.removeItem('prefillData');
-              sessionStorage.removeItem('prefillData');
-              console.log('Removed prefill data from storage after successful update');
-            }, 2000);
-            
             return newData;
           });
+          
+          // IMPORTANT FIX: Automatically advance to step 1 after loading prefill data
+          // This ensures the COVIDPromptGenerator is visible and can start working
+          setTimeout(() => {
+            console.log('Automatically advancing to step 1 (prompt generator)');
+            setActiveStep(1);
+            
+            // Clear out the storage after advancing
+            localStorage.removeItem('prefillData');
+            sessionStorage.removeItem('prefillData');
+            console.log('Removed prefill data from storage after successful update');
+          }, 500); // Short delay to ensure form data is fully updated
+          
         } catch (error) {
           console.error('Error parsing prefill data:', error);
           // Clear bad data
