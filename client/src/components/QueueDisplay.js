@@ -226,6 +226,51 @@ const QueueDisplay = () => {
         businessData.revenueReductionInfo = item.submissionData.originalData.formData.revenueReductionInfo;
       }
       
+      // Add revenue data if available - especially important for revenue approach
+      const requestedInfo = item.submissionData?.originalData?.formData?.requestedInfo;
+      if (requestedInfo) {
+        // Map 2019 revenue data
+        if (requestedInfo.gross_sales_2019) {
+          if (requestedInfo.gross_sales_2019.q1) businessData.q1_2019 = requestedInfo.gross_sales_2019.q1;
+          if (requestedInfo.gross_sales_2019.q2) businessData.q2_2019 = requestedInfo.gross_sales_2019.q2;
+          if (requestedInfo.gross_sales_2019.q3) businessData.q3_2019 = requestedInfo.gross_sales_2019.q3;
+          if (requestedInfo.gross_sales_2019.q4) businessData.q4_2019 = requestedInfo.gross_sales_2019.q4;
+        }
+        
+        // Map 2020 revenue data if available
+        if (requestedInfo.gross_sales_2020) {
+          if (requestedInfo.gross_sales_2020.q1) businessData.q1_2020 = requestedInfo.gross_sales_2020.q1;
+          if (requestedInfo.gross_sales_2020.q2) businessData.q2_2020 = requestedInfo.gross_sales_2020.q2;
+          if (requestedInfo.gross_sales_2020.q3) businessData.q3_2020 = requestedInfo.gross_sales_2020.q3;
+          if (requestedInfo.gross_sales_2020.q4) businessData.q4_2020 = requestedInfo.gross_sales_2020.q4;
+        }
+        
+        // Map 2021 revenue data
+        if (requestedInfo.gross_sales_2021) {
+          if (requestedInfo.gross_sales_2021.q1) businessData.q1_2021 = requestedInfo.gross_sales_2021.q1;
+          if (requestedInfo.gross_sales_2021.q2) businessData.q2_2021 = requestedInfo.gross_sales_2021.q2;
+          if (requestedInfo.gross_sales_2021.q3) businessData.q3_2021 = requestedInfo.gross_sales_2021.q3;
+          if (requestedInfo.gross_sales_2021.q4) businessData.q4_2021 = requestedInfo.gross_sales_2021.q4;
+        }
+      }
+      
+      // Also check for revenue data directly in the report's quarter analysis
+      const quarterAnalysis = item.submissionData?.report?.qualificationData?.quarterAnalysis;
+      if (quarterAnalysis && Array.isArray(quarterAnalysis)) {
+        quarterAnalysis.forEach(q => {
+          if (q.quarter && q.revenues) {
+            // Extract the quarter number from format like "Quarter 1"
+            const qNum = q.quarter.replace('Quarter ', '');
+            if (q.revenues.revenue2019) {
+              businessData[`q${qNum}_2019`] = q.revenues.revenue2019.toString();
+            }
+            if (q.revenues.revenue2021) {
+              businessData[`q${qNum}_2021`] = q.revenues.revenue2021.toString();
+            }
+          }
+        });
+      }
+      
       console.log('Saving data to both localStorage and sessionStorage:', businessData);
       
       // Store in BOTH localStorage and sessionStorage with a unique timestamp
