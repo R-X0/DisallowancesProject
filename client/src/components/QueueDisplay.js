@@ -347,6 +347,11 @@ const QueueDisplay = () => {
                           Report available: {getFilenameFromPath(item.reportPath)}
                         </Typography>
                       )}
+                      {item.submissionData?.report?.qualificationData?.qualifyingQuarters?.length > 0 && (
+                        <Typography variant="caption" display="block" sx={{ color: 'green' }}>
+                          Qualifying Quarters: {item.submissionData.report.qualificationData.qualifyingQuarters.join(', ')}
+                        </Typography>
+                      )}
                     </>
                   }
                 />
@@ -450,7 +455,58 @@ const QueueDisplay = () => {
                 </Box>
               )}
 
-              {/* SIMPLE Excel Report Section */}
+              {/* Qualification Analysis Section */}
+              {selectedItem.submissionData?.report?.qualificationData && (
+                <Box mt={3}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Qualification Analysis
+                  </Typography>
+                  <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Typography variant="body2" gutterBottom>
+                      <strong>Qualifying Quarters:</strong> {
+                        selectedItem.submissionData.report.qualificationData.qualifyingQuarters.length > 0 
+                          ? selectedItem.submissionData.report.qualificationData.qualifyingQuarters.join(', ') 
+                          : 'None'
+                      }
+                    </Typography>
+                    
+                    {selectedItem.submissionData.report.qualificationData.quarterAnalysis && (
+                      <TableContainer component={Paper} variant="outlined" sx={{ mt: 2 }}>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Quarter</TableCell>
+                              <TableCell>2019 Revenue</TableCell>
+                              <TableCell>2021 Revenue</TableCell>
+                              <TableCell>Decrease %</TableCell>
+                              <TableCell>Qualifies</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {selectedItem.submissionData.report.qualificationData.quarterAnalysis.map((quarter) => (
+                              <TableRow key={quarter.quarter}>
+                                <TableCell>{quarter.quarter}</TableCell>
+                                <TableCell>${quarter.revenues.revenue2019.toLocaleString()}</TableCell>
+                                <TableCell>${quarter.revenues.revenue2021.toLocaleString()}</TableCell>
+                                <TableCell>{quarter.percentDecrease}%</TableCell>
+                                <TableCell>
+                                  <Chip 
+                                    label={quarter.qualifies ? "Yes" : "No"}
+                                    color={quarter.qualifies ? "success" : "error"}
+                                    size="small"
+                                  />
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    )}
+                  </Paper>
+                </Box>
+              )}
+
+              {/* Excel Report Section */}
               {selectedItem.reportPath ? (
                 <Box mt={3}>
                   <Typography variant="subtitle1" gutterBottom>
