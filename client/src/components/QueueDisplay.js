@@ -24,7 +24,8 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Tooltip
+  Tooltip,
+  Alert
 } from '@mui/material';
 import { 
   AccessTime, 
@@ -34,7 +35,8 @@ import {
   Description,
   CloudDownload,
   Info,
-  Refresh
+  Refresh,
+  TableChartOutlined
 } from '@mui/icons-material';
 
 const QueueDisplay = () => {
@@ -56,6 +58,7 @@ const QueueDisplay = () => {
         const data = await response.json();
         
         if (data.success) {
+          console.log('Queue data received:', data.queue);
           setQueueItems(data.queue);
         } else {
           throw new Error(data.message || 'Failed to fetch queue data');
@@ -124,6 +127,7 @@ const QueueDisplay = () => {
 
   // Function to handle clicking on a queue item
   const handleItemClick = (item) => {
+    console.log('Clicked item:', item);
     setSelectedItem(item);
     setDialogOpen(true);
   };
@@ -135,7 +139,12 @@ const QueueDisplay = () => {
 
   // Function to download a file
   const handleDownloadFile = (filePath) => {
-    if (!filePath) return;
+    if (!filePath) {
+      console.error('No file path provided');
+      return;
+    }
+    
+    console.log(`Attempting to download file: ${filePath}`);
     
     // Check if it's a URL or a local path
     if (filePath.startsWith('http')) {
@@ -143,6 +152,7 @@ const QueueDisplay = () => {
     } else {
       // Use the MongoDB endpoint
       const endpoint = `/api/mongodb-queue/download?path=${encodeURIComponent(filePath)}`;
+      console.log(`Opening download endpoint: ${endpoint}`);
       window.open(endpoint, '_blank');
     }
   };
@@ -246,6 +256,11 @@ const QueueDisplay = () => {
                           {item.files.length} file(s) attached
                         </Typography>
                       )}
+                      {item.reportPath && (
+                        <Typography variant="caption" display="block" color="primary">
+                          Report available: {getFilenameFromPath(item.reportPath)}
+                        </Typography>
+                      )}
                     </>
                   }
                 />
@@ -299,32 +314,16 @@ const QueueDisplay = () => {
                         <TableCell variant="head">Timestamp</TableCell>
                         <TableCell>{new Date(selectedItem.timestamp).toLocaleString()}</TableCell>
                       </TableRow>
+                      {selectedItem.reportPath && (
+                        <TableRow>
+                          <TableCell variant="head">Report Path</TableCell>
+                          <TableCell>{selectedItem.reportPath}</TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </TableContainer>
               </Box>
-
-              {/* Submission Data Accordion */}
-              <Accordion>
-                <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Typography variant="subtitle1">Submission Data (JSON)</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Box 
-                    component="pre"
-                    sx={{ 
-                      p: 2, 
-                      bgcolor: 'grey.100', 
-                      borderRadius: 1,
-                      overflow: 'auto',
-                      fontSize: '0.875rem',
-                      maxHeight: '400px'
-                    }}
-                  >
-                    {JSON.stringify(selectedItem.submissionData, null, 2)}
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
 
               {/* Files Section */}
               {selectedItem.files && selectedItem.files.length > 0 && (
@@ -365,8 +364,8 @@ const QueueDisplay = () => {
                 </Box>
               )}
 
-              {/* Report File */}
-              {selectedItem.reportPath && (
+              {/* SIMPLE Excel Report Section */}
+              {selectedItem.reportPath ? (
                 <Box mt={3}>
                   <Typography variant="subtitle1" gutterBottom>
                     Generated Excel Report
@@ -374,21 +373,55 @@ const QueueDisplay = () => {
                   <Paper variant="outlined" sx={{ p: 2 }}>
                     <Box display="flex" alignItems="center" justifyContent="space-between">
                       <Box display="flex" alignItems="center">
-                        <Description sx={{ mr: 1 }} />
+                        <TableChartOutlined sx={{ mr: 1, color: 'primary.main' }} />
                         <Typography>{getFilenameFromPath(selectedItem.reportPath)}</Typography>
                       </Box>
                       <Button
-                        variant="outlined"
+                        variant="contained"
+                        color="primary"
                         size="small"
                         startIcon={<CloudDownload />}
                         onClick={() => handleDownloadFile(selectedItem.reportPath)}
                       >
-                        Download Report
+                        Download Excel Report
                       </Button>
                     </Box>
                   </Paper>
                 </Box>
+              ) : (
+                <Box mt={3}>
+                  <Alert severity="info">
+                    No Excel report is available for this submission.
+                  </Alert>
+                </Box>
               )}
+
+              {/* Debug section for reportPath */}
+              <Box mt={3}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Debug Information
+                </Typography>
+                <Accordion>
+                  <AccordionSummary expandIcon={<ExpandMore />}>
+                    <Typography>Raw Data Structure</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Box
+                      component="pre"
+                      sx={{
+                        p: 2,
+                        bgcolor: 'grey.100',
+                        borderRadius: 1,
+                        overflow: 'auto',
+                        fontSize: '0.75rem',
+                        maxHeight: '400px'
+                      }}
+                    >
+                      {JSON.stringify(selectedItem, null, 2)}
+                    </Box>
+                  </AccordionDetails>
+                </Accordion>
+              </Box>
             </DialogContent>
             <DialogActions>
               <Button onClick={handleCloseDialog}>Close</Button>
