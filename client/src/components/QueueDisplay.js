@@ -25,7 +25,9 @@ import {
   TableRow,
   IconButton,
   Tooltip,
-  Alert
+  Alert,
+  TextField,
+  DialogContentText
 } from '@mui/material';
 import { 
   AccessTime, 
@@ -36,7 +38,8 @@ import {
   CloudDownload,
   Info,
   Refresh,
-  TableChartOutlined
+  TableChartOutlined,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 
 const QueueDisplay = () => {
@@ -45,6 +48,10 @@ const QueueDisplay = () => {
   const [error, setError] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   // Connect to MongoDB queue API endpoint
   const fetchQueue = async () => {
@@ -174,6 +181,70 @@ const QueueDisplay = () => {
     return parts[parts.length - 1];
   };
   
+  // Function to open delete confirmation dialog
+  const handleOpenDeleteDialog = (item, event) => {
+    // Stop propagation to prevent the item click handler from firing
+    event.stopPropagation();
+    
+    setSelectedItem(item);
+    setDeleteConfirmation('');
+    setDeleteError(null);
+    setDeleteDialogOpen(true);
+  };
+  
+  // Function to handle delete confirmation
+  const handleDeleteConfirmation = async () => {
+    if (deleteConfirmation !== 'DELETE') {
+      setDeleteError('Please type DELETE to confirm');
+      return;
+    }
+    
+    if (!selectedItem || !selectedItem.id) {
+      setDeleteError('No item selected for deletion');
+      return;
+    }
+    
+    setDeleting(true);
+    setDeleteError(null);
+    
+    try {
+      const response = await fetch(`/api/mongodb-queue/${selectedItem.id}`, {
+        method: 'DELETE'
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        console.log('Delete successful:', result);
+        
+        // Close the dialog
+        setDeleteDialogOpen(false);
+        
+        // Remove the item from the queue list
+        setQueueItems(prev => prev.filter(item => item.id !== selectedItem.id));
+        
+        // If the details dialog for this item is open, close it too
+        if (dialogOpen && selectedItem && selectedItem.id === selectedItem.id) {
+          setDialogOpen(false);
+        }
+      } else {
+        setDeleteError(result.message || 'Failed to delete submission');
+      }
+    } catch (error) {
+      console.error('Error deleting submission:', error);
+      setDeleteError(`Error: ${error.message}`);
+    } finally {
+      setDeleting(false);
+    }
+  };
+  
+  // Function to handle delete dialog close
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setDeleteConfirmation('');
+    setDeleteError(null);
+  };
+  
   return (
     <Paper elevation={3} sx={{ 
       p: 2, 
@@ -220,11 +291,26 @@ const QueueDisplay = () => {
               <ListItem 
                 alignItems="flex-start"
                 secondaryAction={
-                  <Tooltip title="View Details">
-                    <IconButton edge="end" onClick={() => handleItemClick(item)}>
-                      <Info />
-                    </IconButton>
-                  </Tooltip>
+                  <Box display="flex">
+                    <Tooltip title="View Details">
+                      <IconButton 
+                        edge="end" 
+                        onClick={() => handleItemClick(item)}
+                        sx={{ mr: 1 }}
+                      >
+                        <Info />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete Submission">
+                      <IconButton 
+                        edge="end" 
+                        color="error"
+                        onClick={(e) => handleOpenDeleteDialog(item, e)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 }
                 sx={{ 
                   cursor: 'pointer',
@@ -417,17 +503,83 @@ const QueueDisplay = () => {
                         maxHeight: '400px'
                       }}
                     >
-                      {JSON.stringify(selectedItem, null, 2)}
+                      {JSON.stringify(selectedItem.submissionData, null, 2)}
                     </Box>
                   </AccordionDetails>
                 </Accordion>
               </Box>
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleCloseDialog}>Close</Button>
+              <Button 
+                onClick={handleCloseDialog}
+                variant="outlined"
+              >
+                Close
+              </Button>
+              <Button 
+                onClick={(e) => handleOpenDeleteDialog(selectedItem, e)}
+                variant="contained"
+                color="error"
+                startIcon={<DeleteIcon />}
+              >
+                Delete Submission
+              </Button>
             </DialogActions>
           </>
         )}
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        aria-labelledby="delete-dialog-title"
+      >
+        <DialogTitle id="delete-dialog-title" sx={{ bgcolor: 'error.light', color: 'error.contrastText' }}>
+          Confirm Deletion
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mt: 2, mb: 2 }}>
+            Are you sure you want to delete this submission? This action cannot be undone.
+          </DialogContentText>
+          <DialogContentText sx={{ fontWeight: 'bold' }}>
+            To confirm, please type DELETE in the field below:
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Type DELETE to confirm"
+            fullWidth
+            variant="outlined"
+            value={deleteConfirmation}
+            onChange={(e) => setDeleteConfirmation(e.target.value)}
+            error={!!deleteError}
+            helperText={deleteError}
+            sx={{ mt: 2 }}
+          />
+          {selectedItem && (
+            <Box mt={3}>
+              <Typography variant="subtitle2">Submission Details:</Typography>
+              <Typography variant="body2">ID: {selectedItem.id}</Typography>
+              <Typography variant="body2">Business: {selectedItem.businessName}</Typography>
+              <Typography variant="body2">Date: {new Date(selectedItem.timestamp).toLocaleString()}</Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog} variant="outlined">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirmation} 
+            color="error" 
+            variant="contained"
+            disabled={deleteConfirmation !== 'DELETE' || deleting}
+            startIcon={deleting ? <CircularProgress size={20} /> : <DeleteIcon />}
+          >
+            {deleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
       </Dialog>
     </Paper>
   );
