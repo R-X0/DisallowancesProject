@@ -34,14 +34,11 @@ import {
   CheckCircle, 
   HourglassEmpty, 
   ExpandMore,
-  Description,
   CloudDownload,
   Info,
   Refresh,
   TableChartOutlined,
   Delete as DeleteIcon,
-  PostAdd,
-  Edit,
   GavelOutlined,
   TrendingDownOutlined
 } from '@mui/icons-material';
@@ -56,8 +53,6 @@ const QueueDisplay = () => {
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
-  // State for the letter generation dialog
-  const [selectedQuarter, setSelectedQuarter] = useState('');
 
   // Connect to MongoDB queue API endpoint
   const fetchQueue = async () => {
@@ -66,12 +61,10 @@ const QueueDisplay = () => {
       
       try {
         const endpoint = '/api/mongodb-queue';
-        // Removed verbose logging
         const response = await fetch(endpoint);
         const data = await response.json();
         
         if (data.success) {
-          // Only log count, not entire queue
           console.log(`Queue data received: ${data.queue.length} items`);
           setQueueItems(data.queue);
         } else {
@@ -109,11 +102,7 @@ const QueueDisplay = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Check if a letter has been generated for a specific quarter
-  const isLetterGenerated = (item, quarter) => {
-    // Check if item has a processed quarters array
-    return item.submissionData?.processedQuarters?.includes(quarter);
-  };
+
 
   // Get status chip based on status and processed quarters
   const getStatusChip = (item) => {
@@ -259,7 +248,6 @@ const QueueDisplay = () => {
   // Function to handle generating a letter for a specific quarter with a specified approach
   const handleGenerateLetter = async (item, quarter, approach = 'auto') => {
     setSelectedItem(item);
-    setSelectedQuarter(quarter);
     
     try {
       // Get the default approach based on whether the quarter qualifies
@@ -462,7 +450,7 @@ const QueueDisplay = () => {
         setQueueItems(prev => prev.filter(item => item.id !== selectedItem.id));
         
         // If the details dialog for this item is open, close it too
-        if (dialogOpen && selectedItem && selectedItem.id === selectedItem.id) {
+        if (dialogOpen && selectedItem) {
           setDialogOpen(false);
         }
       } else {
@@ -483,16 +471,11 @@ const QueueDisplay = () => {
     setDeleteError(null);
   };
   
-  // Helper function to get all quarters from quarter analysis
-  const getAllQuarters = (item) => {
+  // Helper function to check if an item needs letters
+  const needsLetters = (item) => {
     const quarterAnalysis = item.submissionData?.report?.qualificationData?.quarterAnalysis || [];
-    return quarterAnalysis.map(q => q.quarter);
-  };
-
-  // Helper function to check if a quarter qualifies
-  const isQualifyingQuarter = (item, quarter) => {
-    const qualifyingQuarters = item.submissionData?.report?.qualificationData?.qualifyingQuarters || [];
-    return qualifyingQuarters.includes(quarter);
+    const processedQuarters = item.submissionData?.processedQuarters || [];
+    return quarterAnalysis.length > processedQuarters.length;
   };
   
   return (
@@ -578,51 +561,14 @@ const QueueDisplay = () => {
                     </Box>
                   }
                   secondary={
-                    <>
-                      <Typography
-                        component="span"
-                        variant="body2"
-                        color="text.primary"
-                      >
-                        {item.id}
-                      </Typography>
-                      {" — "}{formatTime(item.timestamp)}
-                      {item.files && item.files.length > 0 && (
-                        <Typography variant="caption" display="block">
-                          {item.files.length} file(s) attached
-                        </Typography>
+                    <Typography variant="caption" display="block">
+                      {formatTime(item.timestamp)}
+                      {needsLetters(item) && (
+                        <span style={{ color: '#f57c00', marginLeft: '8px', fontWeight: 'bold' }}>
+                          • Needs Letters
+                        </span>
                       )}
-                      {item.reportPath && (
-                        <Typography variant="caption" display="block" color="primary">
-                          Report available: {item.reportPath.split('/').pop()}
-                        </Typography>
-                      )}
-                      
-                      {/* Show quarterly data if available - TEXT ONLY, NO BUTTONS */}
-                      {item.submissionData?.report?.qualificationData?.quarterAnalysis?.length > 0 && (
-                        <Box>
-                          {/* Qualifying Quarters */}
-                          {item.submissionData?.report?.qualificationData?.qualifyingQuarters?.length > 0 && (
-                            <Typography variant="caption" display="block" sx={{ color: 'green' }}>
-                              Qualifying by Revenue: {item.submissionData.report.qualificationData.qualifyingQuarters.join(', ')}
-                            </Typography>
-                          )}
-                          
-                          {/* All Quarters - Text Only */}
-                          <Typography variant="caption" display="block">
-                            All Quarters: {getAllQuarters(item).join(', ')} 
-                            {item.submissionData?.processedQuarters?.length > 0 && (
-                              <span> (Completed: {item.submissionData.processedQuarters.join(', ')})</span>
-                            )}
-                          </Typography>
-                          
-                          {/* Simple instruction */}
-                          <Typography variant="caption" display="block" sx={{ fontStyle: 'italic', mt: 0.5 }}>
-                            Click for details and letter generation options
-                          </Typography>
-                        </Box>
-                      )}
-                    </>
+                    </Typography>
                   }
                 />
               </ListItem>
