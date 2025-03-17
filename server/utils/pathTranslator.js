@@ -16,9 +16,8 @@ function translatePath(containerPath) {
   // Normalize the path (handles both forward and backslashes)
   const normalizedPath = containerPath.replace(/\\/g, '/');
   
-  // Check if this is already a local path
+  // Check if this is already a local path - silently
   if (fs.existsSync(normalizedPath)) {
-    console.log(`Path exists as-is: ${normalizedPath}`);
     return normalizedPath;
   }
   
@@ -27,13 +26,10 @@ function translatePath(containerPath) {
     // Replace /app/ with the local base directory
     const localPath = path.join(baseDir, normalizedPath.substring(5));
     
-    // Check if the translated path exists
+    // Check if the translated path exists - don't log
     if (fs.existsSync(localPath)) {
-      console.log(`Translated path exists: ${localPath}`);
       return localPath;
     }
-    
-    console.log(`Translated path does not exist: ${localPath}`);
     
     // Try a few other common locations
     const pathOptions = [
@@ -47,7 +43,6 @@ function translatePath(containerPath) {
     
     for (const option of pathOptions) {
       if (fs.existsSync(option)) {
-        console.log(`Found file at alternative location: ${option}`);
         return option;
       }
     }

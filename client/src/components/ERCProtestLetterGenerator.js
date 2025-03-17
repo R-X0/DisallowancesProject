@@ -363,7 +363,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         console.log('Setting package data:', newPackageData);
         setPackageData(newPackageData);
         
-        // IMPORTANT ADDITION: Update MongoDB with the generated zipPath
+        // IMPORTANT: Update MongoDB with the generated zipPath
         // This ensures the quarter is marked as processed and the zip is stored
         if (formData.trackingId && selectedTimePeriod && newPackageData.zipPath) {
           console.log('Updating MongoDB with letter data...');

@@ -11,14 +11,11 @@ router.get('/', async (req, res) => {
   try {
     // Ensure connected to database
     await connectToDatabase();
-    console.log('Connected to MongoDB, fetching submissions...');
     
     // Fetch submissions, sorted by receivedAt (newest first)
     const submissions = await Submission.find({})
       .sort({ receivedAt: -1 })
       .limit(50);
-    
-    console.log(`Found ${submissions.length} submissions in MongoDB`);
     
     // Transform data to match expected format for QueueDisplay with path translation
     const queueItems = submissions.map(submission => {
@@ -61,7 +58,6 @@ router.get('/', async (req, res) => {
           }
         }
       } catch (err) {
-        console.error(`Error extracting business name for submission ${processedSubmission.submissionId}:`, err);
         businessName = `Submission #${processedSubmission.submissionId || processedSubmission._id}`;
       }
       
@@ -73,81 +69,38 @@ router.get('/', async (req, res) => {
         status = 'processing';
       }
       
-      // Log report path if it exists to help with debugging
+      // Find report path if it exists
       let reportPath = null;
       if (processedSubmission.report && processedSubmission.report.path) {
         reportPath = processedSubmission.report.path;
-        console.log(`Found report path for submission ${processedSubmission.submissionId || processedSubmission._id}: ${reportPath}`);
-        
-        // Check if report file exists at the translated path
-        try {
-          if (fs.existsSync(reportPath)) {
-            console.log(`Report file exists at: ${reportPath}`);
-          } else {
-            console.log(`Report file NOT found at: ${reportPath}`);
-          }
-        } catch (err) {
-          console.error(`Error checking report file: ${err.message}`);
-        }
       }
-      
-      // Use the ID from the right place based on your structure
-      const submissionId = processedSubmission.submissionId || processedSubmission._id;
       
       // Process files with path translation
       const files = [];
       if (processedSubmission.receivedFiles && Array.isArray(processedSubmission.receivedFiles)) {
         processedSubmission.receivedFiles.forEach(file => {
           if (file && file.originalName && file.savedPath) {
-            const fileEntry = {
+            files.push({
               name: file.originalName,
-              path: file.savedPath, // This is now the translated path
+              path: file.savedPath,
               type: file.mimetype || 'application/octet-stream',
               size: file.size || 0
-            };
-            
-            // Check if file exists at the translated path
-            try {
-              if (fs.existsSync(file.savedPath)) {
-                console.log(`File exists at: ${file.savedPath}`);
-              } else {
-                console.log(`File NOT found at: ${file.savedPath}`);
-              }
-            } catch (err) {
-              console.error(`Error checking file: ${err.message}`);
-            }
-            
-            files.push(fileEntry);
+            });
           }
         });
       }
       
-      console.log(`Processed submission ${submissionId}:`);
-      console.log(`- Business Name: ${businessName}`);
-      console.log(`- Files Found: ${files.length}`);
-      console.log(`- Report Path: ${reportPath || 'None'}`);
-      
       return {
-        id: submissionId,
+        id: processedSubmission.submissionId || processedSubmission._id,
         businessName,
         timestamp: processedSubmission.receivedAt,
         status,
         files,
         reportPath,
-        // RESTORED: Include the complete submission data for detailed view
+        // Include the complete submission data for detailed view
         submissionData: processedSubmission
       };
     });
-    
-    // Log the first item's structure if available
-    if (queueItems.length > 0) {
-      console.log('Sample queue item structure:');
-      console.log('- ID:', queueItems[0].id);
-      console.log('- Business Name:', queueItems[0].businessName);
-      console.log('- reportPath:', queueItems[0].reportPath);
-      console.log('- Has files:', queueItems[0].files?.length > 0);
-      console.log('- Complete data included: Yes');
-    }
     
     res.status(200).json({
       success: true,
@@ -174,31 +127,25 @@ router.get('/download', async (req, res) => {
       });
     }
     
-    console.log(`Download requested for: ${filePath}`);
-    
     // Check if it's a URL or a local path
     if (filePath.startsWith('http')) {
-      console.log('URL detected, redirecting');
       return res.redirect(filePath);
     }
     
     // Translate the path to local file system
     const translatedPath = translatePath(filePath);
-    console.log(`Translated path: ${translatedPath}`);
     
     // Otherwise, handle as a local file
     try {
       if (!fs.existsSync(translatedPath)) {
-        console.error(`File not found at path: ${translatedPath}`);
         return res.status(404).json({
           success: false,
-          message: 'File not found after path translation. Original: ' + filePath + ', Translated: ' + translatedPath
+          message: 'File not found'
         });
       }
 
       // Get file stats for debug info
       const stats = fs.statSync(translatedPath);
-      console.log(`File exists (${stats.size} bytes), sending download`);
       
       // Get file extension to set the correct content type
       const ext = path.extname(translatedPath).toLowerCase();
@@ -218,8 +165,6 @@ router.get('/download', async (req, res) => {
         contentType = 'application/json';
       }
       
-      console.log(`Using content type: ${contentType} for extension: ${ext}`);
-      
       // Set content disposition to force download
       res.setHeader('Content-Disposition', `attachment; filename="${path.basename(translatedPath)}"`);
       res.setHeader('Content-Type', contentType);
@@ -229,16 +174,12 @@ router.get('/download', async (req, res) => {
       fileStream.pipe(res);
       
     } catch (error) {
-      console.error(`Error accessing file ${translatedPath}:`, error);
       return res.status(500).json({
         success: false,
-        message: `Error accessing file: ${error.message}`,
-        path: filePath,
-        translatedPath: translatedPath
+        message: `Error accessing file: ${error.message}`
       });
     }
   } catch (error) {
-    console.error('Error in download endpoint:', error);
     res.status(500).json({
       success: false,
       message: `Error in download endpoint: ${error.message}`
@@ -260,7 +201,6 @@ router.post('/update-processed-quarters', async (req, res) => {
     
     // Ensure connected to database
     await connectToDatabase();
-    console.log(`Updating processed quarters for submission ID: ${submissionId}, adding quarter: ${quarter}`);
     
     // Check if the ID is a valid MongoDB ObjectId (24 character hex)
     const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(submissionId);
@@ -309,21 +249,15 @@ router.post('/update-processed-quarters', async (req, res) => {
           submission.submissionData.quarterZips = {};
         }
         submission.submissionData.quarterZips[quarter] = zipPath;
-        console.log(`Stored zipPath for quarter ${quarter}: ${zipPath}`);
       }
       
       // Save the updated submission
       await submission.save();
-      
-      console.log(`Added quarter ${quarter} to processed quarters for submission ${submissionId}`);
     } else {
-      console.log(`Quarter ${quarter} is already in processed quarters for submission ${submissionId}`);
-      
       // Still update the zipPath if provided, even if quarter is already processed
       if (zipPath && submission.submissionData.quarterZips) {
         submission.submissionData.quarterZips[quarter] = zipPath;
         await submission.save();
-        console.log(`Updated zipPath for quarter ${quarter}: ${zipPath}`);
       }
     }
     
@@ -356,7 +290,6 @@ router.delete('/:submissionId', async (req, res) => {
     
     // Ensure connected to database
     await connectToDatabase();
-    console.log(`Attempting to delete submission with ID: ${submissionId}`);
     
     // Check if the ID is a valid MongoDB ObjectId (24 character hex)
     const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(submissionId);
@@ -386,7 +319,6 @@ router.delete('/:submissionId', async (req, res) => {
     
     // Log what we're about to delete
     console.log(`Found submission to delete: ${submission.submissionId || submission._id}`);
-    console.log(`Received at: ${submission.receivedAt}`);
     
     // Optional: Delete associated files
     const filesToDelete = [];
@@ -436,14 +368,11 @@ router.delete('/:submissionId', async (req, res) => {
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
           fileResults.push({ path: filePath, deleted: true });
-          console.log(`Deleted file: ${filePath}`);
         } else {
           fileResults.push({ path: filePath, deleted: false, reason: 'File not found' });
-          console.log(`File not found for deletion: ${filePath}`);
         }
       } catch (fileError) {
         fileResults.push({ path: filePath, deleted: false, reason: fileError.message });
-        console.error(`Error deleting file ${filePath}:`, fileError);
       }
     }
     

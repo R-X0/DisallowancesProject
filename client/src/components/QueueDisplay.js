@@ -66,12 +66,13 @@ const QueueDisplay = () => {
       
       try {
         const endpoint = '/api/mongodb-queue';
-        console.log(`Fetching queue from ${endpoint}`);
+        // Removed verbose logging
         const response = await fetch(endpoint);
         const data = await response.json();
         
         if (data.success) {
-          console.log('Queue data received:', data.queue);
+          // Only log count, not entire queue
+          console.log(`Queue data received: ${data.queue.length} items`);
           setQueueItems(data.queue);
         } else {
           throw new Error(data.message || 'Failed to fetch queue data');
@@ -187,6 +188,72 @@ const QueueDisplay = () => {
     console.log('Clicked item:', item);
     setSelectedItem(item);
     setDialogOpen(true);
+  };
+
+  // Update processed quarters in MongoDB (with fallback to local UI updates)
+  const updateProcessedQuarters = async (itemId, quarter, zipPath = null) => {
+    try {
+      console.log(`Updating processed quarters for ${itemId}, quarter ${quarter}`);
+      if (zipPath) {
+        console.log(`Also storing zip path: ${zipPath}`);
+      }
+      
+      // API call to update processed quarters
+      const response = await fetch(`/api/mongodb-queue/update-processed-quarters`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          submissionId: itemId,
+          quarter,
+          zipPath
+        })
+      });
+      
+      if (!response.ok) {
+        console.error(`API returned ${response.status} - ${response.statusText}`);
+        // Fall back to local UI update
+        console.log("Falling back to local UI update only");
+        updateLocalUI(itemId, quarter);
+        return { success: false, message: 'API endpoint error but continuing with local update' };
+      }
+      
+      const result = await response.json();
+      console.log("Server update successful:", result);
+      
+      // Also update local UI for immediate feedback
+      updateLocalUI(itemId, quarter);
+      
+      return result;
+    } catch (error) {
+      console.error('Error updating processed quarters:', error);
+      // Fall back to local UI update
+      console.log("Falling back to local UI update due to error");
+      updateLocalUI(itemId, quarter);
+      return { success: false, error: error.message };
+    }
+  };
+  
+  // Helper function to update local UI state
+  const updateLocalUI = (itemId, quarter) => {
+    setQueueItems(prevItems => 
+      prevItems.map(queueItem => {
+        if (queueItem.id === itemId) {
+          const processedQuarters = queueItem.submissionData?.processedQuarters || [];
+          if (!processedQuarters.includes(quarter)) {
+            return {
+              ...queueItem,
+              submissionData: {
+                ...queueItem.submissionData,
+                processedQuarters: [...processedQuarters, quarter]
+              }
+            };
+          }
+        }
+        return queueItem;
+      })
+    );
   };
 
   // Function to handle generating a letter for a specific quarter with a specified approach
@@ -310,10 +377,10 @@ const QueueDisplay = () => {
       sessionStorage.setItem('prefillData', dataString); // Backup in case localStorage gets cleared
       
       // Update MongoDB to mark this quarter as processed immediately
-      // This ensures even if the user doesn't complete the letter generation,
-      // we won't show the option again when they return to the queue view
       console.log("Updating MongoDB to mark quarter as processing");
       await updateProcessedQuarters(item.id, quarter);
+      // After marking as processed in MongoDB, also update local UI for immediate feedback
+      updateLocalUI(item.id, quarter);
       
       // Use a longer delay to ensure storage is written before navigation
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -325,72 +392,6 @@ const QueueDisplay = () => {
       console.error('Error initiating letter generation:', error);
       alert("An error occurred. Please try again.");
     }
-  };
-
-  // Update processed quarters in MongoDB (with fallback to local UI updates)
-  const updateProcessedQuarters = async (itemId, quarter, zipPath = null) => {
-    try {
-      console.log(`Updating processed quarters for ${itemId}, quarter ${quarter}`);
-      if (zipPath) {
-        console.log(`Also storing zip path: ${zipPath}`);
-      }
-      
-      // API call to update processed quarters
-      const response = await fetch(`/api/mongodb-queue/update-processed-quarters`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          submissionId: itemId,
-          quarter,
-          zipPath
-        })
-      });
-      
-      if (!response.ok) {
-        console.error(`API returned ${response.status} - ${response.statusText}`);
-        // Fall back to local UI update
-        console.log("Falling back to local UI update only");
-        updateLocalUI(itemId, quarter);
-        return { success: false, message: 'API endpoint error but continuing with local update' };
-      }
-      
-      const result = await response.json();
-      console.log("Server update successful:", result);
-      
-      // Also update local UI for immediate feedback
-      updateLocalUI(itemId, quarter);
-      
-      return result;
-    } catch (error) {
-      console.error('Error updating processed quarters:', error);
-      // Fall back to local UI update
-      console.log("Falling back to local UI update due to error");
-      updateLocalUI(itemId, quarter);
-      return { success: false, error: error.message };
-    }
-  };
-  
-  // Helper function to update local UI state
-  const updateLocalUI = (itemId, quarter) => {
-    setQueueItems(prevItems => 
-      prevItems.map(queueItem => {
-        if (queueItem.id === itemId) {
-          const processedQuarters = queueItem.submissionData?.processedQuarters || [];
-          if (!processedQuarters.includes(quarter)) {
-            return {
-              ...queueItem,
-              submissionData: {
-                ...queueItem.submissionData,
-                processedQuarters: [...processedQuarters, quarter]
-              }
-            };
-          }
-        }
-        return queueItem;
-      })
-    );
   };
 
   // Function to close the dialog
