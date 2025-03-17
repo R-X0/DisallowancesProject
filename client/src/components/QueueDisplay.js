@@ -216,7 +216,8 @@ const QueueDisplay = () => {
         naicsCode: item.submissionData?.originalData?.formData?.naicsCode || '541110', // Default to law firm if missing
         timePeriods: [quarter],
         approach: approachToUse,  // Add the approach to the data
-        timestamp: new Date().getTime() // Add timestamp to ensure it's treated as new data
+        timestamp: new Date().getTime(), // Add timestamp to ensure it's treated as new data
+        submissionId: item.id // Store the submission ID for later use
       };
       
       // Add additional context information if available
@@ -308,27 +309,11 @@ const QueueDisplay = () => {
       localStorage.setItem('prefillData', dataString);
       sessionStorage.setItem('prefillData', dataString); // Backup in case localStorage gets cleared
       
-      // Skip the API call that's giving 404 errors - just update UI locally
-      console.log("Updating UI to show quarter as processed");
-      
-      // Update the queue item in our state only (skip server update)
-      const updatedQueueItems = queueItems.map(queueItem => {
-        if (queueItem.id === item.id) {
-          const processedQuarters = queueItem.submissionData?.processedQuarters || [];
-          if (!processedQuarters.includes(quarter)) {
-            return {
-              ...queueItem,
-              submissionData: {
-                ...queueItem.submissionData,
-                processedQuarters: [...processedQuarters, quarter]
-              }
-            };
-          }
-        }
-        return queueItem;
-      });
-      
-      setQueueItems(updatedQueueItems);
+      // Update MongoDB to mark this quarter as processed immediately
+      // This ensures even if the user doesn't complete the letter generation,
+      // we won't show the option again when they return to the queue view
+      console.log("Updating MongoDB to mark quarter as processing");
+      await updateProcessedQuarters(item.id, quarter);
       
       // Use a longer delay to ensure storage is written before navigation
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -342,9 +327,14 @@ const QueueDisplay = () => {
     }
   };
 
-  // Optional: Modify the updateProcessedQuarters function to handle 404 gracefully
-  const updateProcessedQuarters = async (itemId, quarter) => {
+  // Update processed quarters in MongoDB (with fallback to local UI updates)
+  const updateProcessedQuarters = async (itemId, quarter, zipPath = null) => {
     try {
+      console.log(`Updating processed quarters for ${itemId}, quarter ${quarter}`);
+      if (zipPath) {
+        console.log(`Also storing zip path: ${zipPath}`);
+      }
+      
       // API call to update processed quarters
       const response = await fetch(`/api/mongodb-queue/update-processed-quarters`, {
         method: 'POST',
@@ -353,21 +343,54 @@ const QueueDisplay = () => {
         },
         body: JSON.stringify({
           submissionId: itemId,
-          quarter
+          quarter,
+          zipPath
         })
       });
       
       if (!response.ok) {
-        console.log(`API returned ${response.status} - continuing anyway`);
-        return { success: false, message: 'API endpoint not found but continuing' };
+        console.error(`API returned ${response.status} - ${response.statusText}`);
+        // Fall back to local UI update
+        console.log("Falling back to local UI update only");
+        updateLocalUI(itemId, quarter);
+        return { success: false, message: 'API endpoint error but continuing with local update' };
       }
       
-      return await response.json();
+      const result = await response.json();
+      console.log("Server update successful:", result);
+      
+      // Also update local UI for immediate feedback
+      updateLocalUI(itemId, quarter);
+      
+      return result;
     } catch (error) {
-      console.log('Error updating processed quarters, but this is non-critical:', error);
-      // Don't throw the error, just return an object so the process continues
+      console.error('Error updating processed quarters:', error);
+      // Fall back to local UI update
+      console.log("Falling back to local UI update due to error");
+      updateLocalUI(itemId, quarter);
       return { success: false, error: error.message };
     }
+  };
+  
+  // Helper function to update local UI state
+  const updateLocalUI = (itemId, quarter) => {
+    setQueueItems(prevItems => 
+      prevItems.map(queueItem => {
+        if (queueItem.id === itemId) {
+          const processedQuarters = queueItem.submissionData?.processedQuarters || [];
+          if (!processedQuarters.includes(quarter)) {
+            return {
+              ...queueItem,
+              submissionData: {
+                ...queueItem.submissionData,
+                processedQuarters: [...processedQuarters, quarter]
+              }
+            };
+          }
+        }
+        return queueItem;
+      })
+    );
   };
 
   // Function to close the dialog

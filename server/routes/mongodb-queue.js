@@ -246,10 +246,101 @@ router.get('/download', async (req, res) => {
   }
 });
 
-
-// Add this to your server/routes/mongodb-queue.js file
-
-// Replace the delete endpoint in your server/routes/mongodb-queue.js file
+// Update processed quarters for a submission
+router.post('/update-processed-quarters', async (req, res) => {
+  try {
+    const { submissionId, quarter, zipPath } = req.body;
+    
+    if (!submissionId || !quarter) {
+      return res.status(400).json({
+        success: false,
+        message: 'Submission ID and quarter are required'
+      });
+    }
+    
+    // Ensure connected to database
+    await connectToDatabase();
+    console.log(`Updating processed quarters for submission ID: ${submissionId}, adding quarter: ${quarter}`);
+    
+    // Check if the ID is a valid MongoDB ObjectId (24 character hex)
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(submissionId);
+    
+    // Find the submission, but be careful about the query to avoid ObjectId casting errors
+    let submission;
+    
+    if (isValidObjectId) {
+      // If it's a valid ObjectId format, we can query by either field
+      submission = await Submission.findOne({
+        $or: [
+          { submissionId: submissionId },
+          { _id: submissionId }
+        ]
+      });
+    } else {
+      // If it's not a valid ObjectId, only query by submissionId
+      submission = await Submission.findOne({ submissionId: submissionId });
+    }
+    
+    if (!submission) {
+      return res.status(404).json({
+        success: false,
+        message: `Submission with ID ${submissionId} not found`
+      });
+    }
+    
+    // Ensure we have a submissionData object
+    if (!submission.submissionData) {
+      submission.submissionData = {};
+    }
+    
+    // Ensure we have a processedQuarters array
+    if (!submission.submissionData.processedQuarters) {
+      submission.submissionData.processedQuarters = [];
+    }
+    
+    // Check if the quarter is already in the processedQuarters array
+    if (!submission.submissionData.processedQuarters.includes(quarter)) {
+      // Add the quarter to the processedQuarters array
+      submission.submissionData.processedQuarters.push(quarter);
+      
+      // If zipPath is provided, store it in a new quarterZips object
+      if (zipPath) {
+        if (!submission.submissionData.quarterZips) {
+          submission.submissionData.quarterZips = {};
+        }
+        submission.submissionData.quarterZips[quarter] = zipPath;
+        console.log(`Stored zipPath for quarter ${quarter}: ${zipPath}`);
+      }
+      
+      // Save the updated submission
+      await submission.save();
+      
+      console.log(`Added quarter ${quarter} to processed quarters for submission ${submissionId}`);
+    } else {
+      console.log(`Quarter ${quarter} is already in processed quarters for submission ${submissionId}`);
+      
+      // Still update the zipPath if provided, even if quarter is already processed
+      if (zipPath && submission.submissionData.quarterZips) {
+        submission.submissionData.quarterZips[quarter] = zipPath;
+        await submission.save();
+        console.log(`Updated zipPath for quarter ${quarter}: ${zipPath}`);
+      }
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: `Quarter ${quarter} marked as processed for submission ${submissionId}`,
+      processedQuarters: submission.submissionData.processedQuarters,
+      quarterZips: submission.submissionData.quarterZips || {}
+    });
+  } catch (error) {
+    console.error(`Error updating processed quarters for submission ${req.body.submissionId}:`, error);
+    res.status(500).json({
+      success: false,
+      message: `Error updating processed quarters: ${error.message}`
+    });
+  }
+});
 
 // Delete a submission
 router.delete('/:submissionId', async (req, res) => {
