@@ -68,6 +68,55 @@ const ERCProtestForm = () => {
     'Q1 2021', 'Q2 2021', 'Q3 2021'
   ];
   
+  // Function to update processed quarters after successful submission
+  const updateLetterStatus = async (selectedQuarter) => {
+    try {
+      // Get the queue item data from sessionStorage
+      const prefillData = sessionStorage.getItem('prefillData');
+      
+      if (!prefillData) {
+        console.log("No prefill data found, can't update letter status");
+        return;
+      }
+      
+      const parsedData = JSON.parse(prefillData);
+      
+      // If we don't have both a submissionId and quarter, we can't update
+      if (!parsedData.submissionId || !selectedQuarter) {
+        console.log("Missing submissionId or quarter, can't update letter status");
+        return;
+      }
+      
+      console.log(`Updating letter status for submission ${parsedData.submissionId}, quarter ${selectedQuarter}`);
+      
+      // Call the API to update processed quarters
+      const response = await fetch('/api/mongodb-queue/update-processed-quarters', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          submissionId: parsedData.submissionId,
+          quarter: selectedQuarter
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        console.log(`Successfully updated letter status for ${selectedQuarter}:`, result);
+        
+        // Clear the prefill data after successful update
+        sessionStorage.removeItem('prefillData');
+        localStorage.removeItem('prefillData');
+      } else {
+        console.error(`Failed to update letter status for ${selectedQuarter}:`, result.message);
+      }
+    } catch (error) {
+      console.error('Error updating letter status:', error);
+    }
+  };
+  
   // Effect to check for prefill data from the queue display - with enhanced reliability
   useEffect(() => {
     const loadPrefillData = () => {
@@ -259,6 +308,21 @@ const ERCProtestForm = () => {
         console.warn('No protest letter data available for submission');
       }
       
+      // Get the quarter from sessionStorage prefill data
+      const prefillData = sessionStorage.getItem('prefillData');
+      let selectedQuarter = null;
+      
+      if (prefillData) {
+        try {
+          const parsedData = JSON.parse(prefillData);
+          if (parsedData.timePeriods && parsedData.timePeriods.length > 0) {
+            selectedQuarter = parsedData.timePeriods[0];
+          }
+        } catch (err) {
+          console.error('Error parsing prefill data:', err);
+        }
+      }
+      
       // Send to backend API
       const response = await fetch('/api/erc-protest/submit', {
         method: 'POST',
@@ -275,6 +339,11 @@ const ERCProtestForm = () => {
         });
         
         setActiveStep(2); // Move to the final step
+        
+        // Update the letter status in MongoDB if this was part of a queue item
+        if (selectedQuarter && protestLetterData && protestLetterData.selectedQuarter) {
+          await updateLetterStatus(protestLetterData.selectedQuarter || selectedQuarter);
+        }
       } else {
         throw new Error(result.message || 'Submission failed');
       }

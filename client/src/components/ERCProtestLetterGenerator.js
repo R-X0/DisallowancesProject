@@ -320,7 +320,8 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
           pdfPath: response.pdfPath,
           zipPath: response.zipPath,
           attachments: response.attachments || [],
-          packageFilename: response.packageFilename || 'complete_package.zip'
+          packageFilename: response.packageFilename || 'complete_package.zip',
+          selectedQuarter: selectedTimePeriod // Add the selected quarter to the package data
         };
         
         console.log('Setting package data:', newPackageData);
@@ -360,8 +361,14 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const handleCloseDialog = () => {
     // Make sure we're still calling onGenerated with the package data when closing the dialog
     if (packageData && onGenerated) {
-      console.log("Sending package data to parent on dialog close:", packageData);
-      onGenerated(packageData);
+      // Add the selected quarter to the package data
+      const packageDataWithQuarter = {
+        ...packageData,
+        selectedQuarter: selectedTimePeriod
+      };
+      
+      console.log("Sending package data to parent on dialog close with quarter info:", packageDataWithQuarter);
+      onGenerated(packageDataWithQuarter);
     }
     
     setDialogOpen(false);
@@ -389,10 +396,15 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         window.open(`/api/erc-protest/download?path=${encodeURIComponent(packageData.zipPath)}`, '_blank');
       }
       
-      // Also trigger the onGenerated callback again to ensure the parent has the data
+      // Also trigger the onGenerated callback again to ensure the parent has the data with quarter info
       if (onGenerated) {
-        console.log("Triggering onGenerated again during download", packageData);
-        onGenerated(packageData);
+        const packageDataWithQuarter = {
+          ...packageData,
+          selectedQuarter: selectedTimePeriod
+        };
+        
+        console.log("Triggering onGenerated with quarter info during download", packageDataWithQuarter);
+        onGenerated(packageDataWithQuarter);
       }
     } else {
       console.warn("No package data or zipPath available for download");

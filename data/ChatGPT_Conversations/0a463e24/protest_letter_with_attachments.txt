@@ -1,0 +1,79 @@
+03/17/2025
+Internal Revenue Service
+Ogden, UT 84201
+
+EIN: 00-0000000  
+Taxpayer Name: 45's Business  
+RE: Formal Protest to Letter [Reference Number] – ERC Disallowance for Q1 2021  
+Tax Period: 1st Quarter 2021 (202101)  
+Claim Amount: [Claim Amount as determined by qualifying wage calculations]
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing 45's Business’ Employee Retention Credit (ERC) claim for the first quarter of 2021. The disallowance appears to be based on the assertion that no government orders were in effect that restricted our operations during this quarter. We respectfully disagree. Multiple federal, state, county, and city government orders were active during this period and imposed COVID‑19 related restrictions that partially suspended or limited our normal business activities. In addition, our revenue decline meets the IRS thresholds for ERC qualification. In this protest letter, we provide a detailed timeline of the relevant government orders with their prescribed details and present our revenue decline data in the dedicated section below.
+
+Below is the timeline of COVID‑19 Government Orders active during Q1 2021:
+
+• Order Name: National Emergency Concerning COVID‑19  
+  Order Number: Proclamation 9994  
+  Date Enacted: 03/13/2020  
+  Date Rescinded: Still in effect  
+  Order Summary: On March 13, 2020, by Proclamation 9994, the President declared a national emergency due to COVID‑19. This activation of emergency powers provided federal funding and support for subsequent state and local public health measures. The declaration has remained in effect, serving as the legal foundation for continued COVID‑19 directives.  
+  Impact on Quarter: For Q1 2021, this federal emergency declaration continued to restrict normal business operations and contributed to the partial suspension of our activities.
+
+• Order Name: CDC/FAA Mask Mandates for Travel  
+  Order Number: Executive Order 13998  
+  Date Enacted: 01/21/2021  
+  Date Rescinded: Still in effect  
+  Order Summary: This order mandated the use of face masks on airplanes, trains, buses, and in airport facilities as part of a broader federal effort to curb the spread of COVID‑19. It was issued to promote travel safety and ensure that essential travel protocols were maintained nationwide.  
+  Impact on Quarter: During Q1 2021, the mandate affected travel protocols and indirectly limited business operations by imposing strict health measures on employees and clients engaged in travel, thereby contributing to operational curtailment.
+
+• Order Name: California COVID‑19 State of Emergency  
+  Order Number: N/A (Governor’s Proclamation)  
+  Date Enacted: 03/04/2020  
+  Date Rescinded: Still in effect  
+  Order Summary: Governor Newsom declared a state of emergency on March 4, 2020, in response to rapidly increasing COVID‑19 cases. This proclamation enabled the state to mobilize additional resources and issue sweeping public health mandates that affected all sectors of business.  
+  Impact on Quarter: In Q1 2021, the underlying restrictions and public health requirements of this order continued to influence operational protocols and limit non‑essential business activities.
+
+• Order Name: Statewide ‘Stay‑at‑Home’ Order  
+  Order Number: Executive Order N‑33‑20  
+  Date Enacted: 03/19/2020  
+  Date Rescinded: 06/15/2021  
+  Order Summary: This order mandated that Californians remain at home except for essential activities, forcing non‑essential businesses to close or operate remotely. It played a critical role in curbing the spread of COVID‑19 by severely restricting gatherings and in‑person interactions.  
+  Impact on Quarter: Although originally enacted in 2020, the effects of this order continued into Q1 2021, imposing limitations on our business operations and contributing to a partial suspension of our normal services.
+
+• Order Name: Stay Well at Home Order  
+  Order Number: [Not Provided – Ventura County Order]  
+  Date Enacted: 03/20/2020  
+  Date Rescinded: 06/15/2021  
+  Order Summary: This local order required Ventura County residents to remain at home except for essential needs, in alignment with state mandates. It led to the closure of virtually all non‑essential businesses and restricted social and commercial activities.  
+  Impact on Quarter: The restrictions imposed by this order continued to be in effect during Q1 2021, thereby contributing significantly to the curtailment of normal business operations.
+
+• Order Name: Local Emergency Proclamation  
+  Order Number: EOC Director Order No. 20‑1  
+  Date Enacted: 03/13/2020  
+  Date Rescinded: Not rescinded  
+  Order Summary: The City of Camarillo declared a local emergency to address the COVID‑19 outbreak, resulting in the closure of public facilities and cancellation of large gatherings. This proclamation set the stage for subsequent local health and safety measures that governed daily operations.  
+  Impact on Quarter: In Q1 2021, the state of local emergency established by this proclamation continued to have an indirect effect on business operations through sustained public health guidance and restrictions.
+
+REVENUE DECLINE DATA
+
+The following section provides the detailed revenue decline information for 45's Business during Q1 2021. This information is provided in strict compliance with the audit requirements to demonstrate that our revenue declines meet the qualification thresholds for the Employee Retention Credit.
+
+During Q1 2021, 45's Business reported EXACTLY $345 in revenue compared to EXACTLY $54,325,234 in Q1 2019. This represents a decline of EXACTLY $54,325,234 – $345 = EXACTLY $54,324,889 – which is a decline of EXACTLY 100.00%. Based on the ERC qualifying threshold, this severe revenue decline qualifies 45's Business for the Employee Retention Credit.
+
+• Q2 2021: EXACTLY $345 compared to Q2 2019: EXACTLY $3,552,452,345 = EXACTLY 100.00% decline (Qualifies for ERC)  
+• Q3 2021: EXACTLY $345 compared to Q3 2019: EXACTLY $3,245,345 = EXACTLY 99.99% decline (Qualifies for ERC)
+
+In conclusion, the multiple government orders listed above, active during Q1 2021, directly contributed to the partial suspension of normal business operations, while the dramatic revenue decline further substantiates our qualification for the ERC.
+
+Thank you for your prompt and fair reconsideration of our ERC claim. Should you require any additional information or further documentation regarding the government orders or revenue details provided herein, please do not hesitate to contact our office.
+
+Under penalties of perjury, I declare that I have submitted this protest and, to the best of my knowledge, the information contained herein is true, correct, and complete.
+
+Sincerely,
+
+[Authorized Representative Name]  
+Authorized Representative for 45's Business
+
+Enclosures: Copies of Government Orders and Relevant Excerpts; Detailed ERC Revenue Decline Analysis
