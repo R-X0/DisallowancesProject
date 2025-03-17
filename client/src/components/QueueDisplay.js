@@ -523,40 +523,22 @@ const QueueDisplay = () => {
               {index > 0 && <Divider component="li" />}
               <ListItem 
                 alignItems="flex-start"
-                secondaryAction={
-                  <Box display="flex">
-                    <Tooltip title="View Details">
-                      <IconButton 
-                        edge="end" 
-                        onClick={() => handleItemClick(item)}
-                        sx={{ mr: 1 }}
-                      >
-                        <Info />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete Submission">
-                      <IconButton 
-                        edge="end" 
-                        color="error"
-                        onClick={(e) => handleOpenDeleteDialog(item, e)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                }
                 sx={{ 
                   cursor: 'pointer',
                   '&:hover': {
                     bgcolor: 'rgba(0, 0, 0, 0.04)'
-                  }
+                  },
+                  position: 'relative',
+                  py: 1.5 
                 }}
                 onClick={() => handleItemClick(item)}
               >
                 <ListItemText
                   primary={
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="subtitle2">{item.businessName}</Typography>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" pr={10}>
+                      <Typography variant="subtitle2" noWrap>
+                        {item.businessName}
+                      </Typography>
                       {getStatusChip(item)}
                     </Box>
                   }
@@ -571,6 +553,37 @@ const QueueDisplay = () => {
                     </Typography>
                   }
                 />
+                <Box 
+                  sx={{ 
+                    position: 'absolute',
+                    right: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    display: 'flex',
+                    gap: 1
+                  }}
+                >
+                  <Tooltip title="View Details">
+                    <IconButton 
+                      edge="end" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleItemClick(item);
+                      }}
+                    >
+                      <Info fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete Submission">
+                    <IconButton 
+                      edge="end" 
+                      color="error"
+                      onClick={(e) => handleOpenDeleteDialog(item, e)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               </ListItem>
             </React.Fragment>
           ))}
