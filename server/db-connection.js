@@ -8,13 +8,22 @@ const MONGODB_URI = process.env.MONGODB_URI;
 // Track connection status
 let isConnected = false;
 let connectionAttempted = false;
+// Add flag to prevent repeated logging
+let loggingEnabled = true;
 
 // Connect to MongoDB
 const connectToDatabase = async () => {
   try {
-    // Add more detailed logging
-    console.log('connectToDatabase called');
-    console.log('MONGODB_URI defined:', !!MONGODB_URI);
+    // Skip repeated logging for connection checks
+    if (loggingEnabled === false) {
+      // Silent check - if already connected, just return
+      if (isConnected) {
+        return true;
+      }
+    }
+    
+    // Disable further logging until app restarts
+    loggingEnabled = false;
     
     if (!MONGODB_URI) {
       console.error('ERROR: No MongoDB URI provided in environment variables');
@@ -22,12 +31,11 @@ const connectToDatabase = async () => {
     }
 
     if (isConnected) {
-      console.log('Using existing MongoDB connection');
       return true;
     }
 
     if (connectionAttempted) {
-      console.log('Previous connection attempt failed, skipping retry');
+      // Don't log this repeatedly
       return false;
     }
 
