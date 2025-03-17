@@ -320,8 +320,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
           pdfPath: response.pdfPath,
           zipPath: response.zipPath,
           attachments: response.attachments || [],
-          packageFilename: response.packageFilename || 'complete_package.zip',
-          selectedQuarter: selectedTimePeriod // Add the selected quarter to the package data
+          packageFilename: response.packageFilename || 'complete_package.zip'
         };
         
         console.log('Setting package data:', newPackageData);
@@ -361,14 +360,8 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const handleCloseDialog = () => {
     // Make sure we're still calling onGenerated with the package data when closing the dialog
     if (packageData && onGenerated) {
-      // Add the selected quarter to the package data
-      const packageDataWithQuarter = {
-        ...packageData,
-        selectedQuarter: selectedTimePeriod
-      };
-      
-      console.log("Sending package data to parent on dialog close with quarter info:", packageDataWithQuarter);
-      onGenerated(packageDataWithQuarter);
+      console.log("Sending package data to parent on dialog close:", packageData);
+      onGenerated(packageData);
     }
     
     setDialogOpen(false);
@@ -396,15 +389,10 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         window.open(`/api/erc-protest/download?path=${encodeURIComponent(packageData.zipPath)}`, '_blank');
       }
       
-      // Also trigger the onGenerated callback again to ensure the parent has the data with quarter info
+      // Also trigger the onGenerated callback again to ensure the parent has the data
       if (onGenerated) {
-        const packageDataWithQuarter = {
-          ...packageData,
-          selectedQuarter: selectedTimePeriod
-        };
-        
-        console.log("Triggering onGenerated with quarter info during download", packageDataWithQuarter);
-        onGenerated(packageDataWithQuarter);
+        console.log("Triggering onGenerated again during download", packageData);
+        onGenerated(packageData);
       }
     } else {
       console.warn("No package data or zipPath available for download");
