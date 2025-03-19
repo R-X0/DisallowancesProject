@@ -5,29 +5,12 @@ const path = require('path');
 const fs = require('fs');
 const { connectToDatabase, Submission } = require('../db-connection');
 const { translatePath, processDocument } = require('../utils/pathTranslator');
-const { ensureConsistentId } = require('../services/protestDriveUploader');
-
-/**
- * Simple quarter normalization - just get the quarter number
- * @param {string} quarter - Any quarter format (Quarter 3, Q3, etc.)
- * @returns {string} - Normalized quarter number (3, 2, etc.)
- */
-function normalizeQuarter(quarter) {
-  if (!quarter) return '';
-  
-  // Just get the quarter number
-  const match = String(quarter).match(/[1-4]/);
-  return match ? match[0] : '';
-}
 
 // Get all submissions for queue display
 router.get('/', async (req, res) => {
   try {
     // Ensure connected to database
     await connectToDatabase();
-    
-    // ADDED: Query parameter to force refresh
-    const forceRefresh = req.query.refresh === 'true';
     
     // Fetch submissions, sorted by receivedAt (newest first)
     const submissions = await Submission.find({})
@@ -121,8 +104,7 @@ router.get('/', async (req, res) => {
     
     res.status(200).json({
       success: true,
-      queue: queueItems,
-      refreshed: forceRefresh
+      queue: queueItems
     });
   } catch (error) {
     console.error('Error fetching MongoDB queue:', error);
@@ -205,7 +187,7 @@ router.get('/download', async (req, res) => {
   }
 });
 
-// Key fixed route: Update processed quarters for a submission with simple, reliable approach
+// Update processed quarters for a submission
 router.post('/update-processed-quarters', async (req, res) => {
   try {
     const { submissionId, quarter, zipPath } = req.body;
@@ -217,158 +199,73 @@ router.post('/update-processed-quarters', async (req, res) => {
       });
     }
     
-    console.log(`Processing update request for submission ${submissionId}, quarter ${quarter}`);
-    if (zipPath) {
-      console.log(`With ZIP path: ${zipPath}`);
-    }
-    
     // Ensure connected to database
     await connectToDatabase();
     
-    // FIXED: Simple ID handling - just try multiple formats directly
-    // Don't do complex transformations
-    const possibleIds = [
-      submissionId,
-      `ERC-${submissionId}`,
-      submissionId.toString().replace('ERC-', ''),
-      submissionId.toString().replace(/\D/g, '') // Just the numeric part
-    ];
+    // Check if the ID is a valid MongoDB ObjectId (24 character hex)
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(submissionId);
     
-    // Try each ID format until we find a match
-    let submission = null;
-    for (const idToTry of possibleIds) {
-      try {
-        const result = await Submission.findOne({
-          $or: [
-            { submissionId: idToTry },
-            { trackingId: idToTry },
-            { _id: idToTry }
-          ]
-        });
-        
-        if (result) {
-          submission = result;
-          console.log(`Found submission with ID format: ${idToTry}`);
-          break;
-        }
-      } catch (err) {
-        console.log(`Error trying ID format ${idToTry}:`, err.message);
-      }
-    }
+    // Find the submission, but be careful about the query to avoid ObjectId casting errors
+    let submission;
     
-    // If still not found, try a more aggressive approach with partial matching
-    if (!submission) {
-      console.log('No exact ID match found, trying partial matching...');
-      
-      // Get all submissions
-      const allSubmissions = await Submission.find({});
-      console.log(`Checking ${allSubmissions.length} submissions for partial matches`);
-      
-      // Extract numeric part of the ID for matching
-      const numericPart = submissionId.toString().replace(/\D/g, '');
-      
-      // Find any submission that contains the numeric part in any ID field
-      for (const sub of allSubmissions) {
-        const subId = sub.submissionId || '';
-        const subTrackingId = sub.trackingId || '';
-        const subObjId = sub._id?.toString() || '';
-        
-        if (subId.includes(numericPart) || 
-            subTrackingId.includes(numericPart) || 
-            subObjId.includes(numericPart) ||
-            numericPart.includes(subId) ||
-            numericPart.includes(subTrackingId) ||
-            numericPart.includes(subObjId)) {
-          submission = sub;
-          console.log(`Found partial match: submission._id = ${sub._id}`);
-          break;
-        }
-      }
+    if (isValidObjectId) {
+      // If it's a valid ObjectId format, we can query by either field
+      submission = await Submission.findOne({
+        $or: [
+          { submissionId: submissionId },
+          { _id: submissionId }
+        ]
+      });
+    } else {
+      // If it's not a valid ObjectId, only query by submissionId
+      submission = await Submission.findOne({ submissionId: submissionId });
     }
     
     if (!submission) {
-      console.error(`Submission with ID ${submissionId} not found in MongoDB after all attempts`);
       return res.status(404).json({
         success: false,
         message: `Submission with ID ${submissionId} not found`
       });
     }
     
-    // Make sure we have the necessary data structures
+    // Ensure we have a submissionData object
     if (!submission.submissionData) {
       submission.submissionData = {};
     }
     
+    // Ensure we have a processedQuarters array
     if (!submission.submissionData.processedQuarters) {
       submission.submissionData.processedQuarters = [];
     }
     
-    // FIXED: Store quarter in multiple simple formats
-    // Original format
+    // Check if the quarter is already in the processedQuarters array
     if (!submission.submissionData.processedQuarters.includes(quarter)) {
+      // Add the quarter to the processedQuarters array
       submission.submissionData.processedQuarters.push(quarter);
-    }
-    
-    // Also store just the number for simple matching
-    const quarterNum = normalizeQuarter(quarter);
-    if (quarterNum && !submission.submissionData.processedQuarters.includes(quarterNum)) {
-      submission.submissionData.processedQuarters.push(quarterNum);
-    }
-    
-    // FIXED: Store ZIP path in multiple ways for reliable access
-    if (zipPath) {
-      // Store at top level for backwards compatibility
-      submission.zipPath = zipPath;
       
-      // Create quarterZips structure if it doesn't exist
-      if (!submission.submissionData.quarterZips) {
-        submission.submissionData.quarterZips = {};
+      // If zipPath is provided, store it in a new quarterZips object
+      if (zipPath) {
+        if (!submission.submissionData.quarterZips) {
+          submission.submissionData.quarterZips = {};
+        }
+        submission.submissionData.quarterZips[quarter] = zipPath;
       }
       
-      // Store under original format
-      submission.submissionData.quarterZips[quarter] = zipPath;
-      
-      // Also store under quarter number for simple access
-      if (quarterNum) {
-        submission.submissionData.quarterZips[quarterNum] = zipPath;
-      }
-      
-      console.log(`Updated ZIP path for ${quarter} to: ${zipPath}`);
-    }
-    
-    // Save the updated submission
-    console.log(`Saving changes to MongoDB...`);
-    try {
+      // Save the updated submission
       await submission.save();
-      console.log(`Successfully saved submission with updated data`);
-    } catch (saveErr) {
-      console.error('Error saving to MongoDB:', saveErr);
-      
-      // Fallback: Try updateOne if save fails
-      try {
-        const updateResult = await Submission.updateOne(
-          { _id: submission._id },
-          { 
-            $set: { 
-              submissionData: submission.submissionData,
-              zipPath: zipPath || submission.zipPath
-            } 
-          }
-        );
-        console.log('Used updateOne as fallback, result:', updateResult);
-      } catch (updateErr) {
-        console.error('Even updateOne failed:', updateErr);
-        throw updateErr;
+    } else {
+      // Still update the zipPath if provided, even if quarter is already processed
+      if (zipPath && submission.submissionData.quarterZips) {
+        submission.submissionData.quarterZips[quarter] = zipPath;
+        await submission.save();
       }
     }
     
-    // Return success with the updated data
     res.status(200).json({
       success: true,
       message: `Quarter ${quarter} marked as processed for submission ${submissionId}`,
       processedQuarters: submission.submissionData.processedQuarters,
-      quarterZips: submission.submissionData.quarterZips || {},
-      submissionId: submission.id || submission._id
+      quarterZips: submission.submissionData.quarterZips || {}
     });
   } catch (error) {
     console.error(`Error updating processed quarters for submission ${req.body.submissionId}:`, error);
@@ -391,28 +288,27 @@ router.delete('/:submissionId', async (req, res) => {
       });
     }
     
-    // Use consistent ID format
-    const formattedId = ensureConsistentId(submissionId);
-    
     // Ensure connected to database
     await connectToDatabase();
     
-    // Build flexible query to find by any ID format
-    const orConditions = [
-      { submissionId: submissionId },
-      { submissionId: formattedId }
-    ];
+    // Check if the ID is a valid MongoDB ObjectId (24 character hex)
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(submissionId);
     
-    // Add ObjectId condition only if valid
-    if (/^[0-9a-fA-F]{24}$/.test(submissionId)) {
-      orConditions.push({ _id: submissionId });
-    }
-    if (/^[0-9a-fA-F]{24}$/.test(formattedId)) {
-      orConditions.push({ _id: formattedId });
-    }
+    // Find the submission, but be careful about the query to avoid ObjectId casting errors
+    let submission;
     
-    // Find the submission with flexible query
-    const submission = await Submission.findOne({ $or: orConditions });
+    if (isValidObjectId) {
+      // If it's a valid ObjectId format, we can query by either field
+      submission = await Submission.findOne({
+        $or: [
+          { submissionId: submissionId },
+          { _id: submissionId }
+        ]
+      });
+    } else {
+      // If it's not a valid ObjectId, only query by submissionId
+      submission = await Submission.findOne({ submissionId: submissionId });
+    }
     
     if (!submission) {
       return res.status(404).json({
@@ -444,8 +340,19 @@ router.delete('/:submissionId', async (req, res) => {
       filesToDelete.push(translatedReportPath);
     }
     
-    // Delete the submission from MongoDB - using the same flexible query
-    const deleteResult = await Submission.deleteOne({ $or: orConditions });
+    // Delete the submission from MongoDB - use the same query approach as above
+    let deleteResult;
+    
+    if (isValidObjectId) {
+      deleteResult = await Submission.deleteOne({
+        $or: [
+          { submissionId: submissionId },
+          { _id: submissionId }
+        ]
+      });
+    } else {
+      deleteResult = await Submission.deleteOne({ submissionId: submissionId });
+    }
     
     if (deleteResult.deletedCount === 0) {
       return res.status(404).json({

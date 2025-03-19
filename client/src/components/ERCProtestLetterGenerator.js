@@ -189,34 +189,6 @@ const determineUserApproach = (formData) => {
   }
 };
 
-/**
- * Normalize quarter format to a consistent standard for comparison
- * @param {string} quarter - Any quarter format (Quarter 1, Q1, etc.)
- * @returns {string} - Normalized format (q1, q2, etc.)
- */
-const normalizeQuarter = (quarter) => {
-  if (!quarter) return '';
-  
-  // Convert to string, lowercase, and remove all non-alphanumeric characters
-  const clean = quarter.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
-  
-  // Extract just the quarter number using regex
-  const match = clean.match(/q?([1-4])/);
-  if (match && match[1]) {
-    // Return standardized format: q1, q2, q3, q4
-    return `q${match[1]}`;
-  }
-  
-  // If quarter includes year (e.g., "q2 2021"), extract quarter part
-  const quarterYearMatch = clean.match(/q?([1-4]).*20([0-9]{2})/);
-  if (quarterYearMatch && quarterYearMatch[1]) {
-    return `q${quarterYearMatch[1]}`;
-  }
-  
-  // Return original if we couldn't normalize it
-  return clean;
-};
-
 const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [generating, setGenerating] = useState(false);
   const [protestLetter, setProtestLetter] = useState('');
@@ -231,7 +203,6 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [documentType, setDocumentType] = useState('protestLetter'); // State for toggling document type
   const [selectedTimePeriod, setSelectedTimePeriod] = useState(''); // For selecting which period to focus on for protest letter
   const [approachFocus, setApproachFocus] = useState('governmentOrders'); // Default approach
-  const [mongoDbUpdated, setMongoDbUpdated] = useState(false); // Flag to track if MongoDB has been updated
 
   // Initialize selected time period when form data changes
   useEffect(() => {
@@ -250,94 +221,46 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   // Handle time period selection change
   const handleTimePeriodChange = (event) => {
     setSelectedTimePeriod(event.target.value);
-    // Reset MongoDB update flag when time period changes
-    setMongoDbUpdated(false);
   };
 
-  // Function to update MongoDB with letter data with retry capability
-  // This function is now centralized and will ONLY be called once for a given letter generation
-  const updateMongoDBWithLetterData = async (trackingId, quarter, zipPath, retryCount = 3) => {
-    // Check if we've already successfully updated MongoDB for this data
-    if (mongoDbUpdated) {
-      console.log('MongoDB already updated for this quarter, skipping duplicate update');
-      return { success: true, message: 'Already updated' };
-    }
-    
+  // Function to update MongoDB with file paths and mark quarter as processed
+  const updateMongoDBWithLetterData = async (trackingId, quarter, zipPath) => {
     if (!trackingId || !quarter || !zipPath) {
       console.log('Missing required data for MongoDB update:', { trackingId, quarter, zipPath });
       return { success: false, message: 'Missing required data' };
     }
     
-    // Keep track of attempts
-    let currentAttempt = 0;
-    let lastError = null;
-    
-    while (currentAttempt < retryCount) {
-      currentAttempt++;
-      try {
-        console.log(`Updating MongoDB for tracking ID: ${trackingId}, quarter: ${quarter} (attempt ${currentAttempt}/${retryCount})`);
-        console.log(`ZIP path: ${zipPath}`);
-        
-        const response = await fetch('/api/mongodb-queue/update-processed-quarters', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            submissionId: trackingId,
-            quarter: quarter,
-            zipPath: zipPath
-          })
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`Error updating MongoDB: ${response.status} - ${response.statusText} - ${errorText}`);
-          lastError = new Error(`Server responded with ${response.status}: ${errorText}`);
-          
-          // Wait before retry (exponential backoff)
-          if (currentAttempt < retryCount) {
-            const delay = Math.pow(2, currentAttempt) * 500; // 1s, 2s, 4s
-            console.log(`Retrying in ${delay}ms...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            continue;
-          }
-          throw lastError;
-        }
-        
-        const result = await response.json();
-        console.log('MongoDB update successful:', result);
-        
-        // Mark as updated so we don't do it again
-        setMongoDbUpdated(true);
-        
-        // Force refresh of the queue display immediately
-        try {
-          const refreshResponse = await fetch('/api/mongodb-queue?refresh=true');
-          console.log('Queue refresh after update:', refreshResponse.ok ? 'success' : 'failed');
-        } catch (refreshError) {
-          console.warn('Non-critical error refreshing queue:', refreshError);
-        }
-        
-        return result;
-      } catch (error) {
-        console.error(`Error updating MongoDB (attempt ${currentAttempt}/${retryCount}):`, error);
-        lastError = error;
-        
-        // Wait before retry (exponential backoff)
-        if (currentAttempt < retryCount) {
-          const delay = Math.pow(2, currentAttempt) * 500; // 1s, 2s, 4s
-          console.log(`Retrying in ${delay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
+    try {
+      console.log(`Updating MongoDB for tracking ID: ${trackingId}, quarter: ${quarter}`);
+      console.log(`ZIP path: ${zipPath}`);
+      
+      const response = await fetch('/api/mongodb-queue/update-processed-quarters', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          submissionId: trackingId,
+          quarter: quarter,
+          zipPath: zipPath
+        })
+      });
+      
+      if (!response.ok) {
+        console.error(`Error updating MongoDB: ${response.status} - ${response.statusText}`);
+        return { success: false, message: 'Server error' };
       }
+      
+      const result = await response.json();
+      console.log('MongoDB update successful:', result);
+      return result;
+    } catch (error) {
+      console.error('Error updating MongoDB:', error);
+      return { success: false, error: error.message };
     }
-    
-    // If we get here, all retries failed
-    return { success: false, error: lastError?.message || 'Unknown error after multiple retries' };
   };
 
-  // Update the generateProtestLetter function with the fix
+  // Function to generate protest letter using our LLM API
   const generateProtestLetter = async () => {
     setGenerating(true);
     setError(null);
@@ -359,9 +282,6 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         selectedTimePeriod : 
         timePeriodsText;
       
-      // Log the exact time period format being used
-      console.log(`Using time period in exact format: "${timePeriodToUse}"`);
-      
       // Calculate revenue declines and determine approach
       const revenueDeclines = calculateRevenueDeclines(formData);
       const qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
@@ -381,7 +301,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         businessType: businessType,
         trackingId: formData.trackingId || '',
         documentType: documentType,
-        // Include all quarterly revenue data
+        // Add revenue data
         q1_2019: formData.q1_2019 || '',
         q2_2019: formData.q2_2019 || '',
         q3_2019: formData.q3_2019 || '',
@@ -393,7 +313,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         q1_2021: formData.q1_2021 || '',
         q2_2021: formData.q2_2021 || '',
         q3_2021: formData.q3_2021 || '',
-        // Include additional context
+        // Also pass additional context
         revenueReductionInfo: formData.revenueReductionInfo || '',
         governmentOrdersInfo: formData.governmentOrdersInfo || '',
         // Pass revenue decline metadata
@@ -402,18 +322,32 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         approachFocus: currentApproach // Use the confirmed approach
       };
       
-      // Set processing message and update step
-      setProcessingMessage("Contacting server to generate document...");
+      // Update processing steps
+      setProcessingMessage('Connecting to ChatGPT conversation...');
       setProcessingStep(1);
       
-      // Make API call to generate the protest letter
-      console.log('Making API call to generate protest letter...');
-      const response = await generateERCProtestLetter(letterData);
-      console.log('Received API response:', response);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setProcessingMessage('Extracting COVID-19 orders and research data...');
+      setProcessingStep(2);
       
-      // Update processing status
-      setProcessingMessage("Document generated, processing attachments...");
+      // Call the API to generate the letter
+      const response = await generateERCProtestLetter(letterData);
+      
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setProcessingMessage(documentType === 'protestLetter' ? 
+        'Generating protest letter...' : 
+        'Generating Form 886-A document...');
       setProcessingStep(3);
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setProcessingMessage('Converting referenced links to PDF attachments...');
+      setProcessingStep(4);
+      
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setProcessingMessage('Creating complete package...');
+      setProcessingStep(5);
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       if (response.success) {
         setProtestLetter(response.letter);
@@ -429,18 +363,26 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         console.log('Setting package data:', newPackageData);
         setPackageData(newPackageData);
         
-        // Update processing status
-        setProcessingMessage("Finalizing document package...");
-        setProcessingStep(4);
-        
-        // IMPORTANT CHANGE: Update MongoDB once with zip path
+        // IMPORTANT: Update MongoDB with the generated zipPath
+        // This ensures the quarter is marked as processed and the zip is stored
         if (formData.trackingId && selectedTimePeriod && newPackageData.zipPath) {
-          setProcessingMessage("Updating database with document package...");
-          await updateMongoDBWithLetterData(
-            formData.trackingId,
-            selectedTimePeriod,
-            newPackageData.zipPath
-          );
+          console.log('Updating MongoDB with letter data...');
+          try {
+            // For form886A, we need to handle that it might process multiple quarters
+            if (documentType === 'form886A' && formData.allTimePeriods && Array.isArray(formData.allTimePeriods)) {
+              // For each time period, mark it as processed
+              for (const timePeriod of formData.allTimePeriods) {
+                await updateMongoDBWithLetterData(formData.trackingId, timePeriod, newPackageData.zipPath);
+              }
+            } else {
+              // For regular protest letters, just mark the selected quarter
+              await updateMongoDBWithLetterData(formData.trackingId, selectedTimePeriod, newPackageData.zipPath);
+            }
+            console.log('MongoDB update completed successfully');
+          } catch (mongoError) {
+            console.error('Error updating MongoDB:', mongoError);
+            // Continue with the flow even if MongoDB update fails
+          }
         }
         
         // Immediately call the onGenerated callback with the package data
@@ -449,9 +391,6 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
           onGenerated(newPackageData);
         }
         
-        // Complete processing and show dialog
-        setProcessingMessage("Document package complete!");
-        setProcessingStep(5);
         setDialogOpen(true);
         setProcessing(false);
       } else {
@@ -478,10 +417,9 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   };
   
   const handleCloseDialog = () => {
-    // Dialog close doesn't need to update MongoDB anymore - it's done once after generation
-    // Just make sure we still call onGenerated
+    // Make sure we're still calling onGenerated with the package data when closing the dialog
     if (packageData && onGenerated) {
-      console.log("Ensuring parent has package data on dialog close:", packageData);
+      console.log("Sending package data to parent on dialog close:", packageData);
       onGenerated(packageData);
     }
     
@@ -497,7 +435,6 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
     );
   };
 
-  // Simplified downloadProtestPackage - no redundant MongoDB updates
   const downloadProtestPackage = () => {
     if (packageData && packageData.zipPath) {
       console.log("Downloading protest package with path:", packageData.zipPath);
@@ -507,12 +444,13 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         // Open it directly in a new tab
         window.open(packageData.zipPath, '_blank');
       } else {
-        // Use the public API endpoint for local file downloads
+        // Use the public API endpoint for local file downloads (updated to use the new public endpoint)
         window.open(`/api/erc-protest/download?path=${encodeURIComponent(packageData.zipPath)}`, '_blank');
       }
       
-      // Still trigger the onGenerated callback to ensure the parent has the data
+      // Also trigger the onGenerated callback again to ensure the parent has the data
       if (onGenerated) {
+        console.log("Triggering onGenerated again during download", packageData);
         onGenerated(packageData);
       }
     } else {
@@ -682,105 +620,101 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
             }
           }}
         >
-          {(
-            <>
-              <DialogTitle>
-                {documentType === 'protestLetter' ? 'ERC Protest Package' : 'Form 886-A Document'}
-                <Button
-                  aria-label="copy"
-                  onClick={copyToClipboard}
-                  sx={{ position: 'absolute', right: 16, top: 8 }}
-                  startIcon={copied ? <CheckCircle color="success" /> : <ContentCopy />}
-                >
-                  {copied ? 'Copied' : 'Copy'}
-                </Button>
-              </DialogTitle>
-              <DialogContent dividers sx={{ flexGrow: 1, overflow: 'auto' }}>
-                {packageData && (
-                  <Box mb={3}>
-                    <Alert severity="success" sx={{ mb: 2 }}>
-                      <Typography variant="subtitle1">
-                        {documentType === 'protestLetter' 
-                          ? `Complete protest package for ${selectedTimePeriod} generated successfully!` 
-                          : `Form 886-A document for ${formData.timePeriods?.join(', ') || 'selected quarters'} generated successfully!`}
-                      </Typography>
-                      <Typography variant="body2">
-                        Your package includes the {documentType === 'protestLetter' ? 'protest letter' : 'Form 886-A document'} and {packageData.attachments.length} PDF attachments 
-                        of the referenced sources. You can download the complete package below.
-                      </Typography>
-                    </Alert>
-                    
-                    <Box display="flex" justifyContent="center" mt={2} mb={3}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<FileDownload />}
-                        onClick={downloadProtestPackage}
-                        sx={{ minWidth: 240 }}
-                      >
-                        Download Complete Package
-                      </Button>
-                    </Box>
-                    
-                    {packageData.attachments.length > 0 && (
-                      <Box mt={3} mb={2}>
-                        <Typography variant="subtitle1" gutterBottom>
-                          Attachments Created:
-                        </Typography>
-                        <Paper variant="outlined" sx={{ p: 2 }}>
-                          <ol>
-                            {packageData.attachments.map((attachment, index) => (
-                              <li key={index}>
-                                <Typography variant="body2">
-                                  {attachment.filename} 
-                                  <Typography variant="caption" component="span" color="text.secondary" sx={{ ml: 1 }}>
-                                    (from {attachment.originalUrl})
-                                  </Typography>
-                                </Typography>
-                              </li>
-                            ))}
-                          </ol>
-                        </Paper>
-                      </Box>
-                    )}
+          <DialogTitle>
+            {documentType === 'protestLetter' ? 'ERC Protest Package' : 'Form 886-A Document'}
+            <Button
+              aria-label="copy"
+              onClick={copyToClipboard}
+              sx={{ position: 'absolute', right: 16, top: 8 }}
+              startIcon={copied ? <CheckCircle color="success" /> : <ContentCopy />}
+            >
+              {copied ? 'Copied' : 'Copy'}
+            </Button>
+          </DialogTitle>
+          <DialogContent dividers sx={{ flexGrow: 1, overflow: 'auto' }}>
+            {packageData && (
+              <Box mb={3}>
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  <Typography variant="subtitle1">
+                    {documentType === 'protestLetter' 
+                      ? `Complete protest package for ${selectedTimePeriod} generated successfully!` 
+                      : `Form 886-A document for ${formData.timePeriods?.join(', ') || 'selected quarters'} generated successfully!`}
+                  </Typography>
+                  <Typography variant="body2">
+                    Your package includes the {documentType === 'protestLetter' ? 'protest letter' : 'Form 886-A document'} and {packageData.attachments.length} PDF attachments 
+                    of the referenced sources. You can download the complete package below.
+                  </Typography>
+                </Alert>
+                
+                <Box display="flex" justifyContent="center" mt={2} mb={3}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    startIcon={<FileDownload />}
+                    onClick={downloadProtestPackage}
+                    sx={{ minWidth: 240 }}
+                  >
+                    Download Complete Package
+                  </Button>
+                </Box>
+                
+                {packageData.attachments.length > 0 && (
+                  <Box mt={3} mb={2}>
+                    <Typography variant="subtitle1" gutterBottom>
+                      Attachments Created:
+                    </Typography>
+                    <Paper variant="outlined" sx={{ p: 2 }}>
+                      <ol>
+                        {packageData.attachments.map((attachment, index) => (
+                          <li key={index}>
+                            <Typography variant="body2">
+                              {attachment.filename} 
+                              <Typography variant="caption" component="span" color="text.secondary" sx={{ ml: 1 }}>
+                                (from {attachment.originalUrl})
+                              </Typography>
+                            </Typography>
+                          </li>
+                        ))}
+                      </ol>
+                    </Paper>
                   </Box>
                 )}
-                
-                <Typography variant="subtitle1" gutterBottom>
-                  {documentType === 'protestLetter' ? 'Protest Letter Preview:' : 'Form 886-A Document Preview:'}
-                </Typography>
-                <TextField
-                  fullWidth
-                  multiline
-                  variant="outlined"
-                  value={protestLetter}
-                  InputProps={{
-                    readOnly: true,
-                    sx: { 
-                      fontFamily: 'monospace', 
-                      fontSize: '0.9rem'
-                    }
-                  }}
-                  minRows={15}
-                  maxRows={30}
-                />
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={copyToClipboard} startIcon={copied ? <CheckCircle /> : <ContentCopy />}>
-                  {copied ? 'Copied!' : 'Copy to Clipboard'}
-                </Button>
-                <Button 
-                  onClick={downloadProtestPackage} 
-                  variant="contained" 
-                  color="primary"
-                  startIcon={<FileDownload />}
-                >
-                  Download Package
-                </Button>
-                <Button onClick={handleCloseDialog}>Close</Button>
-              </DialogActions>
-            </>
-          )}
+              </Box>
+            )}
+            
+            <Typography variant="subtitle1" gutterBottom>
+              {documentType === 'protestLetter' ? 'Protest Letter Preview:' : 'Form 886-A Document Preview:'}
+            </Typography>
+            <TextField
+              fullWidth
+              multiline
+              variant="outlined"
+              value={protestLetter}
+              InputProps={{
+                readOnly: true,
+                sx: { 
+                  fontFamily: 'monospace', 
+                  fontSize: '0.9rem'
+                }
+              }}
+              minRows={15}
+              maxRows={30}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={copyToClipboard} startIcon={copied ? <CheckCircle /> : <ContentCopy />}>
+              {copied ? 'Copied!' : 'Copy to Clipboard'}
+            </Button>
+            <Button 
+              onClick={downloadProtestPackage} 
+              variant="contained" 
+              color="primary"
+              startIcon={<FileDownload />}
+            >
+              Download Package
+            </Button>
+            <Button onClick={handleCloseDialog}>Close</Button>
+          </DialogActions>
         </Dialog>
       </Paper>
     </Box>

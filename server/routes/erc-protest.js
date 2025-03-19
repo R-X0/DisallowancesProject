@@ -3,12 +3,10 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs').promises;
-const fsSync = require('fs');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const googleSheetsService = require('../services/googleSheetsService');
 const googleDriveService = require('../services/googleDriveService');
-const { ensureConsistentId } = require('../services/protestDriveUploader');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -113,12 +111,8 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
       });
     }
     
-    // Generate tracking ID with consistent format using 8 characters from UUID
-    // IMPORTANT: Use the ensureConsistentId helper to ensure this matches any numeric IDs
-    // coming from the MongoDB or letter generator
-    const uuidTrimmed = uuidv4().substring(0, 8).toUpperCase();
-    const trackingId = `ERC-${uuidTrimmed}`;
-    console.log(`Generated consistent tracking ID: ${trackingId}`);
+    // Generate tracking ID
+    const trackingId = `ERC-${uuidv4().substring(0, 8).toUpperCase()}`;
     
     // Create directory for this submission
     const submissionDir = path.join(__dirname, `../data/ERC_Disallowances/${trackingId}`);
@@ -213,6 +207,7 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
         for (const pathToCheck of pathsToCheck) {
           console.log(`Checking if ZIP exists at: ${pathToCheck}`);
           try {
+            const fsSync = require('fs');
             if (fsSync.existsSync(pathToCheck)) {
               console.log(`Found ZIP file at: ${pathToCheck}`);
               foundZipPath = pathToCheck;
@@ -262,6 +257,7 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
         for (const pathToCheck of pathsToCheck) {
           console.log(`Checking if PDF exists at: ${pathToCheck}`);
           try {
+            const fsSync = require('fs');
             if (fsSync.existsSync(pathToCheck)) {
               console.log(`Found PDF file at: ${pathToCheck}`);
               foundPdfPath = pathToCheck;
@@ -326,49 +322,6 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
       // Continue anyway, not a critical error
     }
     
-    // After successful Google Drive uploads and Sheet updates, update MongoDB with processed quarters
-    if (timePeriods && timePeriods.length > 0 && submissionInfo.zipPath) {
-      try {
-        console.log(`Updating MongoDB to mark quarters as processed with ZIP: ${submissionInfo.zipPath}`);
-        
-        // For each time period, add it to MongoDB processed quarters
-        for (const quarter of timePeriods) {
-          try {
-            const response = await fetch(`http://localhost:${process.env.PORT || 5000}/api/mongodb-queue/update-processed-quarters`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                submissionId: trackingId,
-                quarter: quarter,
-                zipPath: submissionInfo.zipPath
-              })
-            });
-            
-            if (response.ok) {
-              const result = await response.json();
-              console.log(`MongoDB update for ${quarter}: ${result.success ? 'Success' : 'Failed'}`);
-            } else {
-              console.error(`Error response from MongoDB update for ${quarter}: ${response.status}`);
-            }
-          } catch (quarterError) {
-            console.error(`Error updating MongoDB for quarter ${quarter}:`, quarterError);
-            // Continue with other quarters even if one fails
-          }
-        }
-        
-        // Force refresh the queue
-        try {
-          await fetch(`http://localhost:${process.env.PORT || 5000}/api/mongodb-queue?refresh=true`);
-          console.log('Queue refreshed after MongoDB updates');
-        } catch (refreshError) {
-          console.error('Error refreshing queue:', refreshError);
-        }
-      } catch (mongoError) {
-        console.error('Error in MongoDB quarter processing:', mongoError);
-        // Continue with response - don't fail the submission
-      }
-    }
-    
     res.status(201).json({
       success: true,
       message: 'Submission received successfully',
@@ -387,7 +340,7 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
 // Get submission status
 router.get('/status/:trackingId', async (req, res) => {
   try {
-    let { trackingId } = req.params;
+    const { trackingId } = req.params;
     
     if (!trackingId) {
       return res.status(400).json({
@@ -395,9 +348,6 @@ router.get('/status/:trackingId', async (req, res) => {
         message: 'Tracking ID is required'
       });
     }
-    
-    // Ensure consistent ID format
-    trackingId = ensureConsistentId(trackingId);
     
     // Look up submission status
     try {
@@ -468,12 +418,9 @@ router.post('/update-status', async (req, res) => {
       });
     }
     
-    // Ensure consistent ID format
-    const formattedTrackingId = ensureConsistentId(trackingId);
-    
     // Update the local file if it exists
     try {
-      const submissionPath = path.join(__dirname, `../data/ERC_Disallowances/${formattedTrackingId}/submission_info.json`);
+      const submissionPath = path.join(__dirname, `../data/ERC_Disallowances/${trackingId}/submission_info.json`);
       const submissionData = await fs.readFile(submissionPath, 'utf8');
       const submissionInfo = JSON.parse(submissionData);
       
@@ -497,12 +444,12 @@ router.post('/update-status', async (req, res) => {
         JSON.stringify(submissionInfo, null, 2)
       );
     } catch (err) {
-      console.log(`Local file for ${formattedTrackingId} not found, skipping update`);
+      console.log(`Local file for ${trackingId} not found, skipping update`);
     }
     
     // Update Google Sheet
     try {
-      await googleSheetsService.updateSubmission(formattedTrackingId, {
+      await googleSheetsService.updateSubmission(trackingId, {
         status,
         protestLetterPath,
         zipPath,

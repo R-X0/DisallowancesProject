@@ -1,0 +1,84 @@
+03/19/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 00-0000000  
+Taxpayer Name: 45's Business  
+RE: Formal Protest to Letter [Insert Letter Number] – ERC Disallowance for Quarter 1 2021  
+Tax Period: Quarter 1 2021  
+Claim Amount: [Insert Claim Amount]  
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing 45's Business’s Employee Retention Credit (ERC) for Quarter 1 2021. The disallowance appears to be based on the assertion that no government orders were in effect which caused a partial or full suspension of our operations. We respectfully disagree. Our business, a law firm, experienced significant revenue declines during Quarter 1 2021 and was impacted by various COVID‐19–related government orders. In this protest letter we detail the relevant government orders and present our revenue decline evidence exactly as provided to demonstrate our qualification for the ERC under the applicable “partial suspension” provisions.
+
+Below, we provide a detailed timeline of the COVID‐19 government orders that affected operations during this period and a dedicated “REVENUE DECLINE DATA” section that includes the exact revenue figures required for IRS audit purposes.
+
+─────────────────────────────  
+Timeline of COVID‐19 Government Orders Active Affecting Operations in Quarter 1 2021
+
+•  
+Order Name: Proclamation 9994 – National Emergency Concerning COVID-19  
+Order Number: Proclamation 9994  
+Date Enacted: 03/13/2020  
+Date Rescinded: Still in effect  
+Order Summary: This proclamation declared a national emergency concerning COVID-19 and activated federal emergency powers and funding. It provided the legal basis for subsequent state and local government orders affecting business operations.  
+Impact on Quarter: The ongoing federal emergency status influenced operational guidelines and compliance requirements during Quarter 1 2021, thereby indirectly impacting our ability to carry out normal business practices.
+
+•  
+Order Name: Executive Order N-33-20 – Statewide “Stay-at-Home” Order  
+Order Number: N-33-20  
+Date Enacted: 03/19/2020  
+Date Rescinded: 06/15/2021  
+Order Summary: This order mandated that all California residents remain at home except for essential activities, resulting in the closure of non-essential businesses. It served as the legal instrument for limiting in-person activities and enforcing social distancing measures statewide.  
+Impact on Quarter: Although primarily applicable in California, the framework of this order exemplifies the type of government directive that imposed operational restrictions. Its nationwide influence during the pandemic contributed to a regulatory environment that affected similar businesses, including our law firm, by limiting in-person services in Quarter 1 2021.
+
+•  
+Order Name: Regional Stay-at-Home Order (ICU Capacity Triggered Shutdown)  
+Order Number: Not Applicable  
+Date Enacted: 12/03/2020  
+Date Rescinded: 01/25/2021  
+Order Summary: This order was triggered by ICU capacity constraints and mandated that non-essential business operations be suspended to protect public health. It emphasized the need for rapid shutdowns in regions experiencing critical hospital capacity issues.  
+Impact on Quarter: The order affected early Quarter 1 2021 operations by necessitating modifications in service delivery, which led to further constraints on conducting routine business activities.
+
+•  
+Order Name: “Stay Well at Home” Order (Ventura County)  
+Order Number: Not Applicable  
+Date Enacted: 03/20/2020  
+Date Rescinded: 06/11/2021  
+Order Summary: This local order required all residents to stay at home except for essential needs, effectively curtailing normal business operations and enforcing strict social distancing. It was designed to mitigate COVID-19 spread by reducing non-essential movement and interactions.  
+Impact on Quarter: The “Stay Well at Home” order continued to be in force during Quarter 1 2021, necessitating modifications to business practices and reducing the scope of in-person services, which is reflective of the constraints experienced by our operations.
+
+─────────────────────────────  
+REVENUE DECLINE DATA
+
+The purpose of this section is to present the exact revenue decline figures as provided, which are required for audit purposes. These figures demonstrate the significant reduction in our revenue during Quarter 1 2021 and serve as critical evidence of our qualification for the ERC.
+
+For the main quarter being protested, our revenue data is as follows:  
+During Q1 2021, 45's Business generated EXACTLY $345 compared to Q1 2019 when generated EXACTLY $54325234. This represents an EXACT decline of $54324889 with an EXACT percentage decline of 100.00%, thereby qualifying for the ERC.
+
+Additionally, the revenue decline in other quarters that qualify for the ERC is noted below:  
+• Q2 2021: EXACTLY $345 compared to Q2 2019: EXACTLY $3552452345 = EXACTLY 100.00% decline (Qualifies for ERC)  
+• Q3 2021: EXACTLY $345 compared to Q3 2019: EXACTLY $3245345 = EXACTLY 99.99% decline (Qualifies for ERC)
+
+In conclusion, the extraordinary decline in revenue, as documented above, combined with the operational restrictions imposed by multiple government orders, clearly demonstrates that 45's Business qualifies for the ERC for Quarter 1 2021.
+
+─────────────────────────────  
+Conclusion and Request
+
+Based on the evidence provided in both the government orders timeline and the detailed revenue decline data, we respectfully request that the IRS reconsider and reverse the disallowance of our ERC claim for Quarter 1 2021. The exact revenue figures and the documented government orders confirm that our operations were significantly impacted in a manner that meets the partial suspension test under applicable IRS guidance. We have complied in good faith with all government directives despite the adverse operational and economic impact, and the Employee Retention Credit is vital to supporting our continued business viability during these challenging times.
+
+Should you require any further information or clarification regarding the above, please do not hesitate to contact us.
+
+Attestation: “Under penalties of perjury, I declare that I submitted the protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated in the protest and accompanying documents is true, correct, and complete.”
+
+Sincerely,
+
+[Authorized Representative Name]  
+Authorized Representative for 45's Business
+
+Enclosures:  
+• Copies of Government Orders and Relevant Excerpts  
+• Detailed ERC Calculations for Quarter 1 2021  
+• Supporting Revenue Decline Documentation  
+• Relevant IRS Guidance Materials

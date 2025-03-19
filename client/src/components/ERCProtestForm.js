@@ -106,16 +106,6 @@ const ERCProtestForm = () => {
             newData.businessWebsite = parsedData.businessWebsite || prevData.businessWebsite;
             newData.naicsCode = parsedData.naicsCode || prevData.naicsCode || '541110'; // Default to law firm if missing
             
-            // Ensure we get the trackingId/submissionId for later MongoDB updates
-            if (parsedData.trackingId) {
-              newData.trackingId = parsedData.trackingId;
-              console.log(`Set form trackingId to: ${parsedData.trackingId}`);
-            } else if (parsedData.submissionId) {
-              // Fallback to submissionId if trackingId not available
-              newData.trackingId = parsedData.submissionId;
-              console.log(`Set form trackingId to submissionId: ${parsedData.submissionId}`);
-            }
-            
             // Handle time periods array properly
             if (parsedData.timePeriods && Array.isArray(parsedData.timePeriods)) {
               newData.timePeriods = parsedData.timePeriods;
@@ -221,31 +211,6 @@ const ERCProtestForm = () => {
   const onProtestLetterGenerated = (data) => {
     console.log("onProtestLetterGenerated called with data:", data);
     setProtestLetterData(data);
-    
-    // If we have the ZIP path, update the MongoDB right away as an extra safeguard
-    if (data && data.zipPath && formData.trackingId) {
-      console.log(`Updating MongoDB with ZIP immediately after generation for ${formData.trackingId}`);
-      
-      // Since this is in the parent component, we need to call the API directly
-      fetch('/api/mongodb-queue/update-processed-quarters', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          submissionId: formData.trackingId,
-          quarter: formData.timePeriods[0], // Use the first selected quarter
-          zipPath: data.zipPath
-        })
-      })
-      .then(response => response.json())
-      .then(result => {
-        console.log("MongoDB update after generation:", result);
-      })
-      .catch(error => {
-        console.error("Error updating MongoDB after generation:", error);
-      });
-    }
   };
   
   // Handle form submission
@@ -581,7 +546,7 @@ const ERCProtestForm = () => {
                 <ERCProtestLetterGenerator 
                   formData={{
                     ...formData,
-                    trackingId: formData.trackingId || submissionStatus?.data?.trackingId
+                    trackingId: submissionStatus?.data?.trackingId
                   }}
                   onGenerated={onProtestLetterGenerated}
                 />
