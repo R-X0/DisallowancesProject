@@ -1,0 +1,91 @@
+03/19/2025
+Internal Revenue Service
+Ogden, UT 84201
+
+EIN: 00-0000000  
+Taxpayer Name: 45's Business  
+RE: Formal Protest to IRS Disallowance – ERC for Quarter 1 2021  
+Tax Period: Quarter 1 2021  
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing 45's Business’s Employee Retention Credit (ERC) claim for Quarter 1 2021. The disallowance is based on the assertion that no government orders were in effect during the disputed quarter which impacted our operations. We respectfully disagree. In addition to a significant decline in revenue, as documented below, multiple government orders directly related to COVID-19 were active and imposed restrictions that partially suspended our normal business activities. In this protest letter we provide both a detailed timeline of the relevant government orders and a dedicated “REVENUE DECLINE DATA” section containing the audit‐critical revenue figures that clearly demonstrate our qualification for the ERC.
+
+Below is a chronological timeline of key COVID-19 government orders that affected operations during the relevant period:
+
+•  
+Order Name: Proclamation 9994 – National Emergency Concerning COVID-19  
+Order Number: 9994  
+Date Enacted: 03/13/2020  
+Date Rescinded: Not formally rescinded during 2020–2021  
+Order Summary: This proclamation declared a nationwide emergency in response to COVID-19 and activated federal emergency powers along with funding to address the crisis. It provided the legal basis for subsequent federal, state, and local measures designed to protect public health.  
+Impact on Quarter: The continuing effect of this proclamation in Quarter 1 2021 created the overarching framework under which COVID-19 restrictions were imposed, thereby affecting our operational decisions and capacity.
+
+•  
+Order Name: CDC/FAA Mask Mandates – Federal Mask Requirements for Travel  
+Order Number: Not Assigned  
+Date Enacted: 01/21/2021  
+Date Rescinded: Remained in effect through 2021 (later lifted in 2022 by court order)  
+Order Summary: This mandate required mask-wearing on airplanes, trains, buses, and at airports as part of the federal response to the pandemic. The measure was intended to protect travelers and stem the spread of COVID-19, thereby influencing travel-related operations and safety protocols.  
+Impact on Quarter: In Quarter 1 2021, as travel was integral to business functions even for professional services, adherence to these safety protocols contributed to additional operational burdens and limitations.
+
+•  
+Order Name: State of Emergency Proclamation – California COVID-19 State of Emergency  
+Order Number: N/A (Governor’s Proclamation)  
+Date Enacted: 03/04/2020  
+Date Rescinded: Not rescinded during 2020–2021  
+Order Summary: This proclamation declared a state of emergency due to the COVID-19 pandemic, granting extensive emergency powers to state agencies. It paved the way for further mandatory restrictions and guidelines affecting businesses throughout the state.  
+Impact on Quarter: Although 45’s Business is located in New York, the nationwide influence of such declarations and the practices they inspired contributed to the overall environment of mandatory restrictions across the country, impacting business operations in Quarter 1 2021.
+
+•  
+Order Name: Executive Order N-33-20 – Statewide “Stay-at-Home” Order  
+Order Number: EO N-33-20  
+Date Enacted: 03/19/2020  
+Date Rescinded: 06/15/2021  
+Order Summary: This order mandated that all residents remain at home except for essential activities, leading to the closure or severe limitation of non-essential business operations. The order was designed to slow the spread of COVID-19 by reducing mobility and close interactions.  
+Impact on Quarter: In Quarter 1 2021, although modified from its initial form, the lingering effects of this stay-at-home order contributed to restricted operations for many business types, including professional services, forcing us to operate under limited capacity.
+
+•  
+Order Name: Ventura County Local Health Emergency  
+Order Number: N/A (County Declaration)  
+Date Enacted: 03/12/2020  
+Date Rescinded: Not rescinded during 2020–2021  
+Order Summary: This local health emergency declaration empowered Ventura County to enforce further public health measures and restrictions in response to COVID-19. It served as a legal basis for additional county-level mandates that affected business operations in the region.  
+Impact on Quarter: The spirit of local emergency declarations, even when originating in other jurisdictions, underscored the nationwide urgency of the pandemic response in Quarter 1 2021, reinforcing the environment of operational curtailment due to mandated restrictions.
+
+•  
+Order Name: Local Emergency Proclamation (Camarillo) – City Declaration of Emergency  
+Order Number: EOC Director Order No. 20-1  
+Date Enacted: 03/13/2020  
+Date Rescinded: Remained in effect through 2020–2021  
+Order Summary: The City of Camarillo declared a local emergency, which activated the Emergency Operations Center and authorized rapid local response measures including closures and restrictions on public gatherings. This order focused on protecting public health while balancing essential business activities.  
+Impact on Quarter: Although our business operates from New York, similar local government actions across the country created parallel operational restrictions that impacted our ability to function normally during Quarter 1 2021.
+
+REVENUE DECLINE DATA
+
+The purpose of this section is to provide the audit‐critical revenue information that demonstrates the significant decline in revenue experienced by 45’s Business during Quarter 1 2021, as compared to the corresponding quarter in a pre-pandemic year. This detailed narrative includes exact revenue amounts, the dollar decline, and the percentage decline for each quarter to establish eligibility for the ERC under the revenue reduction thresholds.
+
+For Quarter 1 2021, 45’s Business reported revenue of EXACTLY $345, compared to EXACTLY $54325234 in Quarter 1 2019. This represents a decline of EXACTLY $54324889, which is an EXACTLY 100.00% decline in revenue. Based on the established threshold for ERC qualification, this dramatic reduction clearly qualifies 45’s Business for the credit.
+
+Additional quarters reported were as follows:  
+• In Quarter 2 2021, revenue was EXACTLY $345 compared to EXACTLY $3552452345 in Quarter 2 2019, reflecting an EXACTLY 100.00% decline.  
+• In Quarter 3 2021, revenue was EXACTLY $345 compared to EXACTLY $3245345 in Quarter 3 2019, representing an EXACTLY 99.99% decline.
+
+In conclusion, the substantial revenue declines, particularly during Quarter 1 2021, combined with the restrictive environment created by multiple government orders, provide a compelling basis for ERC qualification. The government orders imposed limitations that contributed to the operational challenges faced during the disputed quarter, and the audit‐critical revenue data supports our claim that 45’s Business experienced a qualifying decline as defined under applicable IRS guidance.
+
+Conclusion and Request
+
+Given the evidence presented above—the direct impact of multiple COVID-19 government orders and the audit‐critical revenue decline data—we respectfully request that the IRS reconsider and reverse the disallowance of the ERC claim for Quarter 1 2021 on behalf of 45’s Business. We assert that both the partial suspension of operations due to mandatory government restrictions and the significant revenue reduction meet the criteria for ERC eligibility. We appreciate your prompt and fair reconsideration of our claim. Should you require any additional information or clarification, please do not hesitate to contact our authorized representative.
+
+Under penalties of perjury, I declare that I have examined the information provided in this protest and that, to the best of my knowledge, it is true, correct, and complete.
+
+Sincerely,
+
+______________________________  
+Authorized Representative  
+45's Business
+
+Enclosures:  
+• Copies of Government Orders and Relevant Excerpts  
+• Detailed Revenue Decline Data for Quarter 1 2021 (and additional quarters)  
+• Supporting Documentation for ERC Qualification

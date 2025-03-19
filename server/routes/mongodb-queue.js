@@ -1,4 +1,4 @@
-// server/routes/mongodb-queue.js
+// server/routes/mongodb-queue.js - FIXED VERSION
 const express = require('express');
 const router = express.Router();
 const path = require('path');
@@ -11,6 +11,9 @@ router.get('/', async (req, res) => {
   try {
     // Ensure connected to database
     await connectToDatabase();
+    
+    // ADDED: Query parameter to force refresh
+    const forceRefresh = req.query.refresh === 'true';
     
     // Fetch submissions, sorted by receivedAt (newest first)
     const submissions = await Submission.find({})
@@ -90,6 +93,39 @@ router.get('/', async (req, res) => {
         });
       }
       
+      // ADDED: Make sure processedQuarters is standardized for UI
+      if (processedSubmission.submissionData?.processedQuarters) {
+        // Convert all quarters to simpler format Q1, Q2, Q3 format for UI consistency
+        processedSubmission.submissionData.processedQuarters = 
+          processedSubmission.submissionData.processedQuarters.map(quarter => {
+            if (typeof quarter !== 'string') return quarter;
+            
+            // Extract the quarter number
+            const quarterMatch = quarter.match(/(?:quarter|q)\s*(\d+)/i);
+            if (quarterMatch && quarterMatch[1]) {
+              return `Q${quarterMatch[1]}`; // Convert to Q1, Q2, Q3 format
+            }
+            return quarter;
+          });
+          
+        // DEBUG: Log the standardized processedQuarters
+        console.log(`Standardized processedQuarters for ${processedSubmission.submissionId || processedSubmission._id}:`, 
+          processedSubmission.submissionData.processedQuarters);
+      }
+      
+      // ADDED: Also add standardized quarter data to the quarterAnalysis
+      if (processedSubmission.submissionData?.report?.qualificationData?.quarterAnalysis) {
+        processedSubmission.submissionData.report.qualificationData.quarterAnalysis.forEach(qAnalysis => {
+          // Add UI-friendly version of the quarter for comparison
+          if (qAnalysis.quarter) {
+            const quarterMatch = qAnalysis.quarter.match(/(?:quarter|q)\s*(\d+)/i);
+            if (quarterMatch && quarterMatch[1]) {
+              qAnalysis.simplifiedQuarter = `Q${quarterMatch[1]}`; // Add a simplified format
+            }
+          }
+        });
+      }
+      
       return {
         id: processedSubmission.submissionId || processedSubmission._id,
         businessName,
@@ -104,7 +140,8 @@ router.get('/', async (req, res) => {
     
     res.status(200).json({
       success: true,
-      queue: queueItems
+      queue: queueItems,
+      refreshed: forceRefresh // ADDED: Indicate if this was a forced refresh
     });
   } catch (error) {
     console.error('Error fetching MongoDB queue:', error);
@@ -241,10 +278,29 @@ router.post('/update-processed-quarters', async (req, res) => {
       console.log(`Existing processedQuarters: ${JSON.stringify(submission.submissionData.processedQuarters)}`);
     }
     
-    // Normalize quarter format for comparison
+    // MODIFIED: Convert quarter to multiple standardized formats for better matching
+    // Create variations of the quarter format to ensure compatibility
     const normalizeQuarter = (q) => {
-      return q.toLowerCase().replace(/\s+/g, '').trim();
+      if (!q) return '';
+      // Remove spaces, convert to lowercase, and remove any special characters
+      return q.toString().toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '').trim();
     };
+    
+    // Extract just the quarter number (1, 2, 3, etc.)
+    const getQuarterNumber = (q) => {
+      if (!q) return null;
+      const matches = q.toString().match(/\d+/);
+      return matches ? matches[0] : null;
+    };
+    
+    // Create variations to store in the database
+    const quarterVariations = [
+      quarter, // Original format
+      `Q${getQuarterNumber(quarter)}`, // Simple Q1 format
+      `Quarter ${getQuarterNumber(quarter)}` // Full "Quarter N" format
+    ].filter(Boolean); // Remove any null/undefined values
+    
+    console.log(`Storing quarter variations: ${JSON.stringify(quarterVariations)}`);
     
     // Ensure we have a submissionData object
     if (!submission.submissionData) {
@@ -256,21 +312,25 @@ router.post('/update-processed-quarters', async (req, res) => {
       submission.submissionData.processedQuarters = [];
     }
     
-    // Check if the quarter is already in the processedQuarters array (with format-insensitive comparison)
-    const normalizedNewQuarter = normalizeQuarter(quarter);
-    let quarterWasAdded = false;
-    let quarterAlreadyExists = submission.submissionData.processedQuarters.some(existingQuarter => 
-      normalizeQuarter(existingQuarter) === normalizedNewQuarter || 
-      existingQuarter === quarter
-    );
+    // Add each variation that doesn't already exist (avoiding duplicates)
+    let addedNewFormat = false;
+    for (const variation of quarterVariations) {
+      const normalizedVariation = normalizeQuarter(variation);
+      
+      // Check if this variation already exists (normalize for comparison)
+      const exists = submission.submissionData.processedQuarters.some(existingQuarter => 
+        normalizeQuarter(existingQuarter) === normalizedVariation
+      );
+      
+      if (!exists) {
+        submission.submissionData.processedQuarters.push(variation);
+        addedNewFormat = true;
+        console.log(`Added ${variation} to processedQuarters array`);
+      }
+    }
     
-    if (!quarterAlreadyExists) {
-      // Add the quarter to the processedQuarters array using the EXACT format provided
-      submission.submissionData.processedQuarters.push(quarter);
-      quarterWasAdded = true;
-      console.log(`Added ${quarter} to processedQuarters array`);
-    } else {
-      console.log(`Quarter ${quarter} was already in processedQuarters array`);
+    if (!addedNewFormat) {
+      console.log(`No new quarter formats needed to be added`);
     }
     
     // If zipPath is provided, store it in a new quarterZips object
@@ -291,7 +351,7 @@ router.post('/update-processed-quarters', async (req, res) => {
     }
     
     // Only save if we made changes
-    if (quarterWasAdded || zipWasUpdated) {
+    if (addedNewFormat || zipWasUpdated) {
       // Save the updated submission
       console.log(`Saving changes to MongoDB...`);
       await submission.save();
