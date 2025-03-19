@@ -1,4 +1,4 @@
-// server/routes/mongodb-queue.js - Updated version with reduced logging
+// server/routes/mongodb-queue.js - Updated version with completion tracking
 const express = require('express');
 const router = express.Router();
 const path = require('path');
@@ -127,7 +127,10 @@ router.get('/', async (req, res) => {
               qualifyingQuarters: qualifyingQuarters
             }
           }
-        }
+        },
+        // Add completion information
+        isFullyComplete: processedSubmission.isFullyComplete || false,
+        allFilesReady: processedSubmission.allFilesReady || false
       };
     });
     
@@ -369,6 +372,50 @@ router.post('/update-processed-quarters', async (req, res) => {
       }
     }
     
+    // ================ NEW CODE FOR COMPLETION TRACKING ================
+    // Get an accurate count of expected quarters from multiple sources
+    let expectedQuarterCount = totalQuartersCount; // Use the existing variable
+
+    // If we have report data with quarter analysis, use that as the authoritative source
+    if (submission.submissionData?.report?.qualificationData?.quarterAnalysis) {
+      expectedQuarterCount = submission.submissionData.report.qualificationData.quarterAnalysis.length;
+      console.log(`Using report quarter analysis for expected count: ${expectedQuarterCount}`);
+    } else if (Array.isArray(submission.timePeriods) && submission.timePeriods.length > 0) {
+      // Fallback to timePeriods array
+      expectedQuarterCount = submission.timePeriods.length;
+      console.log(`Using timePeriods array for expected count: ${expectedQuarterCount}`);
+    } else if (submission.submissionData?.originalData?.formData?.timePeriods &&
+              Array.isArray(submission.submissionData.originalData.formData.timePeriods)) {
+      // Last resort - check original form data
+      expectedQuarterCount = submission.submissionData.originalData.formData.timePeriods.length;
+      console.log(`Using original form data for expected count: ${expectedQuarterCount}`);
+    }
+
+    // Check if all quarters are now processed
+    if (processedQuartersCount >= expectedQuarterCount && expectedQuarterCount > 0) {
+      // Add special fields to indicate completion
+      submission.status = 'complete'; // Use 'complete' instead of 'allComplete'
+      
+      // Add a specific field that's easy to query
+      submission.isFullyComplete = true;
+      
+      // Add completion timestamp
+      if (!submission.submissionData.completedAt) {
+        submission.submissionData.completedAt = new Date();
+      }
+      
+      // Check if all ZIP files are available
+      const allZipsAvailable = submission.submissionData.processedQuarters.every(quarter => 
+        submission.submissionData.quarterZips && 
+        submission.submissionData.quarterZips[quarter]
+      );
+      
+      submission.allFilesReady = allZipsAvailable;
+      
+      console.log(`Marking submission ${submissionId} as fully complete. All ${processedQuartersCount}/${expectedQuarterCount} quarters processed.`);
+    }
+    // ================ END OF NEW CODE ================
+    
     // Save the update
     try {
       // FIXED: Make sure to use await here to ensure changes are saved 
@@ -445,8 +492,10 @@ router.post('/update-processed-quarters', async (req, res) => {
         message: `Quarter ${quarter} marked as processed for submission ${submissionId}`,
         processedQuarters: submission.submissionData.processedQuarters,
         quarterZips: submission.submissionData.quarterZips || {},
-        totalQuarters: totalQuartersCount,
-        progress: `${processedQuartersCount}/${totalQuartersCount}`
+        totalQuarters: expectedQuarterCount,
+        progress: `${processedQuartersCount}/${expectedQuarterCount}`,
+        isFullyComplete: submission.isFullyComplete || false,
+        allFilesReady: submission.allFilesReady || false
       });
     } catch (saveError) {
       console.error('Error saving submission:', saveError);
