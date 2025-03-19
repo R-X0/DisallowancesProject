@@ -1,0 +1,73 @@
+03/19/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 00-0000000  
+Taxpayer Name: Business #17424016  
+RE: Formal Protest to Letter ______ – ERC Disallowance for Q2 2021  
+Tax Period: 2nd Quarter 2021 (2021Q2)  
+Claim Amount: [Claim Amount as Calculated]
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing Business #17424016’s Employee Retention Credit (ERC) claim for the second quarter of 2021. The notice asserts that no governmental directives were in effect during that period that resulted in a partial suspension of our operations. We respectfully disagree. Multiple federal and state-level COVID‑19 related government orders were active during Q2 2021, and they imposed restrictions and operational modifications that significantly curtailed normal business activities for our law firm. In support of our position, we provide below a detailed timeline of the applicable orders along with their specific details and a dedicated section presenting our revenue decline data.
+
+Below is a chronological summary of the key government orders impacting our operations in Q2 2021:
+
+•  
+ Order Name: Proclamation 9994 – National Emergency Concerning COVID‑19  
+ Order Number: Proclamation 9994  
+ Date Enacted: 03/13/2020  
+ Date Rescinded: Still in effect  
+ Order Summary: This proclamation declared a nationwide emergency due to the COVID‑19 outbreak. It activated federal emergency powers and funding and set the stage for subsequent state and local lockdowns and restrictions. Although it did not in itself mandate business closures, it provided the legal framework for the public health measures that followed.  
+ Impact on Quarter: The continued recognition of the national emergency influenced federal guidance and indirectly contributed to the partial suspension of operations in Q2 2021 as businesses, including our law firm, were required to adopt enhanced safety protocols.
+
+•  
+ Order Name: CDC/FAA Mask Mandates – Federal Mask Requirements for Travel  
+ Order Number: CDC/FAA Mask Mandates  
+ Date Enacted: 01/21/2021  
+ Date Rescinded: 04/18/2022  
+ Order Summary: With the onset of a new administration in early 2021, federal mask mandates for travel were introduced via an executive order and CDC directive. These mandates applied to travel and related sectors, ensuring standardized protection measures were implemented on airplanes, trains, buses, airports, and federal properties.  
+ Impact on Quarter: These federal requirements affected our Q2 2021 operations by necessitating strict mask-wearing policies for any business travel and interactions, thereby contributing to modifications in our operational protocols.
+
+•  
+ Order Name: Executive Order N‑33‑20 – Statewide “Stay‑at‑Home” Order  
+ Order Number: N‑33‑20  
+ Date Enacted: 03/19/2020  
+ Date Rescinded: 06/15/2021  
+ Order Summary: This order directed all residents in California to remain at home except for essential needs, effectively forcing the closure of non‑essential businesses and limiting operations for those deemed essential. It mandated that businesses adapt to strict safety protocols and operate only under limited conditions.  
+ Impact on Quarter: Although our law firm was classified as an essential service, the broader restrictions imposed by this order and its lasting societal impact during Q2 2021 led to reduced in‑person interactions and adjustments in client engagement, thereby partially suspending our normal operations.
+
+•  
+ Order Name: Beyond the Blueprint Reopening Order  
+ Order Number: Executive Order N‑07‑21 / State Health Officer Order  
+ Date Enacted: 06/11/2021  
+ Date Rescinded: Still in effect  
+ Order Summary: This order signaled the full reopening of California by formally terminating earlier lockdown measures and the stringent stay‑at‑home framework. It allowed businesses to resume operations under normal capacity while still maintaining residual safety protocols as required by public health directives.  
+ Impact on Quarter: Despite the easing of restrictions later in Q2 2021, the partial suspension experienced earlier during the quarter—and the gradual implementation of the reopening measures—continued to limit our law firm’s ability to operate at full capacity.
+
+REVENUE DECLINE DATA
+
+The following section is provided to strictly document and demonstrate the significant revenue decline experienced by Business #17424016, which forms a substantial basis for our ERC qualification under the applicable thresholds. This evidence is provided for audit purposes and includes the EXACT revenue figures and percentages as provided by our records.
+
+For the primary quarter under protest, Q2 2021, our records show that our revenue was EXACTLY $2134214 compared to Q2 2019, when revenue was EXACTLY $23453245. This represents an EXACT decline that meets the ERC qualification standard. The significant percentage decline—EXACTLY 90.90%—clearly exceeds the required threshold, thereby substantiating our claim for ERC eligibility based on the revenue reduction criteria for 2021.
+
+Additionally, similar revenue declines were observed in other quarters:  
+• Q1 2021: EXACTLY $34534 compared to Q1 2019: EXACTLY $453245 = EXACTLY 92.38% decline (Qualifies for ERC)  
+• Q3 2021: EXACTLY $534 compared to Q3 2019: EXACTLY $435345 = EXACTLY 99.88% decline (Qualifies for ERC)
+
+In conclusion, the documented governmental orders in effect during Q2 2021 created an environment that necessitated significant modifications to how our law firm operated, while the precise revenue data corroborates that our operations experienced a qualifying decline. In light of the above evidence and the applicable IRS guidance on partial suspension and revenue decline, we respectfully request that the IRS reconsider and reverse the disallowance of our Q2 2021 ERC.
+
+Attestation: “Under penalties of perjury, I declare that I submitted the protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated in the protest and accompanying documents is true, correct, and complete.”
+
+Thank you for your attention to this matter. Please do not hesitate to contact our office if further clarification or additional documentation is required.
+
+Sincerely,
+
+[Authorized Representative Signature]  
+____________________________  
+Name: [Authorized Representative Name]  
+Title: [Title]  
+Business #17424016
+
+Enclosures: Copies of COVID‑19 Government Orders (formatted per order detail), Detailed Revenue Decline Analysis for Q2 2021, and Supporting ERC Documentation.
