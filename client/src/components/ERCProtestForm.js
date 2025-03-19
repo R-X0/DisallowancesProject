@@ -35,6 +35,7 @@ const ERCProtestForm = () => {
     timePeriods: [], // Changed from timePeriod (string) to timePeriods (array)
     governmentOrdersInfo: '', // Additional info for Government Orders section
     revenueReductionInfo: '', // Additional info for Revenue Reduction section
+    trackingId: '', // Added to track the ID for updates
     // Adding new quarterly revenue fields
     q1_2019: '',
     q2_2019: '',
@@ -105,6 +106,10 @@ const ERCProtestForm = () => {
             newData.location = parsedData.location || prevData.location;
             newData.businessWebsite = parsedData.businessWebsite || prevData.businessWebsite;
             newData.naicsCode = parsedData.naicsCode || prevData.naicsCode || '541110'; // Default to law firm if missing
+            
+            // IMPORTANT: Preserve the submissionId for updates
+            newData.trackingId = parsedData.submissionId || parsedData.trackingId || prevData.trackingId;
+            console.log(`Setting tracking ID: ${newData.trackingId}`);
             
             // Handle time periods array properly
             if (parsedData.timePeriods && Array.isArray(parsedData.timePeriods)) {
@@ -235,6 +240,13 @@ const ERCProtestForm = () => {
         }
       });
       
+      // Check for existing trackingId and include it in the submission
+      // This is a critical fix to prevent creating new records
+      if (formData.trackingId) {
+        console.log(`Including existing trackingId in submission: ${formData.trackingId}`);
+        submitData.append('trackingId', formData.trackingId);
+      }
+      
       // Append disallowance notice files
       pdfFiles.forEach(file => {
         submitData.append('disallowanceNotices', file);
@@ -250,10 +262,18 @@ const ERCProtestForm = () => {
         submitData.append('protestPackagePath', normalizedZipPath);
         submitData.append('protestLetterPath', normalizedPdfPath);
         
+        // Also include the current quarter we processed
+        if (protestLetterData.quarter) {
+          console.log(`Including processed quarter in submission: ${protestLetterData.quarter}`);
+          submitData.append('processedQuarter', protestLetterData.quarter);
+        }
+        
         // Debug log to verify the data was added to FormData
         console.log('FormData after adding paths:', { 
           packagePath: submitData.get('protestPackagePath'), 
-          letterPath: submitData.get('protestLetterPath')
+          letterPath: submitData.get('protestLetterPath'),
+          trackingId: submitData.get('trackingId'),
+          processedQuarter: submitData.get('processedQuarter')
         });
       } else {
         console.warn('No protest letter data available for submission');
@@ -268,13 +288,29 @@ const ERCProtestForm = () => {
       const result = await response.json();
       
       if (response.ok) {
+        // Save the trackingId we get back for future submissions
+        if (result.trackingId && !formData.trackingId) {
+          console.log(`Saving trackingId for future use: ${result.trackingId}`);
+          setFormData(prev => ({
+            ...prev,
+            trackingId: result.trackingId
+          }));
+        }
+        
         setSubmissionStatus({
           success: true,
-          message: 'Submission successful. Processing has begun.',
+          message: result.message || 'Submission successful. Processing has begun.',
           data: result
         });
         
         setActiveStep(2); // Move to the final step
+        
+        // Force refresh the queue after a short delay
+        setTimeout(() => {
+          console.log('Refreshing queue after submission');
+          // Dispatch a custom event that QueueDisplay.js can listen for
+          window.dispatchEvent(new CustomEvent('refreshQueue'));
+        }, 2000);
       } else {
         throw new Error(result.message || 'Submission failed');
       }
@@ -325,6 +361,11 @@ const ERCProtestForm = () => {
                     <Typography variant="h6" gutterBottom>
                       Business Information
                     </Typography>
+                    {formData.trackingId && (
+                      <Typography variant="subtitle2" color="primary">
+                        Tracking ID: {formData.trackingId}
+                      </Typography>
+                    )}
                   </Grid>
                   
                   <Grid item xs={12} md={6}>
@@ -546,7 +587,7 @@ const ERCProtestForm = () => {
                 <ERCProtestLetterGenerator 
                   formData={{
                     ...formData,
-                    trackingId: submissionStatus?.data?.trackingId
+                    trackingId: submissionStatus?.data?.trackingId || formData.trackingId
                   }}
                   onGenerated={onProtestLetterGenerated}
                 />
@@ -582,6 +623,11 @@ const ERCProtestForm = () => {
                 <pre style={{ overflow: 'auto', maxHeight: '100px' }}>
                   {protestLetterData ? JSON.stringify(protestLetterData, null, 2) : 'No data yet'}
                 </pre>
+                {formData.trackingId && (
+                  <Typography variant="body2" color="primary">
+                    Using tracking ID: {formData.trackingId}
+                  </Typography>
+                )}
               </Box>
             </StepContent>
           </Step>
@@ -600,6 +646,11 @@ const ERCProtestForm = () => {
                       <Typography variant="body1" mb={3}>
                         Your ERC protest has been submitted. You can now create another protest letter or start a new submission.
                       </Typography>
+                      {submissionStatus.data?.trackingId && (
+                        <Typography variant="body2" color="primary">
+                          Tracking ID: {submissionStatus.data.trackingId}
+                        </Typography>
+                      )}
                     </>
                   ) : (
                     <Typography variant="body1">
@@ -626,6 +677,7 @@ const ERCProtestForm = () => {
                       timePeriods: [],
                       governmentOrdersInfo: '',
                       revenueReductionInfo: '',
+                      trackingId: '', // Clear the tracking ID for a truly new submission
                       // Reset all quarterly revenue fields
                       q1_2019: '',
                       q2_2019: '',

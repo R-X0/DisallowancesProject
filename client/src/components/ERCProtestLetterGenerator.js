@@ -1,3 +1,5 @@
+// client/src/components/ERCProtestLetterGenerator.js
+
 import React, { useState, useEffect } from 'react';
 import { 
   Box, Button, Paper, Typography, TextField, 
@@ -320,79 +322,15 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
           pdfPath: response.pdfPath,
           zipPath: response.zipPath,
           attachments: response.attachments || [],
-          packageFilename: response.packageFilename || 'complete_package.zip'
+          packageFilename: response.packageFilename || 'complete_package.zip',
+          quarter: selectedTimePeriod
         };
         
         console.log('Setting package data:', newPackageData);
         setPackageData(newPackageData);
         
-        // CRITICAL FIX: Update MongoDB with the generated zipPath
-        // This ensures the quarter is marked as processed and the zip is stored
-        if (formData.trackingId && selectedTimePeriod && newPackageData.zipPath) {
-          console.log('Updating MongoDB with letter data:', {
-            trackingId: formData.trackingId,
-            quarter: selectedTimePeriod,
-            zipPath: newPackageData.zipPath
-          });
-          
-          // Make multiple attempts to update MongoDB
-          let updateSuccess = false;
-          let attempts = 0;
-          const maxAttempts = 3;
-          
-          while (!updateSuccess && attempts < maxAttempts) {
-            attempts++;
-            try {
-              console.log(`Attempt ${attempts} to update MongoDB...`);
-              
-              const updateResponse = await fetch('/api/mongodb-queue/update-processed-quarters', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  submissionId: formData.trackingId,
-                  quarter: selectedTimePeriod,
-                  zipPath: newPackageData.zipPath
-                })
-              });
-              
-              if (!updateResponse.ok) {
-                throw new Error(`Server returned ${updateResponse.status}: ${updateResponse.statusText}`);
-              }
-              
-              const updateResult = await updateResponse.json();
-              console.log('MongoDB update result:', updateResult);
-              
-              if (updateResult.success) {
-                console.log('Successfully marked quarter as processed in MongoDB');
-                updateSuccess = true;
-                
-                // Also update local UI immediately for better feedback
-                if (onGenerated) {
-                  console.log("Triggering onGenerated after successful MongoDB update");
-                  onGenerated(newPackageData);
-                }
-              } else {
-                console.error('Failed to update MongoDB:', updateResult.message);
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
-              }
-            } catch (mongoError) {
-              console.error(`Error updating MongoDB (attempt ${attempts}):`, mongoError);
-              await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
-            }
-          }
-          
-          if (!updateSuccess) {
-            console.error(`Failed to update MongoDB after ${maxAttempts} attempts.`);
-            // Fall back to using local UI update even if MongoDB update failed
-            if (onGenerated) {
-              console.log("Calling onGenerated as fallback after MongoDB update failures");
-              onGenerated(newPackageData);
-            }
-          }
-        }
-        
+        // Note: No MongoDB update here - we've removed it and will handle it at form submission
+
         // Immediately call the onGenerated callback with the package data
         console.log('Calling onGenerated with package data:', newPackageData);
         if (onGenerated) {

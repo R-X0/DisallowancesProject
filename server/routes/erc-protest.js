@@ -7,6 +7,7 @@ const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const googleSheetsService = require('../services/googleSheetsService');
 const googleDriveService = require('../services/googleDriveService');
+const { connectToDatabase, Submission } = require('../db-connection'); // Import MongoDB connection
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -67,30 +68,41 @@ router.get('/download', async (req, res) => {
   }
 });
 
-// Submit ERC protest form
 router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) => {
   try {
-    let { businessName, ein, location, businessWebsite, naicsCode, additionalInfo, protestPackagePath, protestLetterPath } = req.body;
+    let { businessName, ein, location, businessWebsite, naicsCode, additionalInfo, protestPackagePath, protestLetterPath, trackingId: existingTrackingId, processedQuarter } = req.body;
     let timePeriods = req.body.timePeriods;
     const files = req.files;
     
-    // DEBUG: Log received paths
+    // DEBUG: Log received paths and tracking ID
     console.log('=== DEBUG PATH INFO ===');
     console.log('Received protestPackagePath:', protestPackagePath);
     console.log('Received protestLetterPath:', protestLetterPath);
+    console.log('Received existingTrackingId:', existingTrackingId);
+    console.log('Received processedQuarter:', processedQuarter);
     console.log('=====================');
     
     // Normalize paths to handle Windows backslashes
     if (protestPackagePath) {
-      // Try to normalize the path
       protestPackagePath = protestPackagePath.replace(/\\/g, '/');
       console.log('Normalized protestPackagePath:', protestPackagePath);
     }
     
     if (protestLetterPath) {
-      // Try to normalize the path
       protestLetterPath = protestLetterPath.replace(/\\/g, '/');
       console.log('Normalized protestLetterPath:', protestLetterPath);
+    }
+    
+    // CRITICAL FIX: Ensure tracking ID is a clean string and not an array
+    if (existingTrackingId) {
+      // Check if it's an array or comma-separated string
+      if (Array.isArray(existingTrackingId)) {
+        existingTrackingId = existingTrackingId[0]; // Take first value
+        console.log(`Fixed array tracking ID, using: ${existingTrackingId}`);
+      } else if (typeof existingTrackingId === 'string' && existingTrackingId.includes(',')) {
+        existingTrackingId = existingTrackingId.split(',')[0]; // Take first value
+        console.log(`Fixed comma-separated tracking ID, using: ${existingTrackingId}`);
+      }
     }
     
     // Parse timePeriods from JSON string (from FormData) if needed
@@ -111,10 +123,42 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
       });
     }
     
-    // Generate tracking ID
-    const trackingId = `ERC-${uuidv4().substring(0, 8).toUpperCase()}`;
+    // Add the processed quarter to timePeriods if it's not already there
+    if (processedQuarter && !timePeriods.includes(processedQuarter)) {
+      console.log(`Adding processedQuarter ${processedQuarter} to timePeriods`);
+      timePeriods.push(processedQuarter);
+    }
     
-    // Create directory for this submission
+    // Check if this is an update to an existing submission or a new one
+    let trackingId = existingTrackingId;
+    
+    if (!trackingId) {
+      // Generate a new tracking ID for new submissions
+      trackingId = `ERC-${uuidv4().substring(0, 8).toUpperCase()}`;
+      console.log(`Generated new tracking ID: ${trackingId}`);
+    } else {
+      console.log(`Using existing tracking ID: ${trackingId}`);
+    }
+    
+    // First look for an existing submission with this trackingId to determine if it's an update
+    let isUpdate = false;
+    const submissionPath = path.join(__dirname, `../data/ERC_Disallowances/${trackingId}/submission_info.json`);
+    
+    // Try to find existing submission info
+    let submissionInfo = {};
+    try {
+      if (fs.existsSync(submissionPath)) {
+        const existingData = await fs.readFile(submissionPath, 'utf8');
+        submissionInfo = JSON.parse(existingData);
+        isUpdate = true;
+        console.log(`Found existing submission data for ${trackingId}`);
+      }
+    } catch (readError) {
+      console.log(`No existing data found for ${trackingId} (${readError.message}), creating new entry`);
+      // Continue with creating new entry
+    }
+    
+    // Create directory for this submission if it doesn't exist
     const submissionDir = path.join(__dirname, `../data/ERC_Disallowances/${trackingId}`);
     await fs.mkdir(submissionDir, { recursive: true });
     
@@ -134,8 +178,9 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
     // For display in the Google Sheet, join multiple time periods with a comma
     const timePeriodsDisplay = timePeriods.join(', ');
     
-    // Save submission info
-    const submissionInfo = {
+    // Update or create submission info
+    submissionInfo = {
+      ...submissionInfo, // Keep existing data for updates
       trackingId,
       businessName,
       ein,
@@ -145,12 +190,19 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
       timePeriods, // Store the full array
       timePeriodsDisplay, // Add this for display purposes
       additionalInfo,
-      files: fileInfo,
+      files: [...(submissionInfo.files || []), ...fileInfo], // Append new files to existing ones
       timestamp: new Date().toISOString(),
-      status: 'Gathering data'
+      status: submissionInfo.status || 'Gathering data' // Keep existing status for updates
     };
     
-    // Create a Google Drive folder for this submission
+    // Update status if we have a protest package
+    if (protestPackagePath) {
+      submissionInfo.status = 'PDF done';
+    }
+    
+    // Create a Google Drive folder for this submission or use existing one
+    let driveFolder = { folderId: null, folderLink: submissionInfo.googleDriveLink };
+    
     try {
       // Initialize Google Drive service if needed
       if (!googleDriveService.initialized) {
@@ -158,12 +210,22 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
         await googleDriveService.initialize();
       }
       
-      const driveFolder = await googleDriveService.createSubmissionFolder(trackingId, businessName);
-      
-      // Add Google Drive folder link to submission info
-      submissionInfo.googleDriveLink = driveFolder.folderLink;
-      
-      console.log(`Created Google Drive folder for ${trackingId}: ${driveFolder.folderLink}`);
+      // Create folder only if we don't already have a Google Drive link
+      if (!submissionInfo.googleDriveLink) {
+        driveFolder = await googleDriveService.createSubmissionFolder(trackingId, businessName);
+        
+        // Add Google Drive folder link to submission info
+        submissionInfo.googleDriveLink = driveFolder.folderLink;
+        
+        console.log(`Created Google Drive folder for ${trackingId}: ${driveFolder.folderLink}`);
+      } else {
+        console.log(`Using existing Google Drive folder: ${submissionInfo.googleDriveLink}`);
+        // Extract folder ID from the link
+        const folderIdMatch = submissionInfo.googleDriveLink.match(/folders\/([^\/]+)$/);
+        if (folderIdMatch && folderIdMatch[1]) {
+          driveFolder.folderId = folderIdMatch[1];
+        }
+      }
       
       // Upload the disallowance notice files to Google Drive
       console.log(`Uploading ${fileInfo.length} disallowance notices to Google Drive...`);
@@ -293,6 +355,7 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
       // Continue anyway, not a critical error
     }
     
+    // Save updated submission info
     await fs.writeFile(
       path.join(submissionDir, 'submission_info.json'),
       JSON.stringify(submissionInfo, null, 2)
@@ -300,31 +363,201 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
     
     // Add to Google Sheet for tracking
     try {
-      await googleSheetsService.addSubmission({
-        trackingId,
-        businessName,
-        ein,
-        location,
-        businessWebsite,
-        naicsCode,
-        timePeriod: timePeriodsDisplay, // Use the joined string for the Google Sheet
-        additionalInfo,
-        status: submissionInfo.status, // Use the possibly updated status
-        timestamp: new Date().toISOString(),
-        googleDriveLink: submissionInfo.googleDriveLink || '',
-        protestLetterPath: submissionInfo.protestLetterPath || '',
-        zipPath: submissionInfo.zipPath || ''
-      });
+      // For updates, use updateSubmission instead of addSubmission
+      if (isUpdate) {
+        console.log(`Updating existing record in Google Sheet for ${trackingId}`);
+        await googleSheetsService.updateSubmission(trackingId, {
+          businessName,
+          ein,
+          location,
+          businessWebsite,
+          naicsCode,
+          timePeriod: timePeriodsDisplay,
+          additionalInfo,
+          status: submissionInfo.status,
+          timestamp: new Date().toISOString(),
+          googleDriveLink: submissionInfo.googleDriveLink || '',
+          protestLetterPath: submissionInfo.protestLetterPath || '',
+          zipPath: submissionInfo.zipPath || ''
+        });
+      } else {
+        // For new submissions - ensure trackingId is a string, not an array
+        console.log(`Adding new record to Google Sheet for ${trackingId}`);
+        await googleSheetsService.addSubmission({
+          trackingId: trackingId.toString(), // Ensure it's a string
+          businessName,
+          ein,
+          location,
+          businessWebsite,
+          naicsCode,
+          timePeriod: timePeriodsDisplay, // Use the joined string for the Google Sheet
+          additionalInfo,
+          status: submissionInfo.status, // Use the possibly updated status
+          timestamp: new Date().toISOString(),
+          googleDriveLink: submissionInfo.googleDriveLink || '',
+          protestLetterPath: submissionInfo.protestLetterPath || '',
+          zipPath: submissionInfo.zipPath || ''
+        });
+      }
       
-      console.log('Added submission to Google Sheet with all fields');
+      console.log(`${isUpdate ? 'Updated' : 'Added'} submission in Google Sheet with all fields`);
+      
+      // Now update MongoDB with processed quarter information
+      try {
+        console.log('Synchronizing MongoDB with processed quarter data...');
+        
+        // Ensure MongoDB is connected
+        const connected = await connectToDatabase();
+        if (!connected) {
+          console.error('MongoDB connection failed for submission sync');
+          throw new Error('Database connection failed');
+        }
+        
+        // First, check if the document exists by trackingId
+        let submission;
+        
+        // Try different formats of the ID to find the right document
+        const idsToCheck = [
+          trackingId,
+          trackingId.replace(/^ERC-/, ''), // Try without ERC- prefix
+          `ERC-${trackingId}` // Try with ERC- prefix
+        ];
+        
+        console.log(`Checking MongoDB with these possible IDs: ${idsToCheck.join(', ')}`);
+        
+        // Try each possible ID format
+        for (const idToCheck of idsToCheck) {
+          const found = await Submission.findOne({ submissionId: idToCheck });
+          if (found) {
+            submission = found;
+            console.log(`Found MongoDB document with submissionId=${idToCheck}`);
+            break;
+          }
+        }
+        
+        // Also try by MongoDB _id if we have a valid ObjectId format
+        if (!submission && /^[0-9a-fA-F]{24}$/.test(trackingId)) {
+          const foundById = await Submission.findById(trackingId);
+          if (foundById) {
+            submission = foundById;
+            console.log(`Found MongoDB document by _id=${trackingId}`);
+          }
+        }
+        
+        // Prepare submission data with default values
+        const submissionData = {
+          submissionId: trackingId, // Use the clean tracking ID
+          businessName,
+          status: submissionInfo.status,
+          receivedAt: new Date(),
+          submissionData: {
+            processedQuarters: timePeriods,
+            quarterZips: {}
+          }
+        };
+        
+        // If we have a processedQuarter, make sure it's in the processed quarters list
+        if (processedQuarter) {
+          // Ensure it's added to the processed quarters
+          if (!submissionData.submissionData.processedQuarters.includes(processedQuarter)) {
+            submissionData.submissionData.processedQuarters.push(processedQuarter);
+          }
+        }
+        
+        // If we have a zipPath, store it in the quarterZips object
+        if (submissionInfo.zipPath && timePeriods.length > 0) {
+          // Store for each time period
+          timePeriods.forEach(quarter => {
+            submissionData.submissionData.quarterZips[quarter] = submissionInfo.zipPath;
+          });
+          
+          // Especially for the processedQuarter if we have one
+          if (processedQuarter) {
+            submissionData.submissionData.quarterZips[processedQuarter] = submissionInfo.zipPath;
+          }
+        }
+        
+        if (submission) {
+          // Update existing record
+          console.log(`Updating existing MongoDB record for ${trackingId}`);
+          
+          // Make sure submissionId is set correctly
+          submission.submissionId = trackingId;
+          
+          // Ensure all required objects exist
+          if (!submission.submissionData) submission.submissionData = {};
+          if (!submission.submissionData.processedQuarters) {
+            submission.submissionData.processedQuarters = [];
+          }
+          if (!submission.submissionData.quarterZips) {
+            submission.submissionData.quarterZips = {};
+          }
+          
+          // Add all quarters as processed
+          timePeriods.forEach(quarter => {
+            if (!submission.submissionData.processedQuarters.includes(quarter)) {
+              submission.submissionData.processedQuarters.push(quarter);
+              console.log(`Added ${quarter} to processed quarters list`);
+            } else {
+              console.log(`Quarter ${quarter} already in processed quarters list`);
+            }
+            
+            // Add zip path for each quarter if available
+            if (submissionInfo.zipPath) {
+              submission.submissionData.quarterZips[quarter] = submissionInfo.zipPath;
+            }
+          });
+          
+          // If we have a processedQuarter, make sure it's in the list
+          if (processedQuarter && !submission.submissionData.processedQuarters.includes(processedQuarter)) {
+            submission.submissionData.processedQuarters.push(processedQuarter);
+            console.log(`Added processed quarter ${processedQuarter} to the list`);
+            
+            // Add zip path for this quarter if available
+            if (submissionInfo.zipPath) {
+              submission.submissionData.quarterZips[processedQuarter] = submissionInfo.zipPath;
+            }
+          }
+          
+          // Update status and other fields
+          submission.status = submissionInfo.status;
+          submission.businessName = businessName;
+          
+          await submission.save();
+          console.log(`Updated MongoDB record for ${trackingId}. Processed quarters now:`, 
+            submission.submissionData.processedQuarters);
+        } else {
+          // Create new record
+          console.log(`Creating new MongoDB record for ${trackingId}`);
+          submission = await Submission.create(submissionData);
+          console.log(`Created new MongoDB record for ${trackingId} with processed quarters:`,
+            submissionData.submissionData.processedQuarters);
+        }
+        
+        // Log the updated MongoDB record for debugging
+        const updatedDoc = await Submission.findOne({ submissionId: trackingId });
+        if (updatedDoc) {
+          console.log('Final MongoDB document state:');
+          console.log('- ID:', updatedDoc._id);
+          console.log('- SubmissionId:', updatedDoc.submissionId);
+          console.log('- Status:', updatedDoc.status);
+          console.log('- Processed Quarters:', updatedDoc.submissionData?.processedQuarters || []);
+          console.log('- Quarter ZIPs:', updatedDoc.submissionData?.quarterZips || {});
+        }
+        
+      } catch (mongoError) {
+        console.error('Error updating MongoDB:', mongoError);
+        // Continue even if MongoDB update fails - don't fail the submission
+      }
+      
     } catch (sheetError) {
-      console.error('Error adding to Google Sheet:', sheetError);
+      console.error('Error updating Google Sheet:', sheetError);
       // Continue anyway, not a critical error
     }
     
     res.status(201).json({
       success: true,
-      message: 'Submission received successfully',
+      message: isUpdate ? 'Submission updated successfully' : 'Submission received successfully',
       trackingId,
       timestamp: new Date().toISOString()
     });
@@ -456,6 +689,87 @@ router.post('/update-status', async (req, res) => {
         googleDriveLink,
         timestamp: new Date().toISOString()
       });
+      
+      // Also update MongoDB
+      try {
+        await connectToDatabase();
+        
+        // Try multiple possible ID formats
+        let allPossibleIds = [trackingId];
+        
+        // If we have a formatted ID, also try without the prefix
+        if (trackingId.startsWith('ERC-')) {
+          const numericPart = trackingId.replace('ERC-', '');
+          allPossibleIds.push(numericPart);
+        }
+        
+        // If we have a numeric ID, also try with a prefix
+        if (!trackingId.startsWith('ERC-') && !isNaN(trackingId)) {
+          allPossibleIds.push(`ERC-${trackingId}`);
+        }
+        
+        // Find submission with any of these IDs
+        let submission = null;
+        for (const possibleId of allPossibleIds) {
+          const found = await Submission.findOne({ submissionId: possibleId });
+          if (found) {
+            submission = found;
+            console.log(`Found MongoDB document with submissionId=${possibleId}`);
+            break;
+          }
+        }
+        
+        if (submission) {
+          submission.status = status;
+          
+          // If the status is 'PDF done' or 'mailed', ensure all quarters are marked as processed
+          if (status === 'PDF done' || status === 'mailed') {
+            if (!submission.submissionData) submission.submissionData = {};
+            if (!submission.submissionData.processedQuarters) {
+              submission.submissionData.processedQuarters = [];
+            }
+            
+            // If we don't have time periods info, get it from the JSON file
+            let timePeriods = [];
+            try {
+              const jsonPath = path.join(__dirname, `../data/ERC_Disallowances/${trackingId}/submission_info.json`);
+              const jsonData = await fs.readFile(jsonPath, 'utf8');
+              const jsonInfo = JSON.parse(jsonData);
+              
+              if (jsonInfo.timePeriods && Array.isArray(jsonInfo.timePeriods)) {
+                timePeriods = jsonInfo.timePeriods;
+              } else if (jsonInfo.timePeriod) {
+                timePeriods = [jsonInfo.timePeriod];
+              }
+            } catch (fileErr) {
+              console.log(`Couldn't read time periods from file for ${trackingId}`);
+            }
+            
+            // Add all quarters if we have them
+            if (timePeriods.length > 0) {
+              timePeriods.forEach(quarter => {
+                if (!submission.submissionData.processedQuarters.includes(quarter)) {
+                  submission.submissionData.processedQuarters.push(quarter);
+                }
+                
+                // If we have a zip path, add it to quarterZips
+                if (zipPath) {
+                  if (!submission.submissionData.quarterZips) {
+                    submission.submissionData.quarterZips = {};
+                  }
+                  submission.submissionData.quarterZips[quarter] = zipPath;
+                }
+              });
+            }
+          }
+          
+          await submission.save();
+          console.log(`Updated MongoDB record for ${trackingId}`);
+        }
+      } catch (mongoError) {
+        console.error(`Error updating MongoDB for ${trackingId}:`, mongoError);
+        // Continue even if MongoDB update fails
+      }
       
       res.status(200).json({
         success: true,

@@ -22,6 +22,11 @@ router.get('/', async (req, res) => {
       // First process the document to translate paths
       const processedSubmission = processDocument(submission.toObject ? submission.toObject() : submission);
       
+      // Log submission data for debugging
+      console.log(`Processing submission: id=${processedSubmission._id}, submissionId=${processedSubmission.submissionId}`);
+      console.log(`Processed quarters:`, processedSubmission.submissionData?.processedQuarters || []);
+      console.log(`Quarter analysis:`, processedSubmission.submissionData?.report?.qualificationData?.quarterAnalysis?.length || 0);
+      
       // Extract a meaningful identifier based on data structure
       let businessName = 'Unnamed Business';
       
@@ -50,6 +55,11 @@ router.get('/', async (req, res) => {
           businessName = formData.businessName;
         }
         
+        // Check if we have a business name directly on the submission
+        if (processedSubmission.businessName) {
+          businessName = processedSubmission.businessName;
+        }
+        
         // Use timestamp as last resort
         if (businessName === 'Unnamed Business') {
           const date = new Date(processedSubmission.receivedAt);
@@ -58,12 +68,16 @@ router.get('/', async (req, res) => {
           }
         }
       } catch (err) {
+        console.log('Error extracting business name:', err);
         businessName = `Submission #${processedSubmission.submissionId || processedSubmission._id}`;
       }
       
       // Determine status based on report generation and files
       let status = 'waiting';
-      if (processedSubmission.report && processedSubmission.report.generated) {
+      if (processedSubmission.status) {
+        // If we have a status field, use it directly
+        status = processedSubmission.status;
+      } else if (processedSubmission.report && processedSubmission.report.generated) {
         status = 'complete';
       } else if (processedSubmission.receivedFiles && processedSubmission.receivedFiles.length > 0) {
         status = 'processing';
@@ -90,8 +104,11 @@ router.get('/', async (req, res) => {
         });
       }
       
+      // Use submissionId field if it exists, otherwise use MongoDB _id
+      const id = processedSubmission.submissionId || processedSubmission._id.toString();
+      
       return {
-        id: processedSubmission.submissionId || processedSubmission._id,
+        id: id,
         businessName,
         timestamp: processedSubmission.receivedAt,
         status,
@@ -100,6 +117,16 @@ router.get('/', async (req, res) => {
         // Include the complete submission data for detailed view
         submissionData: processedSubmission
       };
+    });
+    
+    console.log(`Queue data processed: ${queueItems.length} items`);
+    // Debug: Log all items with their processedQuarters for debugging
+    queueItems.forEach(item => {
+      console.log(`Item ${item.id}: processedQuarters=`, 
+        item.submissionData?.processedQuarters || [],
+        "totalQuarters=", 
+        item.submissionData?.report?.qualificationData?.quarterAnalysis?.length || 0
+      );
     });
     
     res.status(200).json({
@@ -216,39 +243,121 @@ router.post('/update-processed-quarters', async (req, res) => {
     const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(submissionId);
     console.log(`Is valid ObjectId format: ${isValidObjectId}`);
     
-    // Find the submission, but be careful about the query to avoid ObjectId casting errors
-    let submission;
+    // Find the submission with expanded search capabilities
+    let submission = null;
     
-    if (isValidObjectId) {
-      // If it's a valid ObjectId format, we can query by either field
-      submission = await Submission.findOne({
-        $or: [
-          { submissionId: submissionId },
-          { _id: submissionId }
-        ]
-      });
-    } else {
-      // If it's not a valid ObjectId, only query by submissionId
-      submission = await Submission.findOne({ submissionId: submissionId });
+    // First, try to find by submissionId (string field)
+    submission = await Submission.findOne({ submissionId: submissionId });
+    
+    // If not found and it's a valid ObjectId, try to find by _id
+    if (!submission && isValidObjectId) {
+      submission = await Submission.findById(submissionId);
     }
     
+    // If still not found, try to find by numeric ID converted to string
     if (!submission) {
-      console.error(`Submission not found: ${submissionId}`);
+      // If the ID is numeric, try to find with additional formatting
+      if (!isNaN(parseInt(submissionId))) {
+        // Try formatted versions like "ERC-12345" or similar pattern
+        const possibleFormats = [
+          submissionId,
+          `ERC-${submissionId}`,
+          `ERC-${submissionId.substring(0, 8)}`
+        ];
+        
+        for (const format of possibleFormats) {
+          submission = await Submission.findOne({ submissionId: format });
+          if (submission) {
+            console.log(`Found submission using format: ${format}`);
+            break;
+          }
+        }
+      }
+    }
+    
+    // If still not found, check if a map exists to resolve the ID
+    if (!submission) {
+      try {
+        const mapDir = path.join(__dirname, '../data/id_mappings');
+        // Check if directory exists
+        if (fs.existsSync(mapDir)) {
+          const files = fs.readdirSync(mapDir);
+          for (const file of files) {
+            if (file.startsWith(`${submissionId}_to_`)) {
+              console.log(`Found ID mapping file: ${file}`);
+              const mapPath = path.join(mapDir, file);
+              const mapData = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
+              if (mapData.formattedId) {
+                console.log(`Looking up mapped ID: ${mapData.formattedId}`);
+                submission = await Submission.findOne({ submissionId: mapData.formattedId });
+                if (submission) {
+                  console.log(`Found submission using mapped ID: ${mapData.formattedId}`);
+                  break;
+                }
+              }
+            }
+          }
+        }
+      } catch (mapError) {
+        console.error('Error checking ID mappings:', mapError);
+      }
+    }
+    
+    // If still not found, create a new record
+    if (!submission) {
+      console.log(`No existing submission found for ID ${submissionId}, creating new record`);
       
-      // Try alternate search methods if not found
-      const allSubmissions = await Submission.find({}).limit(10);
-      console.log('Recent submissions:', allSubmissions.map(s => ({
-        id: s._id, 
-        submissionId: s.submissionId
-      })));
-      
-      return res.status(404).json({
-        success: false,
-        message: `Submission with ID ${submissionId} not found`
+      // Create a new MongoDB record with this submissionId
+      submission = new Submission({
+        submissionId: submissionId,
+        receivedAt: new Date(),
+        status: 'processing',
+        submissionData: {
+          processedQuarters: [],
+          quarterZips: {}
+        }
       });
+      
+      // Try to get some info from the filesystem if available
+      try {
+        // Check if there's a submission_info.json file
+        let jsonPath = '';
+        // Check if it starts with ERC-
+        if (submissionId.startsWith('ERC-')) {
+          jsonPath = path.join(__dirname, `../data/ERC_Disallowances/${submissionId}/submission_info.json`);
+        } else {
+          jsonPath = path.join(__dirname, `../data/ERC_Disallowances/ERC-${submissionId}/submission_info.json`);
+        }
+        
+        if (fs.existsSync(jsonPath)) {
+          const jsonData = fs.readFileSync(jsonPath, 'utf8');
+          const info = JSON.parse(jsonData);
+          
+          // Add business name if available
+          if (info.businessName) {
+            submission.businessName = info.businessName;
+          }
+          
+          // Add status if available
+          if (info.status) {
+            submission.status = info.status;
+          }
+        }
+      } catch (fileError) {
+        console.error('Error reading submission info file:', fileError);
+      }
     }
     
     console.log(`Found submission: ${submission._id}, creating update...`);
+    
+    // Log the full submission object for debugging
+    console.log('Full submission data:', JSON.stringify(submission, null, 2));
+
+    // Ensure submissionId is properly saved in the document
+    if (!submission.submissionId && submissionId) {
+      submission.submissionId = submissionId;
+      console.log(`Added missing submissionId ${submissionId} to document`);
+    }
     
     // Ensure we have a submissionData object
     if (!submission.submissionData) {
@@ -289,6 +398,26 @@ router.post('/update-processed-quarters', async (req, res) => {
       }
     }
     
+    // Check if we should update the status based on processed quarters
+    const allProcessedQuarters = submission.submissionData.processedQuarters;
+    const totalQuarters = submission.submissionData?.report?.qualificationData?.quarterAnalysis?.length || 0;
+    
+    // If there are no quarters in the analysis, just check if we have ANY processed quarters
+    if (totalQuarters === 0 && allProcessedQuarters.length > 0) {
+      submission.status = 'complete';
+      console.log('Updated status to complete (no quarter analysis, but quarters processed)');
+    } 
+    // If all quarters have been processed, mark as complete
+    else if (totalQuarters > 0 && allProcessedQuarters.length >= totalQuarters) {
+      submission.status = 'complete';
+      console.log(`Updated status to complete (all ${totalQuarters} quarters processed)`);
+    }
+    // If we have some quarters processed but not all, mark as processing
+    else if (allProcessedQuarters.length > 0) {
+      submission.status = 'processing';
+      console.log('Updated status to processing');
+    }
+    
     // Save the updated submission with explicit error handling
     try {
       console.log('Saving submission update to MongoDB...');
@@ -318,6 +447,7 @@ router.post('/update-processed-quarters', async (req, res) => {
     });
   }
 });
+
 // Delete a submission
 router.delete('/:submissionId', async (req, res) => {
   try {
