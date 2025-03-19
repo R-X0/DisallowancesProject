@@ -482,12 +482,14 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
         if (submission) {
           console.log(`Updating existing MongoDB record for ${trackingId}`);
           
+          // FIXED: Initialize arrays properly
           // Ensure required nested objects exist
           if (!submission.submissionData) {
             submission.submissionData = {};
           }
           
-          if (!submission.submissionData.processedQuarters) {
+          // FIXED: Always initialize arrays correctly
+          if (!Array.isArray(submission.submissionData.processedQuarters)) {
             submission.submissionData.processedQuarters = [];
           }
           
@@ -495,10 +497,20 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
             submission.submissionData.quarterZips = {};
           }
           
+          // FIXED: Ensure root-level processedQuarters is also an array
+          if (!Array.isArray(submission.processedQuarters)) {
+            submission.processedQuarters = [];
+          }
+          
           // Add processed quarter if specified and not already included
           if (processedQuarter && !submission.submissionData.processedQuarters.includes(processedQuarter)) {
             submission.submissionData.processedQuarters.push(processedQuarter);
             console.log(`Added ${processedQuarter} to processed quarters list`);
+            
+            // FIXED: Also update root level for backward compatibility 
+            if (!submission.processedQuarters.includes(processedQuarter)) {
+              submission.processedQuarters.push(processedQuarter);
+            }
             
             // Add ZIP path for this quarter if available
             if (submissionInfo.zipPath) {
@@ -510,7 +522,19 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
           submission.businessName = businessName;
           submission.status = submissionInfo.status;
           
+          // FIXED: Make sure to use await
           await submission.save();
+          
+          // FIXED: Verify the save
+          const verifiedDoc = await Submission.findById(submission._id);
+          if (verifiedDoc) {
+            console.log('Verification after save:', {
+              id: verifiedDoc._id,
+              rootQuarters: verifiedDoc.processedQuarters || [],
+              nestedQuarters: verifiedDoc.submissionData?.processedQuarters || []
+            });
+          }
+          
           console.log(`Updated MongoDB record for ${trackingId}. Processed quarters now:`, 
             submission.submissionData.processedQuarters);
         } else {
@@ -522,6 +546,8 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
             businessName,
             status: submissionInfo.status,
             receivedAt: new Date(),
+            // FIXED: Initialize arrays properly
+            processedQuarters: [],
             submissionData: {
               processedQuarters: [],
               quarterZips: {}
@@ -530,6 +556,8 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
           
           // Add processed quarter if specified
           if (processedQuarter) {
+            // FIXED: Add to both locations
+            submissionData.processedQuarters.push(processedQuarter);
             submissionData.submissionData.processedQuarters.push(processedQuarter);
             console.log(`Added ${processedQuarter} to new MongoDB record`);
             
@@ -540,6 +568,17 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
           }
           
           const newSubmission = await Submission.create(submissionData);
+          
+          // FIXED: Verify the creation
+          const verifiedDoc = await Submission.findById(newSubmission._id);
+          if (verifiedDoc) {
+            console.log('Verification after creation:', {
+              id: verifiedDoc._id,
+              rootQuarters: verifiedDoc.processedQuarters || [],
+              nestedQuarters: verifiedDoc.submissionData?.processedQuarters || []
+            });
+          }
+          
           console.log(`Created new MongoDB record for ${trackingId} with ID: ${newSubmission._id}`);
         }
         
@@ -729,13 +768,21 @@ router.post('/update-status', async (req, res) => {
         if (submission) {
           submission.status = status;
           
+          // FIXED: Initialize arrays if needed
+          if (!submission.submissionData) {
+            submission.submissionData = {};
+          }
+          
+          if (!Array.isArray(submission.submissionData.processedQuarters)) {
+            submission.submissionData.processedQuarters = [];
+          }
+          
+          if (!Array.isArray(submission.processedQuarters)) {
+            submission.processedQuarters = [];
+          }
+          
           // If the status is 'PDF done' or 'mailed', ensure all quarters are marked as processed
           if (status === 'PDF done' || status === 'mailed') {
-            if (!submission.submissionData) submission.submissionData = {};
-            if (!submission.submissionData.processedQuarters) {
-              submission.submissionData.processedQuarters = [];
-            }
-            
             // If we don't have time periods info, get it from the JSON file
             let timePeriods = [];
             try {
@@ -759,6 +806,11 @@ router.post('/update-status', async (req, res) => {
                   submission.submissionData.processedQuarters.push(quarter);
                 }
                 
+                // Update root level too for backward compatibility 
+                if (!submission.processedQuarters.includes(quarter)) {
+                  submission.processedQuarters.push(quarter);
+                }
+                
                 // If we have a zip path, add it to quarterZips
                 if (zipPath) {
                   if (!submission.submissionData.quarterZips) {
@@ -771,6 +823,18 @@ router.post('/update-status', async (req, res) => {
           }
           
           await submission.save();
+          
+          // FIXED: Verify the save
+          const verifiedDoc = await Submission.findById(submission._id);
+          if (verifiedDoc) {
+            console.log('Verification after update-status save:', {
+              id: verifiedDoc._id,
+              status: verifiedDoc.status,
+              rootQuarters: verifiedDoc.processedQuarters || [],
+              nestedQuarters: verifiedDoc.submissionData?.processedQuarters || []
+            });
+          }
+          
           console.log(`Updated MongoDB record for ${trackingId}`);
         }
       } catch (mongoError) {

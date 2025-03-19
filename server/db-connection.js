@@ -11,6 +11,36 @@ let connectionAttempted = false;
 // Add flag to prevent repeated logging
 let loggingEnabled = true;
 
+// Define a proper schema with all necessary fields
+const submissionSchema = new mongoose.Schema({
+  submissionId: String,
+  businessName: String,
+  ein: String,
+  location: String,
+  businessWebsite: String,
+  naicsCode: String,
+  status: String,
+  receivedAt: { type: Date, default: Date.now },
+  // Root level fields for backward compatibility
+  processedQuarters: [String],
+  // Nested structure for all submission data
+  submissionData: {
+    originalData: {
+      formData: mongoose.Schema.Types.Mixed
+    },
+    processedQuarters: [String],
+    quarterZips: mongoose.Schema.Types.Mixed,
+    report: {
+      generated: Boolean,
+      path: String,
+      qualificationData: {
+        qualifyingQuarters: [String],
+        quarterAnalysis: [mongoose.Schema.Types.Mixed]
+      }
+    }
+  }
+});
+
 // Connect to MongoDB
 const connectToDatabase = async () => {
   try {
@@ -73,11 +103,7 @@ if (MONGODB_URI && !MONGODB_URI.includes('/?') && !MONGODB_URI.split('/')[3]) {
   console.log('Consider adding a database name: mongodb+srv://user:pass@cluster.domain/database_name?retryWrites=true&w=majority');
 }
 
-// The rest of your code (schema definitions, etc.)
-const submissionSchema = new mongoose.Schema({
-  // Your schema definition
-});
-
+// Create the model
 const Submission = mongoose.model('Submission', submissionSchema);
 
 module.exports = {

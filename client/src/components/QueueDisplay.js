@@ -1,3 +1,5 @@
+// client/src/components/QueueDisplay.js
+
 import React, { useState, useEffect } from 'react';
 import { 
   Paper, 
@@ -53,6 +55,7 @@ const QueueDisplay = () => {
         
         if (data.success) {
           console.log(`Queue data received: ${data.queue.length} items`);
+          console.log('Queue data detail:', data.queue);
           setQueueItems(data.queue);
         } else {
           throw new Error(data.message || 'Failed to fetch queue data');
@@ -123,6 +126,13 @@ const QueueDisplay = () => {
 
   // Get status chip based on status and processed quarters
   const getStatusChip = (item) => {
+    // Log the item status and processed quarters for debugging
+    console.log(`Status chip for ${item.id}:`, {
+      status: item.status,
+      processedQuarters: item.submissionData?.processedQuarters || [],
+      totalQuarters: item.submissionData?.report?.qualificationData?.quarterAnalysis?.length || 0
+    });
+    
     const status = item.status;
     
     // FIXED: Get count of processed quarters from the right location
@@ -154,6 +164,20 @@ const QueueDisplay = () => {
           return <Chip 
             icon={<CheckCircle fontSize="small" />} 
             label="Complete" 
+            color="success" 
+            size="small" 
+          />;
+        case 'PDF done':
+          return <Chip 
+            icon={<CheckCircle fontSize="small" />} 
+            label="PDF Done" 
+            color="success" 
+            size="small" 
+          />;
+        case 'mailed':
+          return <Chip 
+            icon={<CheckCircle fontSize="small" />} 
+            label="Mailed" 
             color="success" 
             size="small" 
           />;
