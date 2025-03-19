@@ -187,10 +187,11 @@ router.get('/download', async (req, res) => {
   }
 });
 
-// Update processed quarters for a submission
 router.post('/update-processed-quarters', async (req, res) => {
   try {
     const { submissionId, quarter, zipPath } = req.body;
+    
+    console.log(`MongoDB update request received for: submissionId=${submissionId}, quarter=${quarter}`);
     
     if (!submissionId || !quarter) {
       return res.status(400).json({
@@ -199,11 +200,21 @@ router.post('/update-processed-quarters', async (req, res) => {
       });
     }
     
-    // Ensure connected to database
-    await connectToDatabase();
+    // Ensure connected to database with more detailed logging
+    const connected = await connectToDatabase();
+    if (!connected) {
+      console.error(`MongoDB connection failed for update: submissionId=${submissionId}`);
+      return res.status(500).json({
+        success: false,
+        message: 'Database connection failed'
+      });
+    }
+    
+    console.log(`MongoDB connected, finding submission: ${submissionId}`);
     
     // Check if the ID is a valid MongoDB ObjectId (24 character hex)
     const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(submissionId);
+    console.log(`Is valid ObjectId format: ${isValidObjectId}`);
     
     // Find the submission, but be careful about the query to avoid ObjectId casting errors
     let submission;
@@ -222,11 +233,22 @@ router.post('/update-processed-quarters', async (req, res) => {
     }
     
     if (!submission) {
+      console.error(`Submission not found: ${submissionId}`);
+      
+      // Try alternate search methods if not found
+      const allSubmissions = await Submission.find({}).limit(10);
+      console.log('Recent submissions:', allSubmissions.map(s => ({
+        id: s._id, 
+        submissionId: s.submissionId
+      })));
+      
       return res.status(404).json({
         success: false,
         message: `Submission with ID ${submissionId} not found`
       });
     }
+    
+    console.log(`Found submission: ${submission._id}, creating update...`);
     
     // Ensure we have a submissionData object
     if (!submission.submissionData) {
@@ -238,10 +260,14 @@ router.post('/update-processed-quarters', async (req, res) => {
       submission.submissionData.processedQuarters = [];
     }
     
+    // Log current state before update
+    console.log('Current processed quarters:', submission.submissionData.processedQuarters);
+    
     // Check if the quarter is already in the processedQuarters array
     if (!submission.submissionData.processedQuarters.includes(quarter)) {
       // Add the quarter to the processedQuarters array
       submission.submissionData.processedQuarters.push(quarter);
+      console.log(`Added ${quarter} to processed quarters`);
       
       // If zipPath is provided, store it in a new quarterZips object
       if (zipPath) {
@@ -249,18 +275,35 @@ router.post('/update-processed-quarters', async (req, res) => {
           submission.submissionData.quarterZips = {};
         }
         submission.submissionData.quarterZips[quarter] = zipPath;
+        console.log(`Stored zipPath for ${quarter}`);
       }
-      
-      // Save the updated submission
-      await submission.save();
     } else {
+      console.log(`Quarter ${quarter} already processed, updating zipPath if needed`);
       // Still update the zipPath if provided, even if quarter is already processed
-      if (zipPath && submission.submissionData.quarterZips) {
+      if (zipPath) {
+        if (!submission.submissionData.quarterZips) {
+          submission.submissionData.quarterZips = {};
+        }
         submission.submissionData.quarterZips[quarter] = zipPath;
-        await submission.save();
+        console.log(`Updated zipPath for ${quarter}`);
       }
     }
     
+    // Save the updated submission with explicit error handling
+    try {
+      console.log('Saving submission update to MongoDB...');
+      await submission.save();
+      console.log('Submission successfully saved');
+    } catch (saveError) {
+      console.error('Error saving submission:', saveError);
+      return res.status(500).json({
+        success: false,
+        message: `Database save failed: ${saveError.message}`
+      });
+    }
+    
+    // Return success with updated data
+    console.log(`Successfully updated processed quarters for ${submissionId}`);
     res.status(200).json({
       success: true,
       message: `Quarter ${quarter} marked as processed for submission ${submissionId}`,
@@ -268,14 +311,13 @@ router.post('/update-processed-quarters', async (req, res) => {
       quarterZips: submission.submissionData.quarterZips || {}
     });
   } catch (error) {
-    console.error(`Error updating processed quarters for submission ${req.body.submissionId}:`, error);
+    console.error(`Error updating processed quarters for submission ${req.body?.submissionId}:`, error);
     res.status(500).json({
       success: false,
       message: `Error updating processed quarters: ${error.message}`
     });
   }
 });
-
 // Delete a submission
 router.delete('/:submissionId', async (req, res) => {
   try {

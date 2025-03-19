@@ -335,29 +335,61 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
             zipPath: newPackageData.zipPath
           });
           
-          try {
-            const updateResponse = await fetch('/api/mongodb-queue/update-processed-quarters', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                submissionId: formData.trackingId,
-                quarter: selectedTimePeriod,
-                zipPath: newPackageData.zipPath
-              })
-            });
-            
-            const updateResult = await updateResponse.json();
-            console.log('MongoDB update result:', updateResult);
-            
-            if (updateResult.success) {
-              console.log('Successfully marked quarter as processed in MongoDB');
-            } else {
-              console.error('Failed to update MongoDB:', updateResult.message);
+          // Make multiple attempts to update MongoDB
+          let updateSuccess = false;
+          let attempts = 0;
+          const maxAttempts = 3;
+          
+          while (!updateSuccess && attempts < maxAttempts) {
+            attempts++;
+            try {
+              console.log(`Attempt ${attempts} to update MongoDB...`);
+              
+              const updateResponse = await fetch('/api/mongodb-queue/update-processed-quarters', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  submissionId: formData.trackingId,
+                  quarter: selectedTimePeriod,
+                  zipPath: newPackageData.zipPath
+                })
+              });
+              
+              if (!updateResponse.ok) {
+                throw new Error(`Server returned ${updateResponse.status}: ${updateResponse.statusText}`);
+              }
+              
+              const updateResult = await updateResponse.json();
+              console.log('MongoDB update result:', updateResult);
+              
+              if (updateResult.success) {
+                console.log('Successfully marked quarter as processed in MongoDB');
+                updateSuccess = true;
+                
+                // Also update local UI immediately for better feedback
+                if (onGenerated) {
+                  console.log("Triggering onGenerated after successful MongoDB update");
+                  onGenerated(newPackageData);
+                }
+              } else {
+                console.error('Failed to update MongoDB:', updateResult.message);
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+              }
+            } catch (mongoError) {
+              console.error(`Error updating MongoDB (attempt ${attempts}):`, mongoError);
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
             }
-          } catch (mongoError) {
-            console.error('Error updating MongoDB:', mongoError);
+          }
+          
+          if (!updateSuccess) {
+            console.error(`Failed to update MongoDB after ${maxAttempts} attempts.`);
+            // Fall back to using local UI update even if MongoDB update failed
+            if (onGenerated) {
+              console.log("Calling onGenerated as fallback after MongoDB update failures");
+              onGenerated(newPackageData);
+            }
           }
         }
         

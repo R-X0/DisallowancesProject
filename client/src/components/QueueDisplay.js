@@ -201,23 +201,57 @@ const QueueDisplay = () => {
   
   // Helper function to update local UI state
   const updateLocalUI = (itemId, quarter) => {
+    console.log(`Updating local UI for item ${itemId}, quarter ${quarter}`);
+    
     setQueueItems(prevItems => 
       prevItems.map(queueItem => {
         if (queueItem.id === itemId) {
-          const processedQuarters = queueItem.submissionData?.processedQuarters || [];
-          if (!processedQuarters.includes(quarter)) {
-            return {
-              ...queueItem,
-              submissionData: {
-                ...queueItem.submissionData,
-                processedQuarters: [...processedQuarters, quarter]
-              }
-            };
+          console.log(`Found matching item: ${queueItem.id}`);
+          
+          // Create a deep copy to avoid mutation issues
+          const updatedItem = JSON.parse(JSON.stringify(queueItem));
+          
+          // Ensure we have the necessary structure
+          if (!updatedItem.submissionData) {
+            updatedItem.submissionData = {};
           }
+          
+          // Initialize processedQuarters if it doesn't exist
+          if (!updatedItem.submissionData.processedQuarters) {
+            updatedItem.submissionData.processedQuarters = [];
+          }
+          
+          // Add the quarter if not already processed
+          if (!updatedItem.submissionData.processedQuarters.includes(quarter)) {
+            updatedItem.submissionData.processedQuarters.push(quarter);
+            console.log(`Added ${quarter} to processedQuarters in UI state`);
+            
+            // Update status if needed
+            const totalQuarters = updatedItem.submissionData?.report?.qualificationData?.quarterAnalysis?.length || 0;
+            const processedCount = updatedItem.submissionData.processedQuarters.length;
+            
+            if (totalQuarters > 0 && processedCount === totalQuarters) {
+              updatedItem.status = 'complete';
+              console.log('Updated status to complete');
+            } else if (processedCount > 0) {
+              updatedItem.status = 'processing';
+              console.log('Updated status to processing');
+            }
+          } else {
+            console.log(`Quarter ${quarter} already in processedQuarters, no change needed`);
+          }
+          
+          return updatedItem;
         }
         return queueItem;
       })
     );
+    
+    // Force a refresh after a short delay to ensure state is properly updated
+    setTimeout(() => {
+      console.log('Forcing queue refresh after UI update');
+      fetchQueue();
+    }, 2000);
   };
 
   // Function to handle generating a letter for a specific quarter with a specified approach
