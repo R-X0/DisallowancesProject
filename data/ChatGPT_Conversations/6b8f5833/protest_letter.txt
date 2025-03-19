@@ -1,0 +1,61 @@
+03/19/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 00-0000000  
+Taxpayer Name: 45's Business  
+
+RE: Formal Protest to Letter [Insert Letter Number] – ERC Disallowance for Q1 2021  
+Tax Period: Quarter 1 2021 (202101)  
+Claim Amount: [Insert Claimed Amount]
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing 45's Business’ Employee Retention Credit (ERC) claim for Quarter 1 2021. The disallowance was based on an assertion that no government orders were in effect during the period that caused a suspension or limitation of our operations. We respectfully disagree. Multiple federal government orders were active during Quarter 1 2021, and they imposed COVID‑19 related restrictions and requirements that disrupted our normal business operations. In this letter we provide a detailed timeline of relevant government orders, demonstrate their impact on our organization’s activities, and present our audit‐critical revenue decline data showing clear qualification for the ERC.
+
+The following is a detailed list of the pertinent COVID‑19 government orders in effect during Quarter 1 2021:
+
+•  
+Order Name: Proclamation 9994 – National Emergency Concerning COVID‑19  
+Order Number: 9994  
+Date Enacted: 03/13/2020  
+Date Rescinded: Still in effect  
+Order Summary: This proclamation declared a nationwide emergency due to the COVID‑19 outbreak. It activated federal emergency powers and funding, thereby providing the legal basis for subsequent public health measures.  
+Impact on Quarter: During Quarter 1 2021, this proclamation ensured that federal guidelines, restrictions, and safety protocols remained in force, which affected the operations of 45's Business by necessitating adherence to federal health and safety recommendations.
+
+•  
+Order Name: CDC/FAA Mask Mandates – Federal Mask Requirements for Travel  
+Order Number: No Official Number  
+Date Enacted: 01/21/2021  
+Date Rescinded: Still in effect  
+Order Summary: This mandate imposed mask‑wearing requirements on interstate travel, including on airplanes, trains, buses, and federal properties, as a measure to protect public health. It reflected the federal government’s commitment to maintaining COVID‑19 safety protocols as the pandemic evolved.  
+Impact on Quarter: In Quarter 1 2021, the mask mandates affected business travel and related operations for 45's Business, thereby contributing to operational adjustments and disruptions in normal service delivery.
+
+In addition to these government orders, we wish to emphasize the significant decline in revenue that directly supports our ERC qualification under IRS guidelines.
+
+REVENUE DECLINE DATA
+
+The purpose of this section is to present the audit‑critical revenue figures demonstrating a marked decline in revenue directly attributable to the impacts of the COVID‑19 pandemic, which in turn substantiate our qualification for the ERC.
+
+For Quarter 1 2021, 45's Business recorded revenue of EXACTLY $345 compared to Quarter 1 2019 revenue of EXACTLY $54325234. This represents an EXACT decline of $54324889 or an EXACT 100.00% decline in revenue for the period. Based on the IRS thresholds requiring a decline of 20% or more for 2021, this severe reduction qualifies 45's Business for the ERC.
+
+Additional quarters with comparable declines are noted below:  
+• Q2 2021: EXACTLY $345 compared to Q2 2019: EXACTLY $3552452345 = EXACTLY 100.00% decline (Qualifies for ERC)  
+• Q3 2021: EXACTLY $345 compared to Q3 2019: EXACTLY $3245345 = EXACTLY 99.99% decline (Qualifies for ERC)
+
+In conclusion, the significant decline in revenue alongside the federal COVID‑19 government orders that remained in effect during Quarter 1 2021 clearly demonstrate that 45's Business was subject to conditions that disrupted its normal operations. Both these factors unequivocally support our ERC claim for Quarter 1 2021.
+
+We respectfully request that the IRS reconsider and reverse the disallowance of our ERC claim for the period under protest. Attached you will find copies of the referenced government orders and supporting documentation of our revenue figures for your review.
+
+Attestation: “Under penalties of perjury, I declare that I submitted the protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated in the protest and accompanying documents is true, correct, and complete.”
+
+Sincerely,
+
+[Signature]  
+[Name of Authorized Representative]  
+Authorized Representative for 45's Business
+
+Enclosures:  
+• Copies of Referenced Government Orders  
+• Revenue Decline Documentation and Audit‑Critical Data  
+• Relevant IRS Guidance Documentation
