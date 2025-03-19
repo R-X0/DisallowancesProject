@@ -322,6 +322,49 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
       // Continue anyway, not a critical error
     }
     
+    // After successful Google Drive uploads and Sheet updates, update MongoDB with processed quarters
+    if (timePeriods && timePeriods.length > 0 && submissionInfo.zipPath) {
+      try {
+        console.log(`Updating MongoDB to mark quarters as processed with ZIP: ${submissionInfo.zipPath}`);
+        
+        // For each time period, add it to MongoDB processed quarters
+        for (const quarter of timePeriods) {
+          try {
+            const response = await fetch(`http://localhost:${process.env.PORT || 5000}/api/mongodb-queue/update-processed-quarters`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                submissionId: trackingId,
+                quarter: quarter,
+                zipPath: submissionInfo.zipPath
+              })
+            });
+            
+            if (response.ok) {
+              const result = await response.json();
+              console.log(`MongoDB update for ${quarter}: ${result.success ? 'Success' : 'Failed'}`);
+            } else {
+              console.error(`Error response from MongoDB update for ${quarter}: ${response.status}`);
+            }
+          } catch (quarterError) {
+            console.error(`Error updating MongoDB for quarter ${quarter}:`, quarterError);
+            // Continue with other quarters even if one fails
+          }
+        }
+        
+        // Force refresh the queue
+        try {
+          await fetch(`http://localhost:${process.env.PORT || 5000}/api/mongodb-queue?refresh=true`);
+          console.log('Queue refreshed after MongoDB updates');
+        } catch (refreshError) {
+          console.error('Error refreshing queue:', refreshError);
+        }
+      } catch (mongoError) {
+        console.error('Error in MongoDB quarter processing:', mongoError);
+        // Continue with response - don't fail the submission
+      }
+    }
+    
     res.status(201).json({
       success: true,
       message: 'Submission received successfully',

@@ -416,31 +416,13 @@ const generateProtestLetter = async () => {
       console.log('Setting package data:', newPackageData);
       setPackageData(newPackageData);
       
-      // Update processing status
+      // Update processing status - MODIFIED: don't update MongoDB here
       setProcessingMessage("Finalizing document package...");
       setProcessingStep(4);
       
-      // IMPORTANT: Update MongoDB with the generated zipPath
-      // This ensures the quarter is marked as processed and the zip is stored
-      if (formData.trackingId && selectedTimePeriod && newPackageData.zipPath) {
-        console.log(`Updating MongoDB with letter data for quarter: "${selectedTimePeriod}"`);
-        try {
-          // For form886A, we need to handle that it might process multiple quarters
-          if (documentType === 'form886A' && formData.allTimePeriods && Array.isArray(formData.allTimePeriods)) {
-            // For each time period, mark it as processed
-            for (const timePeriod of formData.allTimePeriods) {
-              await updateMongoDBWithLetterData(formData.trackingId, timePeriod, newPackageData.zipPath);
-            }
-          } else {
-            // For regular protest letters, just mark the selected quarter
-            await updateMongoDBWithLetterData(formData.trackingId, selectedTimePeriod, newPackageData.zipPath);
-          }
-          console.log('MongoDB update completed successfully');
-        } catch (mongoError) {
-          console.error('Error updating MongoDB:', mongoError);
-          // Continue with the flow even if MongoDB update fails
-        }
-      }
+      // IMPORTANT CHANGE: Don't update MongoDB here, just store the data
+      console.log(`Generated package data for ${formData.trackingId}, quarter ${selectedTimePeriod}`);
+      console.log(`Package data will be sent to parent component for final submission`);
       
       // Immediately call the onGenerated callback with the package data
       console.log('Calling onGenerated with package data:', newPackageData);
@@ -727,101 +709,105 @@ const generateProtestLetter = async () => {
             }
           }}
         >
-          <DialogTitle>
-            {documentType === 'protestLetter' ? 'ERC Protest Package' : 'Form 886-A Document'}
-            <Button
-              aria-label="copy"
-              onClick={copyToClipboard}
-              sx={{ position: 'absolute', right: 16, top: 8 }}
-              startIcon={copied ? <CheckCircle color="success" /> : <ContentCopy />}
-            >
-              {copied ? 'Copied' : 'Copy'}
-            </Button>
-          </DialogTitle>
-          <DialogContent dividers sx={{ flexGrow: 1, overflow: 'auto' }}>
-            {packageData && (
-              <Box mb={3}>
-                <Alert severity="success" sx={{ mb: 2 }}>
-                  <Typography variant="subtitle1">
-                    {documentType === 'protestLetter' 
-                      ? `Complete protest package for ${selectedTimePeriod} generated successfully!` 
-                      : `Form 886-A document for ${formData.timePeriods?.join(', ') || 'selected quarters'} generated successfully!`}
-                  </Typography>
-                  <Typography variant="body2">
-                    Your package includes the {documentType === 'protestLetter' ? 'protest letter' : 'Form 886-A document'} and {packageData.attachments.length} PDF attachments 
-                    of the referenced sources. You can download the complete package below.
-                  </Typography>
-                </Alert>
-                
-                <Box display="flex" justifyContent="center" mt={2} mb={3}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<FileDownload />}
-                    onClick={downloadProtestPackage}
-                    sx={{ minWidth: 240 }}
-                  >
-                    Download Complete Package
-                  </Button>
-                </Box>
-                
-                {packageData.attachments.length > 0 && (
-                  <Box mt={3} mb={2}>
-                    <Typography variant="subtitle1" gutterBottom>
-                      Attachments Created:
-                    </Typography>
-                    <Paper variant="outlined" sx={{ p: 2 }}>
-                      <ol>
-                        {packageData.attachments.map((attachment, index) => (
-                          <li key={index}>
-                            <Typography variant="body2">
-                              {attachment.filename} 
-                              <Typography variant="caption" component="span" color="text.secondary" sx={{ ml: 1 }}>
-                                (from {attachment.originalUrl})
-                              </Typography>
-                            </Typography>
-                          </li>
-                        ))}
-                      </ol>
-                    </Paper>
+          {(
+            <>
+              <DialogTitle>
+                {documentType === 'protestLetter' ? 'ERC Protest Package' : 'Form 886-A Document'}
+                <Button
+                  aria-label="copy"
+                  onClick={copyToClipboard}
+                  sx={{ position: 'absolute', right: 16, top: 8 }}
+                  startIcon={copied ? <CheckCircle color="success" /> : <ContentCopy />}
+                >
+                  {copied ? 'Copied' : 'Copy'}
+                </Button>
+              </DialogTitle>
+              <DialogContent dividers sx={{ flexGrow: 1, overflow: 'auto' }}>
+                {packageData && (
+                  <Box mb={3}>
+                    <Alert severity="success" sx={{ mb: 2 }}>
+                      <Typography variant="subtitle1">
+                        {documentType === 'protestLetter' 
+                          ? `Complete protest package for ${selectedTimePeriod} generated successfully!` 
+                          : `Form 886-A document for ${formData.timePeriods?.join(', ') || 'selected quarters'} generated successfully!`}
+                      </Typography>
+                      <Typography variant="body2">
+                        Your package includes the {documentType === 'protestLetter' ? 'protest letter' : 'Form 886-A document'} and {packageData.attachments.length} PDF attachments 
+                        of the referenced sources. You can download the complete package below.
+                      </Typography>
+                    </Alert>
+                    
+                    <Box display="flex" justifyContent="center" mt={2} mb={3}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<FileDownload />}
+                        onClick={downloadProtestPackage}
+                        sx={{ minWidth: 240 }}
+                      >
+                        Download Complete Package
+                      </Button>
+                    </Box>
+                    
+                    {packageData.attachments.length > 0 && (
+                      <Box mt={3} mb={2}>
+                        <Typography variant="subtitle1" gutterBottom>
+                          Attachments Created:
+                        </Typography>
+                        <Paper variant="outlined" sx={{ p: 2 }}>
+                          <ol>
+                            {packageData.attachments.map((attachment, index) => (
+                              <li key={index}>
+                                <Typography variant="body2">
+                                  {attachment.filename} 
+                                  <Typography variant="caption" component="span" color="text.secondary" sx={{ ml: 1 }}>
+                                    (from {attachment.originalUrl})
+                                  </Typography>
+                                </Typography>
+                              </li>
+                            ))}
+                          </ol>
+                        </Paper>
+                      </Box>
+                    )}
                   </Box>
                 )}
-              </Box>
-            )}
-            
-            <Typography variant="subtitle1" gutterBottom>
-              {documentType === 'protestLetter' ? 'Protest Letter Preview:' : 'Form 886-A Document Preview:'}
-            </Typography>
-            <TextField
-              fullWidth
-              multiline
-              variant="outlined"
-              value={protestLetter}
-              InputProps={{
-                readOnly: true,
-                sx: { 
-                  fontFamily: 'monospace', 
-                  fontSize: '0.9rem'
-                }
-              }}
-              minRows={15}
-              maxRows={30}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={copyToClipboard} startIcon={copied ? <CheckCircle /> : <ContentCopy />}>
-              {copied ? 'Copied!' : 'Copy to Clipboard'}
-            </Button>
-            <Button 
-              onClick={downloadProtestPackage} 
-              variant="contained" 
-              color="primary"
-              startIcon={<FileDownload />}
-            >
-              Download Package
-            </Button>
-            <Button onClick={handleCloseDialog}>Close</Button>
-          </DialogActions>
+                
+                <Typography variant="subtitle1" gutterBottom>
+                  {documentType === 'protestLetter' ? 'Protest Letter Preview:' : 'Form 886-A Document Preview:'}
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  variant="outlined"
+                  value={protestLetter}
+                  InputProps={{
+                    readOnly: true,
+                    sx: { 
+                      fontFamily: 'monospace', 
+                      fontSize: '0.9rem'
+                    }
+                  }}
+                  minRows={15}
+                  maxRows={30}
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={copyToClipboard} startIcon={copied ? <CheckCircle /> : <ContentCopy />}>
+                  {copied ? 'Copied!' : 'Copy to Clipboard'}
+                </Button>
+                <Button 
+                  onClick={downloadProtestPackage} 
+                  variant="contained" 
+                  color="primary"
+                  startIcon={<FileDownload />}
+                >
+                  Download Package
+                </Button>
+                <Button onClick={handleCloseDialog}>Close</Button>
+              </DialogActions>
+            </>
+          )}
         </Dialog>
       </Paper>
     </Box>

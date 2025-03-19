@@ -1,0 +1,222 @@
+Below is the full sanitized transcript of the conversation, with all the conversation text (including any links) preserved:
+
+──────────────────────────── AVAILABILITY OF COVID‐RELATED GOVERNMENT ORDERS ────────────────────────────
+
+User:
+“Please provide all state, city, and county COVID‐related government orders, proclamations, and public health orders in place during 2020–2021 that would affect a “business” business located in Camarillo, California. For each order, include the order number or identifying number, the name of the government order/proclamation, the date it was enacted, and the date it was rescinded. If rescinded by subsequent orders, list subsequent order and dates. Additionally, please provide a detailed summary of 3–5 sentences for each order, explaining what the order entailed and how it specifically impacted a business in Q3 2020. Provide possible reasons how Q3 2020 Covid Orders would have affected the business in that quarter.”
+
+Assistant:
+“To gather the most relevant COVID‐related government orders affecting a business in Camarillo, California, during 2020–2021, I need some clarification:
+
+1. Type of Business: Are you referring to a general business, or do you have a specific industry in mind (e.g., retail, restaurant, manufacturing, service‐based)? Certain regulations varied by industry.
+
+2. Scope: Should I include federal, state (California), county (Ventura County), and city‐level (Camarillo) orders, or do you want only state and local regulations?
+
+3. Level of Detail: Do you need the full text of the orders, or just a summary with key points (such as restrictions on capacity, operational changes, or closures)?
+
+Let me know so I can refine the research accordingly!”
+
+User:
+“you figure it out”
+
+Assistant:
+“I will compile a list of all COVID‐related government orders, proclamations, and public health orders that were in effect during 2020–2021 and impacted businesses in Camarillo, California. This includes federal, state (California), county (Ventura County), and city‐level (Camarillo) regulations.
+
+For each order, I will provide:
+• The order number or identifying number
+• The name of the government order/proclamation
+• The date it was enacted and the date it was rescinded
+• If it was rescinded by a subsequent order, details of the subsequent order and its date
+• A detailed 3–5 sentence summary describing what the order entailed and how it specifically impacted a business in Q3 2020
+
+Additionally, I will analyze the potential reasons Q3 2020 COVID orders would have affected a business during that quarter. I will notify you once the research is complete.”
+
+──────────────────────────── SUMMARY OF COMPILED ORDERS ─────────────────────────────
+Below is the compiled and structured summary of the key COVID‐19 orders that affected Camarillo businesses, organized by jurisdiction. (Note: Sources are referenced inline with indicators such as [43†L106-L115] to denote the original government release line numbers and provided links.)
+
+──────────────────────────── Federal Orders ─────────────────────────────
+
+1. Proclamation 9994 – National Emergency Concerning COVID‑19  
+   • Date Enacted: March 13, 2020  
+   • Date Rescinded: Not rescinded during 2020–2021 (remained in effect and was continued by the President until a later termination by Congress in 2023)  
+   • Rescinded By: Provided a framework for subsequent state and local emergency actions  
+   • Summary: This proclamation declared a nationwide emergency due to the COVID‑19 outbreak [43†L106-L115]. It activated federal emergency powers and funding, thereby indirectly enabling the state and local lockdowns and restrictions that followed. Although it did not itself mandate business closures, it set the stage for the urgent public health actions that affected all aspects of commerce. In Q3 2020, businesses in Camarillo operated under the shadow of this ongoing national emergency, which both enabled federal stimulus support and underscored the need for local restrictions.
+
+2. CDC/FAA Mask Mandates – Federal Mask Requirements for Travel  
+   • Date Enacted: January 21, 2021 (via Executive Order 13998 for travel safety; CDC order effective February 1, 2021)  
+   • Date Rescinded: Not rescinded during 2021 (remained in effect throughout that year; later lifted in 2022 by a court order)  
+   • Rescinded By: The mask mandate for travel was terminated by a court order on April 18, 2022  
+   • Summary: While not directly causing business closures, this mandate required masks on airplanes, trains, buses, airports, and federal properties. Although it began in early 2021 and thus did not directly impact Q3 2020 businesses, it reflected the continuation of federal actions in response to COVID‑19. It highlights that after the more severe local disruptions of Q3 2020, the federal focus shifted toward enforcing public safety protocols, particularly in travel-related sectors.
+
+──────────────────────────── California State Orders ─────────────────────────────
+
+3. State of Emergency Proclamation – California COVID‑19 State of Emergency (Governor Newsom’s Proclamation)  
+   • Order Number: N/A (it is a Governor’s Proclamation)  
+   • Date Enacted: March 4, 2020 ([45†L72-L80])  
+   • Date Rescinded: Not rescinded during 2020–2021 (the state of emergency remained in effect throughout this period)  
+   • Rescinded By: Ended February 28, 2023 by a later proclamation  
+   • Summary: Governor Newsom declared a state of emergency early on in March 2020 to access additional resources and enable emergency measures. This declaration authorized subsequent measures including lockdowns and business restrictions, and provided legal grounding for state interventions. In Q3 2020, the sustained state of emergency meant that all COVID‑19 related health orders maintained their authority over business operations, justifying limits on capacity, closures, and required regulatory relief.
+
+4. Executive Order N‑33‑20 – “Stay‑at‑Home” Order  
+   • Date Enacted: March 19, 2020 ([47†L31-L39])  
+   • Date Rescinded: June 15, 2021 ([58†L1-L4]; rescinded by Executive Order N‑07‑21 issued on June 11, 2021, effective June 15, 2021)  
+   • Rescinded By: EO N‑07‑21 and other subsequent phased reopening orders  
+   • Summary: This was California’s statewide lockdown which required all individuals to stay home except for essential activities. It forced all non‑essential businesses to close or severely limit operations, allowing only essential services to function. Although by Q3 2020 the state had gradually permitted some reopenings, many Camarillo businesses operated with heavily reduced capacities due to lingering effects and modifications of this original order. Its continued strict measures in upcoming phases directly affected businesses by keeping indoor operations, such as dine‑in restaurants and retail, at limited capacity.
+
+5. State Public Health Officer Order (Stage 2 Reopening) – Modifying Stay‑at‑Home; Early Stage 2 Order  
+   • Order Date/Number: May 7, 2020 (issued as part of Executive Order N‑60‑20) ([18†L39-L47])  
+   • Date Rescinded: June 15, 2021 ([22†L407-L414])  
+   • Rescinded By: Replaced by the “Beyond Blueprint” Order effective June 15, 2021  
+   • Summary: As conditions improved in spring 2020, this order relaxed the very strict stay‑home measures to permit lower‑risk businesses to reopen with modifications. It allowed retail stores (e.g., clothing, bookstores, florists) and manufacturing in support of these sectors to operate, though higher‑risk establishments remained closed. For Camarillo businesses in Q3 2020, this order underpinned a phased reopening; many stores had reopened (often only for curbside or limited indoor service) only to face renewed restrictions later in the summer when cases surged again.
+
+6. State Public Health Officer Order (July 13, 2020) – Statewide Rollback of Reopening  
+   • Order Date: July 13, 2020 ([18†L49-L57])  
+   • Date Rescinded: Superseded on August 31, 2020 by the “Blueprint” tier framework; formally rescinded on June 15, 2021 ([22†L407-L414])  
+   • Rescinded By: The Blueprint Order (announced August 28, 2020) and later by the Beyond Blueprint Order  
+   • Summary: In response to a sharp rise in COVID‑19 cases in July 2020, the state ordered a rollback of reopenings by closing indoor operations in several sectors. This meant restaurants had to eliminate indoor dining, recreational venues and personal care services were ordered closed, and many businesses had to abruptly change operations. In Q3 2020, many Camarillo businesses—especially those in hospitality, fitness, and personal care—suffered direct losses as they had reopened in May/June only to face a second shutdown by July due to this rollback.
+
+7. “Blueprint for a Safer Economy” Framework – Color‑Tier Reopening System  
+   • Order Number: State Health Officer Order (August 28, 2020)  
+   • Date Enacted: Announced August 28, 2020 (effective August 31, 2020) ([51†L68-L76])  
+   • Date Rescinded: June 15, 2021 ([22†L407-L414])  
+   • Rescinded By: The “Beyond Blueprint” Order issued June 11, 2021  
+   • Summary: This framework replaced blanket closure orders with a graduated color‑tier system (Purple, Red, Orange, Yellow) that tied allowable business operations to local COVID‑19 metrics. Ventura County (which includes Camarillo) was placed in the most restrictive tier (Purple) at first, meaning that most indoor operations were limited to outdoor or take‑out service. While it offered the promise of a phased reopening, during Q3 2020 most Camarillo businesses remained heavily restricted as the county largely stayed in the higher‑risk tiers until conditions improved toward the very end of the quarter.
+
+8. Regional Stay‑at‑Home Order – ICU Capacity Triggered Shutdown  
+   • Order Date: December 3, 2020 (announced; effective regionally December 6, 2020) ([59†L55-L63], [59†L75-L83])  
+   • Date Rescinded: January 25, 2021 ([54†L355-L363])  
+   • Rescinded By: Lifting of the Regional Stay‑at‑Home Order statewide after ICU projections improved in January 2021  
+   • Summary: Although this order was issued in December 2020, it underscored the severity of the pandemic by mandating comprehensive shutdowns if regional hospital ICU capacity fell below 15%. While Q3 2020 was not directly under this order, the prospect of such a strict “emergency brake” was looming—especially for travel‐related and hospitality businesses in the region—underscoring the tenuous nature of the reopening period during late summer 2020.
+
+9. “Beyond the Blueprint” Reopening Order  
+   • Order Number: Executive Order N‑07‑21 / State Health Officer Order  
+   • Date Enacted: June 11, 2021 (effective June 15, 2021) ([20†L63-L70] and [22†L407-L414])  
+   • Date Rescinded: This order itself ended the prior restrictions; once in effect, it rescinded the Stay‑at‑Home and Blueprint orders  
+   • Summary: These orders marked a full reopening of California by terminating the earlier pandemic restrictions such as the March 2020 Stay‑at‑Home Order and the Blueprint tier system. While these measures provided significant relief later in 2021, they also highlight that throughout Q3 2020, businesses in Camarillo had to work under strict rules. The delayed full reopening meant that Q3 2020 saw many operations constrained, which directly affected business revenue and capacity.
+
+──────────────────────────── Ventura County Orders ─────────────────────────────
+
+10. Ventura County Local Health Emergency – Declaration  
+    • Order/Proclamation Date: March 12, 2020 ([38†L19-L27])  
+    • Date Rescinded: Not rescinded during 2020–2021 (remained active; officially ended in 2022)  
+    • Rescinded By: A later Board of Supervisors resolution (post-2021)  
+    • Summary: Ventura County’s Health Officer declared a local health emergency on March 12, 2020, which provided the legal authority to issue and enforce subsequent health orders. Although the declaration did not by itself impose restrictions, it laid the groundwork for later and stricter orders that directly affected business operations. In Q3 2020, this status allowed the county to maintain and enforce safety orders that kept many local businesses either closed or with reduced operations.
+
+11. Ventura County Public Health Order (March 17, 2020) – Early Local Closures and Gathering Restrictions  
+    • Order Date: March 17, 2020 ([61†L78-L83])  
+    • Date Rescinded: Superseded by a more comprehensive “Stay Well at Home” order on March 20, 2020  
+    • Rescinded By: Ventura County’s Stay Well at Home order issued March 20, 2020 ([61†L95-L102])  
+    • Summary: This early order directed vulnerable residents to shelter in place and mandated the closure of certain businesses and public facilities. It included restrictions on bars, nightclubs, gyms, and movie theaters even before the state’s full mandate. Although its provisions were later incorporated into broader orders, it set an early precedent in Ventura County for strict measures that continued to affect local businesses in later months.
+
+12. “Stay Well at Home” Order (Ventura County) – Countywide Lockdown  
+    • Order Date: March 20, 2020 ([61†L95-L102])  
+    • Date Rescinded: June 11, 2021 (formally lifted when county restrictions aligned with state reopenings, per updates on June 15, 2021)  
+    • Rescinded By: Ventura County Health Officer’s order ending local stay-at-home directives  
+    • Summary: This order required all Ventura County residents to remain at home except for essential activities, effectively forcing non-essential businesses to cease in-person operations. It directly resulted in most Camarillo businesses closing their doors or transitioning to limited service models. Even as some operations gradually resumed later in the year, the lingering framework of this order continued to restrict business activities in Q3 2020.
+
+13. Ventura County Public Health Order Updates (March–April 2020) – Extensions and Social Distancing Protocols  
+    • Order Dates:  
+  – March 31, 2020: Extended the stay-home order (extension to April 19, 2020) ([6†L73-L77])  
+  – April 9, 2020: Added a ban on gatherings and mandated safety protocols (social distancing, posting safety plans) ([13†L39-L47] and [13†L49-L57])  
+  – April 20, 2020: Further extended the stay-home order through May 15, 2020  
+    • Date Rescinded: Superseded by a “Safely Reopening” order issued May 7, 2020  
+    • Rescinded By: Ventura County Health Officer’s order on May 7, 2020 which aligned with the state’s roadmap  
+    • Summary: These successive updates reinforced the county’s commitment to aggressive COVID‑19 mitigation, gradually extending and tightening restrictions. They required businesses that remained open to enforce strict social distancing and safety protocols. Though not active in Q3 2020 per se, the policies set in place at that time carried forward into the reopening phases, meaning that businesses that reopened in Q3 were still required to maintain these precautionary measures.
+
+14. “Safely Reopening Ventura County” Order – Stage 2 of County Reopening  
+    • Order Dates: May 7, 2020 (initial) and May 20, 2020 (amendment) ([6†L64-L72] and [29†L437-L445])  
+    • Date Rescinded: Superseded by the state Blueprint order on August 31, 2020 and eventual statewide reopening on June 15, 2021  
+    • Rescinded By: Ventura County’s update aligning with the state Blueprint Tier 1 and later orders  
+    • Summary: With an aim toward economic recovery, this order allowed select lower-risk businesses to reopen under strict safety conditions. It permitted retail with curbside pickup and eventually even dine‑in service for restaurants under strict rules. For Camarillo, these orders meant that by late spring and early summer 2020, many businesses reopened at reduced capacity; however, many later faced renewed closures during the Q3 surge.
+
+15. Ventura County 4th of July Closure Order – Temporary Beach Closure  
+    • Order Date: June 30, 2020 (for the July 3–5 weekend) ([39†L5-L12])  
+    • Date Rescinded: Automatically expired on July 6, 2020  
+    • Rescinded By: The order was limited to the Independence Day weekend  
+    • Summary: Anticipating the risk of large gatherings during the holiday weekend amid rising cases, the county ordered the closure of beaches and restricted parking in beach areas. This temporarily reduced tourism and visitor-driven revenue for adjacent businesses, even though Camarillo itself is inland. The preemptive measure reflected the ongoing caution enforced by local officials, indirectly affecting a broader area’s economic activity during Q3 2020.
+
+16. Ventura County July 2020 Order – Local Implementation of State Rollback  
+    • Order Date: July 13, 2020 (effective July 14, 2020) ([9†L31-L39])  
+    • Date Rescinded: Partially rescinded on October 6, 2020 as the county moved to a lower tier (Red tier)  
+    • Rescinded By: Ventura County Health Officer’s October 6, 2020 order  
+    • Summary: Following the state’s July rollback, Ventura County issued a local order to enforce closures of indoor operations for gyms, places of worship, personal care services, and other sectors. This order had a severe impact on Camarillo businesses that had re-opened earlier in the summer, forcing many of them to abruptly return to restrictive operating conditions. The enforced closure during the middle of Q3 led to significant revenue losses for affected sectors.
+
+17. Ventura County “Red Tier” Reopening Order – Fall 2020 Easing  
+    • Order Date: October 6, 2020 ([9†L13-L21] and [9†L31-L39])  
+    • Date Rescinded: Effectively superseded in January 2021 through later regional orders and finally by statewide reopening in June 2021  
+    • Rescinded By: Ventura County’s subsequent orders once the COVID‑19 situation improved  
+    • Summary: With a fall improvement in COVID‑19 metrics, Ventura County moved to the Red tier, easing restrictions and allowing many indoor operations to resume at limited capacity. Though this easing came just after Q3, it reflected the conditions at the tail end of Q3 when businesses were hopeful for a sustained recovery. Nonetheless, it also underscored that during most of Q3 2020, businesses operated under much stricter conditions, and this change only provided relief very late in the quarter.
+
+18. Ventura County Eviction Moratorium – Temporary Ban on Evictions  
+    • Order/Ordinance Number: Urgency Ordinance No. 4563 (and subsequent extensions)  
+    • Date Enacted: Initially April 22, 2020 (retroactive to March 2020; first passed March 31, 2020) ([6†L66-L72] and [66†L144-L150])  
+    • Date Rescinded: For commercial evictions, protections continued through September 30, 2020; for residential, later replaced by California AB 3088 (effective August 31, 2020)  
+    • Rescinded By: The California COVID‑19 Tenant Relief Act (AB 3088) for residential, and by the county’s own schedule for commercial evictions  
+    • Summary: To help both residents and small businesses cope with lost revenues, Ventura County enacted a moratorium on evictions on both residential and commercial properties. This gave local Camarillo businesses some relief by protecting them against immediate eviction if they fell behind on rent due to COVID‑19 disruptions. Although only a deferral (not a cancellation) of rent obligations, this measure helped mitigate the immediate risk of losing business premises during the economically disruptive Q3 2020 period.
+
+──────────────────────────── City of Camarillo Orders ─────────────────────────────
+
+19. Local Emergency Proclamation (Camarillo) – City Declaration of Emergency  
+    • Order Number: EOC Director Order No. 20‑1 (Emergency Proclamation)  
+    • Date Enacted: March 13, 2020 ([38†L29-L37])  
+    • Date Rescinded: Not rescinded during 2020–2021 (remained in effect into 2021; formally ended in 2022)  
+    • Rescinded By: A later Camarillo City Council resolution (post-2021)  
+    • Summary: On March 13, 2020, Camarillo declared a local emergency, which activated the Emergency Operations Center and allowed rapid adoption of restrictive measures. The declaration led to the closure of city facilities and cancellation of public events, directly impacting local economic activities and the support structure for businesses. Throughout Q3 2020, the continued local emergency enabled the city to enforce policies related to public safety and business operations.
+
+20. Camarillo Eviction Moratorium Orders – Citywide Ban on Evictions  
+    • Order Numbers: EOC Director Order No. 20‑2 (initial, March 18, 2020) and its amendment on April 23, 2020 ([35†L218-L222])  
+    • Date Enacted: March 18, 2020 (with amendment on April 23, 2020)  
+    • Date Rescinded: Superseded for residential tenants by California AB 3088 on August 31, 2020; commercial provisions expired with the local emergency  
+    • Rescinded By: The state’s Tenant Relief Act and, eventually, by termination of the local emergency declaration  
+    • Summary: To protect tenants during the pandemic, Camarillo issued orders that halted evictions for both residents and local businesses unable to pay rent due to COVID‑19 hardships. This provided crucial relief for small business owners who risked losing their premises when income plummeted during shut‑downs and capacity restrictions in Q3 2020. Although these measures only postponed rent and eviction proceedings, they enabled many businesses to survive the worst of the crisis.
+
+21. Camarillo Resolution No. 2020‑63 – Temporary Outdoor Dining Program  
+    • Date Enacted: June 10, 2020 (approximately)  
+    • Date Rescinded: Expired when full indoor dining resumed (effectively June 15, 2021, tied to the local emergency period)  
+    • Rescinded By: Automatic sunset as the city’s COVID‑19 restrictions were lifted and normal zoning rules reinstated  
+    • Summary: Recognizing that indoor dining was heavily restricted, the City of Camarillo allowed restaurants to set up temporary outdoor dining areas. This resolution waived certain zoning requirements and fees so that local eateries could expand seating outdoors safely. In Q3 2020, especially after July when indoor dining was again restricted, this measure enabled restaurants to continue operating at a reduced capacity, thereby supporting local business survival despite ongoing COVID‑19 constraints.
+
+22. Miscellaneous City Measures – Additional Local Actions  
+    • Dates: Various throughout 2020 (spring through summer)  
+    • Summary: In addition to the major orders above, Camarillo took several other supportive steps during COVID‑19. These included suspending late fees for business taxes, moving permitting processes online to reduce in‑person interactions, and promoting take‑out and outdoor service options. Such measures, although not formal “orders,” directly affected local businesses by easing operational burdens and helping mitigate revenue losses during Q3 2020.
+
+──────────────────────────── FINAL THOUGHTS ─────────────────────────────
+Throughout Q3 2020, businesses in Camarillo, California, struggled under a layered regulatory framework. Federal actions set an overarching emergency context, while state orders imposed blanket stay‑at‑home measures and later introduced a tier‑based reopening plan. Ventura County’s aggressive local orders frequently mandated rolling closures and capacity limits, and the City of Camarillo added its own targeted measures such as eviction moratoria and support for outdoor dining. Together, these orders enforced a patchwork of restrictions and relief initiatives—each intended to slow the spread of COVID‑19 while trying to mitigate economic impact. For many local businesses, the result was a continuous cycle of closures and partial reopenings, reduced customer capacity, and increased operational challenges during Q3 2020.
+
+──────────────────────────── LINKS (AS INCLUDED IN THE ORIGINAL TRANSCRIPT) ─────────────────────────────
+• Federal Proclamation Notice (National Emergency):  
+  https://bidenwhitehouse.archives.gov/briefing-room/presidential-actions/2021/02/24/notice-on-the-continuation-of-the-national-emergency-concerning-the-coronavirus-disease-2019-covid-19-pandemic/#:~:text=On%20March%2013%2C%202020%2C%20by,and%20safety%20of%20the%20Nation
+
+• California State Emergency Proclamation by Governor Newsom:  
+  https://www.gov.ca.gov/2020/03/04/governor-newsom-declares-state-of-emergency-to-help-state-prepare-for-broader-spread-of-covid-19/#:~:text=SACRAMENTO%20%E2%80%93%20As%20part%20of,19%20death
+
+• California Stay‑at‑Home Order (Executive Order N‑33‑20):  
+  https://www.gov.ca.gov/wp-content/uploads/2020/03/3.19.20-attested-EO-N-33-20-COVID-19-HEALTH-ORDER.pdf#:~:text=March%2019%2C%202020%20To%20protect,may%20designate%20additional%20sectors%20as
+
+• California “Beyond the Blueprint” Order (EO N‑07‑21):  
+  https://www.gov.ca.gov/wp-content/uploads/2021/06/6.11.21-EO-N-07-21-signed.pdf#:~:text=1%29%20Executive%20Order%20N,based%20framework%20for%20reopening%20the
+
+• Blueprint for a Safer Economy Framework:  
+  https://www.gov.ca.gov/2020/08/28/governor-newsom-unveils-blueprint-for-a-safer-economy-a-statewide-stringent-and-slow-plan-for-living-with-covid-19/#:~:text=SACRAMENTO%20%E2%80%93%20Governor%20Gavin%20Newsom,the%20trajectory%20of%20the%20disease  
+  (Additional explanation and details are provided on the site.)
+
+• Ventura County Public Health Orders and “Stay Well at Home” orders:  
+  Various orders and updates can be referenced via Ventura County official publications (e.g., orders dated March 17, March 20, March 31, April 9, and April 20, 2020). For example:  
+  https://aagla.org/wp-content/uploads/2020/06/extension-or-the-ordinance.pdf#:~:text=7,101040%2C%20101085%20and%20120175%20directing
+
+• Ventura County “Red Tier” Order and related reopening documentation:  
+  https://vcportal.ventura.org/CEO/VCNC/VC_Public_Health_Officer_Order_10-06-2020.pdf#:~:text=one%20based%20on%20a%20monitoring,that%20the%20current%20public%20health
+
+• Camarillo City emergency proclamations and supporting measures:  
+  For example, Camarillo’s Local Emergency Proclamation details can be found on Camarillo Health Care District’s website:  
+  https://www.camhealth.com/city-of-camarillo-past-press-releases#:~:text=Camarillo%2C%20California%20%E2%80%93%20Camarillo%20City,be%20available%20by%20appointment%20only
+
+  And the Temporary Outdoor Dining Program resolution is archived here:  
+  https://cms7files.revize.com/camarilloca/Departments/Community%20Development/Applications/Reso%202020-63.pdf#:~:text=RESOLUTION%20NO.%202020,19
+
+• Additional local and regional orders regarding eviction moratoria and other measures are available through local governmental and association websites (e.g., the Apartment Association of Greater Los Angeles):  
+  https://members.aagla.org/news/temporary-eviction-moratoriums--novel-coronavirus-covid-19#:~:text=Temporary%20Eviction%20Moratoriums
+
+──────────────────────────── END OF CONVERSATION ─────────────────────────────
+
+This is the complete, cleaned transcript of the discussion regarding COVID‑19 government orders and their business impact on Camarillo, California, with all details and embedded links preserved.

@@ -1,0 +1,61 @@
+3/19/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 00-0000000  
+Taxpayer Name: 45's Business  
+RE: Formal Protest to ERC Disallowance for Quarter 1 2021  
+Tax Period: Quarter 1 2021 (202101)  
+Claim Amount: [Not Provided]  
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing 45's Business’s Employee Retention Credit (ERC) claim for Quarter 1 2021. The notice asserts that no government orders were in effect during the period that would have caused a suspension or significant limitation of our operations. We respectfully dispute this assertion. Multiple COVID‑19 related government orders were active during Quarter 1 2021, creating operational restrictions that materially impacted 45's Business. In addition, our audited revenue decline data for Quarter 1 2021 clearly demonstrates a severe downturn in revenue compared to pre‑pandemic quarters. In this letter, we provide a detailed timeline of the relevant government orders using the required format and include a comprehensive presentation of our audit‑critical revenue decline data.
+
+Below is a chronological timeline of key COVID‑19 government orders that were in effect during Quarter 1 2021:
+
+•  
+Order Name: National Emergency Concerning COVID‑19  
+Order Number: N/A  
+Date Enacted: 03/13/2020  
+Date Rescinded: Still in effect  
+Order Summary: This proclamation declared a nationwide emergency due to the COVID‑19 outbreak. It activated federal emergency powers and funding, thereby indirectly enabling the state and local lockdowns and restrictions that followed.  
+Impact on Quarter: In Q1 2021, this order provided the overarching federal mandate that underpinned continued COVID‑19 restrictions, affecting our business operations by maintaining a high-alert public health environment.
+
+•  
+Order Name: CDC/FAA Mask Mandates – Federal Mask Requirements for Travel  
+Order Number: N/A  
+Date Enacted: 01/21/2021  
+Date Rescinded: Still in effect  
+Order Summary: This order mandated that masks be worn on airplanes, trains, buses, airports, and federal properties to ensure travel safety and promote public health. It was issued as part of the federal government’s efforts to reduce the spread of COVID‑19.  
+Impact on Quarter: During Q1 2021, this mandate influenced business travel and internal operations by enforcing mask requirements, thereby contributing to the operational challenges faced by 45's Business.
+
+•  
+Order Name: Executive Order N‑33‑20 – “Stay‑at‑Home” Order  
+Order Number: N‑33‑20  
+Date Enacted: 03/19/2020  
+Date Rescinded: 06/15/2021  
+Order Summary: This order required all individuals to remain at home except for essential activities, forcing non‑essential businesses to close or severely restrict operations. It provided the legal authority for numerous COVID‑19 restrictions and significantly curtailed normal economic activities.  
+Impact on Quarter: In Quarter 1 2021, although gradual reopenings had begun, substantial portions of this order remained in effect, directly limiting the operational capacity of 45's Business and contributing to the revenue decline we experienced.
+
+REVENUE DECLINE DATA  
+This section provides a detailed analysis of the revenue decline experienced by 45's Business, presented in exact figures as audited, which form the basis of our ERC qualification. The enclosed data shows that severe declines in revenue occurred during multiple quarters due to the operational restrictions imposed by COVID‑19 related government orders.
+
+In Quarter 1 2021, 45's Business generated EXACTLY $345 in revenue. When compared to Quarter 1 2019, where revenue was EXACTLY $54325234, this represents an EXACT decline of $54324889 and an EXACT percentage decline of 100.00%. Based on revenue decline thresholds for 2021, this substantial drop qualifies 45's Business for the ERC.
+
+• Q2 2021: EXACTLY $345 compared to Q2 2019: EXACTLY $3552452345 = EXACTLY 100.00% decline (Qualifies for ERC)  
+• Q3 2021: EXACTLY $345 compared to Q3 2019: EXACTLY $3245345 = EXACTLY 99.99% decline (Qualifies for ERC)
+
+In conclusion, the significant revenue reductions evidenced above are directly linked to the operational constraints imposed by COVID‑19 related government orders. These orders not only curtailed normal business activities but also forced 45's Business to operate under unprecedented limitations, thereby meeting the ERC qualification criteria.
+
+We respectfully request that the IRS reconsider and reverse the disallowance of our ERC claim for Quarter 1 2021. We have enclosed copies of the government orders and our detailed revenue analyses for your review. Should you require any additional information or clarification regarding this protest, please do not hesitate to contact us.
+
+Attestation: “Under penalties of perjury, I declare that I submitted the protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated in the protest and accompanying documents is true, correct, and complete.”
+
+Sincerely,
+
+[Signature]  
+Authorized Representative  
+45's Business  
+
+Enclosures: Copies of Government Orders; Detailed Revenue Decline Data; Supporting Documentation for ERC Qualification
