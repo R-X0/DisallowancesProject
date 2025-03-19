@@ -231,6 +231,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [documentType, setDocumentType] = useState('protestLetter'); // State for toggling document type
   const [selectedTimePeriod, setSelectedTimePeriod] = useState(''); // For selecting which period to focus on for protest letter
   const [approachFocus, setApproachFocus] = useState('governmentOrders'); // Default approach
+  const [mongoDbUpdated, setMongoDbUpdated] = useState(false); // Flag to track if MongoDB has been updated
 
   // Initialize selected time period when form data changes
   useEffect(() => {
@@ -249,203 +250,221 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   // Handle time period selection change
   const handleTimePeriodChange = (event) => {
     setSelectedTimePeriod(event.target.value);
+    // Reset MongoDB update flag when time period changes
+    setMongoDbUpdated(false);
   };
 
-// Function to update MongoDB with letter data with retry capability
-const updateMongoDBWithLetterData = async (trackingId, quarter, zipPath, retryCount = 3) => {
-  if (!trackingId || !quarter || !zipPath) {
-    console.log('Missing required data for MongoDB update:', { trackingId, quarter, zipPath });
-    return { success: false, message: 'Missing required data' };
-  }
-  
-  // Keep track of attempts
-  let currentAttempt = 0;
-  let lastError = null;
-  
-  while (currentAttempt < retryCount) {
-    currentAttempt++;
-    try {
-      console.log(`Updating MongoDB for tracking ID: ${trackingId}, quarter: ${quarter} (attempt ${currentAttempt}/${retryCount})`);
-      console.log(`ZIP path: ${zipPath}`);
-      
-      const response = await fetch('/api/mongodb-queue/update-processed-quarters', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          submissionId: trackingId,
-          quarter: quarter,
-          zipPath: zipPath
-        })
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Error updating MongoDB: ${response.status} - ${response.statusText} - ${errorText}`);
-        lastError = new Error(`Server responded with ${response.status}: ${errorText}`);
+  // Function to update MongoDB with letter data with retry capability
+  // This function is now centralized and will ONLY be called once for a given letter generation
+  const updateMongoDBWithLetterData = async (trackingId, quarter, zipPath, retryCount = 3) => {
+    // Check if we've already successfully updated MongoDB for this data
+    if (mongoDbUpdated) {
+      console.log('MongoDB already updated for this quarter, skipping duplicate update');
+      return { success: true, message: 'Already updated' };
+    }
+    
+    if (!trackingId || !quarter || !zipPath) {
+      console.log('Missing required data for MongoDB update:', { trackingId, quarter, zipPath });
+      return { success: false, message: 'Missing required data' };
+    }
+    
+    // Keep track of attempts
+    let currentAttempt = 0;
+    let lastError = null;
+    
+    while (currentAttempt < retryCount) {
+      currentAttempt++;
+      try {
+        console.log(`Updating MongoDB for tracking ID: ${trackingId}, quarter: ${quarter} (attempt ${currentAttempt}/${retryCount})`);
+        console.log(`ZIP path: ${zipPath}`);
+        
+        const response = await fetch('/api/mongodb-queue/update-processed-quarters', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            submissionId: trackingId,
+            quarter: quarter,
+            zipPath: zipPath
+          })
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Error updating MongoDB: ${response.status} - ${response.statusText} - ${errorText}`);
+          lastError = new Error(`Server responded with ${response.status}: ${errorText}`);
+          
+          // Wait before retry (exponential backoff)
+          if (currentAttempt < retryCount) {
+            const delay = Math.pow(2, currentAttempt) * 500; // 1s, 2s, 4s
+            console.log(`Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+          throw lastError;
+        }
+        
+        const result = await response.json();
+        console.log('MongoDB update successful:', result);
+        
+        // Mark as updated so we don't do it again
+        setMongoDbUpdated(true);
+        
+        // Force refresh of the queue display immediately
+        try {
+          const refreshResponse = await fetch('/api/mongodb-queue?refresh=true');
+          console.log('Queue refresh after update:', refreshResponse.ok ? 'success' : 'failed');
+        } catch (refreshError) {
+          console.warn('Non-critical error refreshing queue:', refreshError);
+        }
+        
+        return result;
+      } catch (error) {
+        console.error(`Error updating MongoDB (attempt ${currentAttempt}/${retryCount}):`, error);
+        lastError = error;
         
         // Wait before retry (exponential backoff)
         if (currentAttempt < retryCount) {
           const delay = Math.pow(2, currentAttempt) * 500; // 1s, 2s, 4s
           console.log(`Retrying in ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
-          continue;
         }
-        throw lastError;
-      }
-      
-      const result = await response.json();
-      console.log('MongoDB update successful:', result);
-      
-      // Force refresh of the queue display immediately
-      try {
-        const refreshResponse = await fetch('/api/mongodb-queue?refresh=true');
-        console.log('Queue refresh after update:', refreshResponse.ok ? 'success' : 'failed');
-      } catch (refreshError) {
-        console.warn('Non-critical error refreshing queue:', refreshError);
-      }
-      
-      return result;
-    } catch (error) {
-      console.error(`Error updating MongoDB (attempt ${currentAttempt}/${retryCount}):`, error);
-      lastError = error;
-      
-      // Wait before retry (exponential backoff)
-      if (currentAttempt < retryCount) {
-        const delay = Math.pow(2, currentAttempt) * 500; // 1s, 2s, 4s
-        console.log(`Retrying in ${delay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
-  }
-  
-  // If we get here, all retries failed
-  return { success: false, error: lastError?.message || 'Unknown error after multiple retries' };
-};
+    
+    // If we get here, all retries failed
+    return { success: false, error: lastError?.message || 'Unknown error after multiple retries' };
+  };
 
-// Update the generateProtestLetter function with the fix
-const generateProtestLetter = async () => {
-  setGenerating(true);
-  setError(null);
-  setProcessing(true);
-  setProcessingStep(0);
-  setPackageData(null);
-  
-  try {
-    // Get business type based on NAICS code
-    const businessType = getNaicsDescription(formData.naicsCode);
+  // Update the generateProtestLetter function with the fix
+  const generateProtestLetter = async () => {
+    setGenerating(true);
+    setError(null);
+    setProcessing(true);
+    setProcessingStep(0);
+    setPackageData(null);
     
-    // Get all selected time periods for context
-    const allTimePeriods = formData.timePeriods ? formData.timePeriods : [formData.timePeriod];
-    const timePeriodsText = allTimePeriods.join(', ');
-    
-    // For protest letters, use the selected time period
-    // For Form 886-A, use all time periods
-    const timePeriodToUse = documentType === 'protestLetter' ? 
-      selectedTimePeriod : 
-      timePeriodsText;
-    
-    // Log the exact time period format being used
-    console.log(`Using time period in exact format: "${timePeriodToUse}"`);
-    
-    // Calculate revenue declines and determine approach
-    const revenueDeclines = calculateRevenueDeclines(formData);
-    const qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
-    
-    // CONFIRM we're using the correct approach - re-check right before API call
-    const currentApproach = determineUserApproach(formData);
-    console.log("Final approach check before API call:", currentApproach);
-    
-    // Prepare data for API call
-    const letterData = {
-      businessName: formData.businessName,
-      ein: formData.ein,
-      location: formData.location,
-      timePeriod: timePeriodToUse,
-      allTimePeriods: allTimePeriods,
-      chatGptLink: chatGptLink,
-      businessType: businessType,
-      trackingId: formData.trackingId || '',
-      documentType: documentType,
-      // Include all quarterly revenue data
-      q1_2019: formData.q1_2019 || '',
-      q2_2019: formData.q2_2019 || '',
-      q3_2019: formData.q3_2019 || '',
-      q4_2019: formData.q4_2019 || '',
-      q1_2020: formData.q1_2020 || '',
-      q2_2020: formData.q2_2020 || '',
-      q3_2020: formData.q3_2020 || '',
-      q4_2020: formData.q4_2020 || '',
-      q1_2021: formData.q1_2021 || '',
-      q2_2021: formData.q2_2021 || '',
-      q3_2021: formData.q3_2021 || '',
-      // Include additional context
-      revenueReductionInfo: formData.revenueReductionInfo || '',
-      governmentOrdersInfo: formData.governmentOrdersInfo || '',
-      // Pass revenue decline metadata
-      revenueDeclines: revenueDeclines,
-      qualifyingQuarters: qualifyingQuarters,
-      approachFocus: currentApproach // Use the confirmed approach
-    };
-    
-    // Set processing message and update step
-    setProcessingMessage("Contacting server to generate document...");
-    setProcessingStep(1);
-    
-    // Make API call to generate the protest letter
-    console.log('Making API call to generate protest letter...');
-    const response = await generateERCProtestLetter(letterData);
-    console.log('Received API response:', response);
-    
-    // Update processing status
-    setProcessingMessage("Document generated, processing attachments...");
-    setProcessingStep(3);
-    
-    if (response.success) {
-      setProtestLetter(response.letter);
+    try {
+      // Get business type based on NAICS code
+      const businessType = getNaicsDescription(formData.naicsCode);
       
-      // Create package data object
-      const newPackageData = {
-        pdfPath: response.pdfPath,
-        zipPath: response.zipPath,
-        attachments: response.attachments || [],
-        packageFilename: response.packageFilename || 'complete_package.zip'
+      // Get all selected time periods for context
+      const allTimePeriods = formData.timePeriods ? formData.timePeriods : [formData.timePeriod];
+      const timePeriodsText = allTimePeriods.join(', ');
+      
+      // For protest letters, use the selected time period
+      // For Form 886-A, use all time periods
+      const timePeriodToUse = documentType === 'protestLetter' ? 
+        selectedTimePeriod : 
+        timePeriodsText;
+      
+      // Log the exact time period format being used
+      console.log(`Using time period in exact format: "${timePeriodToUse}"`);
+      
+      // Calculate revenue declines and determine approach
+      const revenueDeclines = calculateRevenueDeclines(formData);
+      const qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
+      
+      // CONFIRM we're using the correct approach - re-check right before API call
+      const currentApproach = determineUserApproach(formData);
+      console.log("Final approach check before API call:", currentApproach);
+      
+      // Prepare data for API call
+      const letterData = {
+        businessName: formData.businessName,
+        ein: formData.ein,
+        location: formData.location,
+        timePeriod: timePeriodToUse,
+        allTimePeriods: allTimePeriods,
+        chatGptLink: chatGptLink,
+        businessType: businessType,
+        trackingId: formData.trackingId || '',
+        documentType: documentType,
+        // Include all quarterly revenue data
+        q1_2019: formData.q1_2019 || '',
+        q2_2019: formData.q2_2019 || '',
+        q3_2019: formData.q3_2019 || '',
+        q4_2019: formData.q4_2019 || '',
+        q1_2020: formData.q1_2020 || '',
+        q2_2020: formData.q2_2020 || '',
+        q3_2020: formData.q3_2020 || '',
+        q4_2020: formData.q4_2020 || '',
+        q1_2021: formData.q1_2021 || '',
+        q2_2021: formData.q2_2021 || '',
+        q3_2021: formData.q3_2021 || '',
+        // Include additional context
+        revenueReductionInfo: formData.revenueReductionInfo || '',
+        governmentOrdersInfo: formData.governmentOrdersInfo || '',
+        // Pass revenue decline metadata
+        revenueDeclines: revenueDeclines,
+        qualifyingQuarters: qualifyingQuarters,
+        approachFocus: currentApproach // Use the confirmed approach
       };
       
-      console.log('Setting package data:', newPackageData);
-      setPackageData(newPackageData);
+      // Set processing message and update step
+      setProcessingMessage("Contacting server to generate document...");
+      setProcessingStep(1);
       
-      // Update processing status - MODIFIED: don't update MongoDB here
-      setProcessingMessage("Finalizing document package...");
-      setProcessingStep(4);
+      // Make API call to generate the protest letter
+      console.log('Making API call to generate protest letter...');
+      const response = await generateERCProtestLetter(letterData);
+      console.log('Received API response:', response);
       
-      // IMPORTANT CHANGE: Don't update MongoDB here, just store the data
-      console.log(`Generated package data for ${formData.trackingId}, quarter ${selectedTimePeriod}`);
-      console.log(`Package data will be sent to parent component for final submission`);
+      // Update processing status
+      setProcessingMessage("Document generated, processing attachments...");
+      setProcessingStep(3);
       
-      // Immediately call the onGenerated callback with the package data
-      console.log('Calling onGenerated with package data:', newPackageData);
-      if (onGenerated) {
-        onGenerated(newPackageData);
+      if (response.success) {
+        setProtestLetter(response.letter);
+        
+        // Create package data object
+        const newPackageData = {
+          pdfPath: response.pdfPath,
+          zipPath: response.zipPath,
+          attachments: response.attachments || [],
+          packageFilename: response.packageFilename || 'complete_package.zip'
+        };
+        
+        console.log('Setting package data:', newPackageData);
+        setPackageData(newPackageData);
+        
+        // Update processing status
+        setProcessingMessage("Finalizing document package...");
+        setProcessingStep(4);
+        
+        // IMPORTANT CHANGE: Update MongoDB once with zip path
+        if (formData.trackingId && selectedTimePeriod && newPackageData.zipPath) {
+          setProcessingMessage("Updating database with document package...");
+          await updateMongoDBWithLetterData(
+            formData.trackingId,
+            selectedTimePeriod,
+            newPackageData.zipPath
+          );
+        }
+        
+        // Immediately call the onGenerated callback with the package data
+        console.log('Calling onGenerated with package data:', newPackageData);
+        if (onGenerated) {
+          onGenerated(newPackageData);
+        }
+        
+        // Complete processing and show dialog
+        setProcessingMessage("Document package complete!");
+        setProcessingStep(5);
+        setDialogOpen(true);
+        setProcessing(false);
+      } else {
+        throw new Error(response.message || 'Failed to generate document');
       }
-      
-      // Complete processing and show dialog
-      setProcessingMessage("Document package complete!");
-      setProcessingStep(5);
-      setDialogOpen(true);
+    } catch (error) {
+      console.error('Error generating document:', error);
       setProcessing(false);
-    } else {
-      throw new Error(response.message || 'Failed to generate document');
+      setError(`Failed to generate document: ${error.message}`);
+    } finally {
+      setGenerating(false);
     }
-  } catch (error) {
-    console.error('Error generating document:', error);
-    setProcessing(false);
-    setError(`Failed to generate document: ${error.message}`);
-  } finally {
-    setGenerating(false);
-  }
-};
+  };
   
   const copyToClipboard = () => {
     navigator.clipboard.writeText(protestLetter)
@@ -459,33 +478,11 @@ const generateProtestLetter = async () => {
   };
   
   const handleCloseDialog = () => {
-    // Before closing dialog, make sure MongoDB is updated with the latest ZIP data
-    if (packageData && packageData.zipPath && (formData.trackingId || formData.submissionId)) {
-      const trackingId = formData.trackingId || formData.submissionId;
-      console.log(`Ensuring MongoDB is updated with ZIP on dialog close for ${trackingId}`);
-      updateMongoDBWithLetterData(trackingId, selectedTimePeriod, packageData.zipPath)
-        .then(result => {
-          console.log("MongoDB update on dialog close:", result);
-        })
-        .catch(err => {
-          console.error("Error updating MongoDB on dialog close:", err);
-        });
-    }
-
-    // Make sure we're still calling onGenerated with the package data when closing the dialog
+    // Dialog close doesn't need to update MongoDB anymore - it's done once after generation
+    // Just make sure we still call onGenerated
     if (packageData && onGenerated) {
-      console.log("Sending package data to parent on dialog close:", packageData);
+      console.log("Ensuring parent has package data on dialog close:", packageData);
       onGenerated(packageData);
-    }
-    
-    // Force a refresh of the queue display
-    try {
-      console.log("Forcing queue refresh after letter generation");
-      fetch('/api/mongodb-queue?refresh=true')
-        .then(response => console.log("Queue refresh status:", response.ok ? "success" : "failed"))
-        .catch(err => console.error("Error during queue refresh:", err));
-    } catch (refreshError) {
-      console.error("Failed to refresh queue:", refreshError);
     }
     
     setDialogOpen(false);
@@ -500,33 +497,10 @@ const generateProtestLetter = async () => {
     );
   };
 
-  // Also modify the downloadProtestPackage function to ensure updates happen BEFORE the download starts
-  const downloadProtestPackage = async () => {
+  // Simplified downloadProtestPackage - no redundant MongoDB updates
+  const downloadProtestPackage = () => {
     if (packageData && packageData.zipPath) {
       console.log("Downloading protest package with path:", packageData.zipPath);
-      
-      // Before downloading, make sure MongoDB is updated with the ZIP path
-      if (formData.trackingId || formData.submissionId) {
-        const trackingId = formData.trackingId || formData.submissionId;
-        console.log(`Ensuring MongoDB is updated with ZIP for ${trackingId}`);
-        
-        try {
-          // Wait for the update to complete BEFORE starting download
-          await updateMongoDBWithLetterData(trackingId, selectedTimePeriod, packageData.zipPath);
-          console.log("MongoDB successfully updated before download");
-          
-          // Force a refresh of the queue display
-          try {
-            await fetch('/api/mongodb-queue?refresh=true');
-            console.log("Queue refresh triggered");
-          } catch (refreshError) {
-            console.error("Failed to refresh queue:", refreshError);
-          }
-        } catch (err) {
-          console.error("Error updating MongoDB during download:", err);
-          // Continue with download even if update fails
-        }
-      }
       
       // Check if it's a Google Drive URL (starts with http/https)
       if (packageData.zipPath.startsWith('http')) {
@@ -537,9 +511,8 @@ const generateProtestLetter = async () => {
         window.open(`/api/erc-protest/download?path=${encodeURIComponent(packageData.zipPath)}`, '_blank');
       }
       
-      // Also trigger the onGenerated callback again to ensure the parent has the data
+      // Still trigger the onGenerated callback to ensure the parent has the data
       if (onGenerated) {
-        console.log("Triggering onGenerated again during download", packageData);
         onGenerated(packageData);
       }
     } else {

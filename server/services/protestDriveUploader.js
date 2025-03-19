@@ -7,6 +7,29 @@ const googleDriveService = require('./googleDriveService');
 const googleSheetsService = require('./googleSheetsService');
 
 /**
+ * Convert a numeric ID to a consistent ERC format
+ * @param {string} trackingId - The original tracking ID (numeric or formatted)
+ * @returns {string} - A consistently formatted ERC ID
+ */
+function ensureConsistentId(trackingId) {
+  // If it's already in ERC-XXXXXXXX format, return it as is
+  if (typeof trackingId === 'string' && trackingId.startsWith('ERC-')) {
+    return trackingId;
+  }
+  
+  // If it's numeric, format it consistently
+  if (/^\d+$/.test(trackingId)) {
+    // IMPORTANT: Use a stable algorithm that won't change between calls
+    // Use 8 characters for consistency (same as uuid substring)
+    const hexId = parseInt(trackingId).toString(16).toUpperCase().padStart(8, '0');
+    return `ERC-${hexId}`;
+  }
+  
+  // If we can't determine format, return as is
+  return trackingId;
+}
+
+/**
  * Upload files to Google Drive and update tracking info
  * @param {string} trackingId - Tracking ID for the submission
  * @param {string} businessName - Business name
@@ -20,15 +43,35 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath) {
     console.log(`PDF path: ${pdfPath}`);
     console.log(`ZIP path: ${zipPath}`);
     
-    // IMPORTANT FIX: Check if the trackingId is numeric (timestamp)
-    // and convert it to ERC format if needed
-    let formattedTrackingId = trackingId;
-    if (/^\d+$/.test(trackingId)) {
-      // Generate a hex ID based on the timestamp and some basic hash
-      const seed = parseInt(trackingId) % 1000000;
-      const hexId = (seed + 0x10000).toString(16).substring(1).toUpperCase();
-      formattedTrackingId = `ERC-${hexId}`;
-      console.log(`Converting numeric trackingId ${trackingId} to ${formattedTrackingId} for Google Sheet compatibility`);
+    // IMPORTANT FIX: Use consistent ID conversion across the application
+    const formattedTrackingId = ensureConsistentId(trackingId);
+    console.log(`Using consistent tracking ID format: ${formattedTrackingId} (original: ${trackingId})`);
+    
+    // Store mapping between original and formatted ID
+    if (formattedTrackingId !== trackingId) {
+      try {
+        const mappingDir = path.join(__dirname, '../data/id_mappings');
+        if (!fsSync.existsSync(mappingDir)) {
+          await fs.mkdir(mappingDir, { recursive: true });
+        }
+        
+        const mapping = {
+          originalId: trackingId,
+          formattedId: formattedTrackingId,
+          timestamp: new Date().toISOString()
+        };
+        
+        // Save mapping file using both IDs to make it findable both ways
+        await fs.writeFile(
+          path.join(mappingDir, `${trackingId}_to_${formattedTrackingId}.json`),
+          JSON.stringify(mapping, null, 2)
+        );
+        
+        console.log(`Stored ID mapping from ${trackingId} to ${formattedTrackingId}`);
+      } catch (mappingErr) {
+        console.log(`Error storing ID mapping: ${mappingErr.message}`);
+        // Continue even if mapping storage fails
+      }
     }
     
     // Verify files exist before upload
@@ -88,6 +131,7 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath) {
     
     // Update the local file if it exists
     try {
+      // Try with formatted ID first
       const submissionPath = path.join(__dirname, `../data/ERC_Disallowances/${formattedTrackingId}/submission_info.json`);
       if (fsSync.existsSync(submissionPath)) {
         const submissionData = await fs.readFile(submissionPath, 'utf8');
@@ -132,30 +176,6 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath) {
       console.log(`Error updating local file: ${fileErr.message}`);
     }
     
-    // Store a mapping between original ID and formatted ID for later use
-    try {
-      const mappingDir = path.join(__dirname, '../data/id_mappings');
-      if (!fsSync.existsSync(mappingDir)) {
-        await fs.mkdir(mappingDir, { recursive: true });
-      }
-      
-      const mapping = {
-        originalId: trackingId,
-        formattedId: formattedTrackingId,
-        timestamp: new Date().toISOString()
-      };
-      
-      await fs.writeFile(
-        path.join(mappingDir, `${trackingId}.json`),
-        JSON.stringify(mapping, null, 2)
-      );
-      
-      console.log(`Stored ID mapping from ${trackingId} to ${formattedTrackingId}`);
-    } catch (mappingErr) {
-      console.log(`Error storing ID mapping: ${mappingErr.message}`);
-      // Continue even if mapping storage fails
-    }
-    
     // Return with both IDs and the drive files
     return {
       ...driveFiles,
@@ -169,5 +189,6 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath) {
 }
 
 module.exports = {
-  uploadToGoogleDrive
+  uploadToGoogleDrive,
+  ensureConsistentId // Export for use in other parts of the app
 };

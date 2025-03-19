@@ -5,49 +5,33 @@ const path = require('path');
 const fs = require('fs');
 const { connectToDatabase, Submission } = require('../db-connection');
 const { translatePath, processDocument } = require('../utils/pathTranslator');
+const { ensureConsistentId } = require('../services/protestDriveUploader');
 
 /**
  * Normalize quarter format to a consistent standard for comparison
  * @param {string} quarter - Any quarter format (Quarter 1, Q1, etc.)
- * @returns {string} - Normalized format (q1_2021, q2_2020, etc.)
+ * @returns {string} - Normalized format (q1, q2, etc.)
  */
 const normalizeQuarter = (quarter) => {
   if (!quarter) return '';
   
-  // Convert to string, lowercase, and clean up non-alphanumeric except underscore
-  const clean = quarter.toString().toLowerCase().replace(/[^a-z0-9_]/g, '');
+  // Convert to string, lowercase, and remove all non-alphanumeric characters
+  const clean = quarter.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
   
-  // Special case for "Quarter X" format
-  if (clean.startsWith('quarter')) {
-    // Extract quarter number
-    const match = clean.match(/quarter([1-4])/);
-    if (match && match[1]) {
-      const qNum = match[1];
-      
-      // If there's a year in the string, extract and append it
-      const yearMatch = clean.match(/(20\d{2})/);
-      if (yearMatch && yearMatch[1]) {
-        return `q${qNum}_${yearMatch[1]}`;
-      }
-      
-      // Without year, just return the quarter number
-      return `q${qNum}`;
-    }
+  // Extract just the quarter number using regex
+  const match = clean.match(/q?([1-4])/);
+  if (match && match[1]) {
+    // Return standardized format: q1, q2, q3, q4
+    return `q${match[1]}`;
   }
   
-  // Handle "QX 20XX" format (most common)
-  const qYearMatch = clean.match(/q([1-4])[\s_]*(20\d{2})/);
-  if (qYearMatch && qYearMatch[1] && qYearMatch[2]) {
-    return `q${qYearMatch[1]}_${qYearMatch[2]}`;
+  // If quarter includes year (e.g., "q2 2021"), extract quarter part
+  const quarterYearMatch = clean.match(/q?([1-4]).*20([0-9]{2})/);
+  if (quarterYearMatch && quarterYearMatch[1]) {
+    return `q${quarterYearMatch[1]}`;
   }
   
-  // Handle just "QX" format
-  const justQMatch = clean.match(/q([1-4])$/);
-  if (justQMatch && justQMatch[1]) {
-    return `q${justQMatch[1]}`;
-  }
-  
-  // If we still can't normalize it, return the cleaned version
+  // Return original if we couldn't normalize it
   return clean;
 };
 
@@ -62,45 +46,25 @@ const getAllQuarterFormats = (quarter) => {
   // Start with the original format
   formats.push(quarter);
   
-  // Try to extract the quarter number and year
-  const normalized = normalizeQuarter(quarter);
+  // Extract just the quarter number, ignoring year
+  const normalizedQuarter = normalizeQuarter(quarter);
   
-  // Pattern: q1_2021
-  const fullMatch = normalized.match(/q([1-4])_?(20\d{2})/);
-  if (fullMatch && fullMatch[1] && fullMatch[2]) {
-    const qNum = fullMatch[1];
-    const year = fullMatch[2];
+  // Get quarter number (1-4)
+  const qNumber = normalizedQuarter.match(/q([1-4])/);
+  if (qNumber && qNumber[1]) {
+    const num = qNumber[1];
     
-    // Add every possible format
-    formats.push(`q${qNum}_${year}`);
-    formats.push(`q${qNum}${year}`);
-    formats.push(`q${qNum} ${year}`);
-    formats.push(`Q${qNum}_${year}`);
-    formats.push(`Q${qNum}${year}`);
-    formats.push(`Q${qNum} ${year}`);
-    formats.push(`Quarter ${qNum}_${year}`);
-    formats.push(`Quarter ${qNum} ${year}`);
-    formats.push(`Quarter${qNum}`);
-    formats.push(`Quarter ${qNum}`);
-    formats.push(`q${qNum}`);
-    formats.push(`Q${qNum}`);
-    
-    // Also add year-first formats
-    formats.push(`${year}_q${qNum}`);
-    formats.push(`${year} q${qNum}`);
-    formats.push(`${year}_Q${qNum}`);
-    formats.push(`${year} Q${qNum}`);
-  } else {
-    // Pattern: q1 (no year)
-    const qMatch = normalized.match(/q([1-4])/);
-    if (qMatch && qMatch[1]) {
-      const qNum = qMatch[1];
-      
-      formats.push(`q${qNum}`);
-      formats.push(`Q${qNum}`);
-      formats.push(`Quarter ${qNum}`);
-      formats.push(`Quarter${qNum}`);
-    }
+    // Add all possible formats for this quarter number
+    formats.push(`q${num}`);
+    formats.push(`Q${num}`);
+    formats.push(`Quarter ${num}`);
+    formats.push(`Quarter${num}`);
+    formats.push(`q${num}_2020`);
+    formats.push(`q${num}_2021`);
+    formats.push(`Q${num} 2020`);
+    formats.push(`Q${num} 2021`);
+    formats.push(`Quarter ${num} 2020`);
+    formats.push(`Quarter ${num} 2021`);
   }
   
   // Remove duplicates
@@ -196,13 +160,9 @@ router.get('/', async (req, res) => {
       
       // Add normalized processedQuarters for more reliable matching
       if (processedSubmission.submissionData?.processedQuarters) {
-        // Add normalized versions for comparison
+        // Normalize each quarter for better matching
         processedSubmission.submissionData.normalizedProcessedQuarters = 
           processedSubmission.submissionData.processedQuarters.map(quarter => normalizeQuarter(quarter));
-          
-        // Log normalized quarters for debugging
-        console.log(`Normalized processedQuarters for ${processedSubmission.submissionId || processedSubmission._id}:`, 
-          processedSubmission.submissionData.normalizedProcessedQuarters);
       }
       
       // Also add standardized quarter data to the quarterAnalysis for easier matching
@@ -313,7 +273,7 @@ router.get('/download', async (req, res) => {
   }
 });
 
-// Update processed quarters for a submission
+// Key fixed function: Update processed quarters for a submission with deduplication
 router.post('/update-processed-quarters', async (req, res) => {
   try {
     const { submissionId, quarter, zipPath } = req.body;
@@ -333,24 +293,29 @@ router.post('/update-processed-quarters', async (req, res) => {
     // Ensure connected to database
     await connectToDatabase();
     
+    // Use consistent ID format
+    const formattedId = ensureConsistentId(submissionId);
+    
     // Check if the ID is a valid MongoDB ObjectId (24 character hex)
-    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(submissionId);
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(formattedId);
     
     // Find the submission, but be careful about the query to avoid ObjectId casting errors
     let submission;
     
+    // Build a flexible query to find the submission by any potential ID format
+    const orConditions = [
+      { submissionId: submissionId },
+      { submissionId: formattedId }
+    ];
+    
+    // Add ObjectId conditions only if valid to avoid casting errors
     if (isValidObjectId) {
-      // If it's a valid ObjectId format, we can query by either field
-      submission = await Submission.findOne({
-        $or: [
-          { submissionId: submissionId },
-          { _id: submissionId }
-        ]
-      });
-    } else {
-      // If it's not a valid ObjectId, only query by submissionId
-      submission = await Submission.findOne({ submissionId: submissionId });
+      orConditions.push({ _id: formattedId });
+      orConditions.push({ _id: submissionId });
     }
+    
+    // Find submission with flexible query
+    submission = await Submission.findOne({ $or: orConditions });
     
     if (!submission) {
       console.error(`Submission with ID ${submissionId} not found in MongoDB`);
@@ -372,18 +337,21 @@ router.post('/update-processed-quarters', async (req, res) => {
       submission.submissionData.processedQuarters = [];
     }
     
-    // Get ALL possible standardized formats of this quarter
-    const quarterFormats = getAllQuarterFormats(quarter);
+    // Get normalized version of the quarter
+    const normalizedQuarter = normalizeQuarter(quarter);
+    
+    // Check if we already processed this quarter (normalized comparison)
+    const existingNormalizedQuarters = submission.submissionData.processedQuarters.map(q => normalizeQuarter(q));
+    const alreadyProcessed = existingNormalizedQuarters.includes(normalizedQuarter);
     
     // Log existing processed quarters for debugging
     console.log(`Existing processed quarters:`, submission.submissionData.processedQuarters);
-    console.log(`Adding standardized formats:`, quarterFormats);
     
-    // Check if any format of this quarter is already processed
-    const normalizedExisting = submission.submissionData.processedQuarters.map(q => normalizeQuarter(q));
-    const normalizedQuarter = normalizeQuarter(quarter);
-    
-    if (!normalizedExisting.includes(normalizedQuarter)) {
+    if (!alreadyProcessed) {
+      // Get ALL possible standardized formats of this quarter
+      const quarterFormats = getAllQuarterFormats(quarter);
+      console.log(`Adding standardized formats:`, quarterFormats);
+      
       // Add ALL formats to the processedQuarters array
       submission.submissionData.processedQuarters.push(...quarterFormats);
       console.log(`Added ${quarterFormats.length} formats for ${quarter} to processed quarters`);
@@ -435,27 +403,28 @@ router.delete('/:submissionId', async (req, res) => {
       });
     }
     
+    // Use consistent ID format
+    const formattedId = ensureConsistentId(submissionId);
+    
     // Ensure connected to database
     await connectToDatabase();
     
-    // Check if the ID is a valid MongoDB ObjectId (24 character hex)
-    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(submissionId);
+    // Build flexible query to find by any ID format
+    const orConditions = [
+      { submissionId: submissionId },
+      { submissionId: formattedId }
+    ];
     
-    // Find the submission, but be careful about the query to avoid ObjectId casting errors
-    let submission;
-    
-    if (isValidObjectId) {
-      // If it's a valid ObjectId format, we can query by either field
-      submission = await Submission.findOne({
-        $or: [
-          { submissionId: submissionId },
-          { _id: submissionId }
-        ]
-      });
-    } else {
-      // If it's not a valid ObjectId, only query by submissionId
-      submission = await Submission.findOne({ submissionId: submissionId });
+    // Add ObjectId condition only if valid
+    if (/^[0-9a-fA-F]{24}$/.test(submissionId)) {
+      orConditions.push({ _id: submissionId });
     }
+    if (/^[0-9a-fA-F]{24}$/.test(formattedId)) {
+      orConditions.push({ _id: formattedId });
+    }
+    
+    // Find the submission with flexible query
+    const submission = await Submission.findOne({ $or: orConditions });
     
     if (!submission) {
       return res.status(404).json({
@@ -487,19 +456,8 @@ router.delete('/:submissionId', async (req, res) => {
       filesToDelete.push(translatedReportPath);
     }
     
-    // Delete the submission from MongoDB - use the same query approach as above
-    let deleteResult;
-    
-    if (isValidObjectId) {
-      deleteResult = await Submission.deleteOne({
-        $or: [
-          { submissionId: submissionId },
-          { _id: submissionId }
-        ]
-      });
-    } else {
-      deleteResult = await Submission.deleteOne({ submissionId: submissionId });
-    }
+    // Delete the submission from MongoDB - using the same flexible query
+    const deleteResult = await Submission.deleteOne({ $or: orConditions });
     
     if (deleteResult.deletedCount === 0) {
       return res.status(404).json({

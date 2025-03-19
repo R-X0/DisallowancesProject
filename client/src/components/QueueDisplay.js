@@ -55,52 +55,50 @@ const QueueDisplay = () => {
   const [deleteError, setDeleteError] = useState(null);
 
   /**
-   * Normalize quarter format to a consistent standard for comparison
+   * IMPROVED: Normalize quarter format to a consistent standard for comparison
    * @param {string} quarter - Any quarter format (Quarter 1, Q1, etc.)
-   * @returns {string} - Normalized format (q1_2021, q2_2020, etc.)
+   * @returns {string} - Normalized format (q1, q2, etc.)
    */
   const normalizeQuarter = (quarter) => {
     if (!quarter) return '';
     
-    // Convert to string, lowercase, and clean up non-alphanumeric except underscore
-    const clean = quarter.toString().toLowerCase().replace(/[^a-z0-9_]/g, '');
+    // Convert to string, lowercase, and remove all non-alphanumeric characters
+    const clean = quarter.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
     
-    // Special case for "Quarter X" format
-    if (clean.startsWith('quarter')) {
-      // Extract quarter number
-      const match = clean.match(/quarter([1-4])/);
-      if (match && match[1]) {
-        const qNum = match[1];
-        
-        // If there's a year in the string, extract and append it
-        const yearMatch = clean.match(/(20\d{2})/);
-        if (yearMatch && yearMatch[1]) {
-          return `q${qNum}_${yearMatch[1]}`;
-        }
-        
-        // Without year, just return the quarter number
-        return `q${qNum}`;
+    // Special case for "Quarter X" format - most common in our app
+    // Must check this FIRST before other patterns
+    if (clean.includes('quarter')) {
+      const quarterMatch = clean.match(/quarter([1-4])/);
+      if (quarterMatch && quarterMatch[1]) {
+        return `q${quarterMatch[1]}`;
       }
     }
     
-    // Handle "QX 20XX" format (most common)
-    const qYearMatch = clean.match(/q([1-4])[\s_]*(20\d{2})/);
-    if (qYearMatch && qYearMatch[1] && qYearMatch[2]) {
-      return `q${qYearMatch[1]}_${qYearMatch[2]}`;
+    // Try to extract just the quarter number using regex
+    const qMatch = clean.match(/q([1-4])/);
+    if (qMatch && qMatch[1]) {
+      // Return standardized format: q1, q2, q3, q4
+      return `q${qMatch[1]}`;
     }
     
-    // Handle just "QX" format
-    const justQMatch = clean.match(/q([1-4])$/);
-    if (justQMatch && justQMatch[1]) {
-      return `q${justQMatch[1]}`;
+    // If quarter includes year (e.g., "q2 2021"), extract just quarter part
+    const quarterYearMatch = clean.match(/q?([1-4]).*20([0-9]{2})/);
+    if (quarterYearMatch && quarterYearMatch[1]) {
+      return `q${quarterYearMatch[1]}`;
     }
     
-    // If we still can't normalize it, return the cleaned version
+    // Last attempt - look for a single digit 1-4 anywhere in the string
+    const digitMatch = clean.match(/[1-4]/);
+    if (digitMatch) {
+      return `q${digitMatch[0]}`;
+    }
+    
+    // Return original if we couldn't normalize it
     return clean;
   };
 
   /**
-   * Check if a quarter has been processed already using improved normalization
+   * IMPROVED: Check if a quarter has been processed using robust normalization
    * @param {string} quarter - The quarter to check
    * @param {Array} processedQuarters - Array of processed quarters
    * @returns {boolean} - Whether the quarter is processed
@@ -116,14 +114,45 @@ const QueueDisplay = () => {
     // Debug logging
     console.log(`Quarter check: "${quarter}" (normalized to "${normalizedQuarter}") vs processed:`, processedQuarters);
     
-    // Map all processed quarters to their normalized versions
+    // Also try specific formats like "Quarter X" or "QX"
+    const qNum = normalizedQuarter.match(/q([1-4])/);
+    if (!qNum || !qNum[1]) {
+      return false; // Cannot extract quarter number
+    }
+    
+    // Generate all possible formats to check against
+    const checkFormats = [
+      normalizedQuarter,           // q1
+      `q${qNum[1]}`,               // q1
+      `quarter${qNum[1]}`,         // quarter1
+      `quarter${qNum[1]}2020`,     // quarter12020
+      `quarter${qNum[1]}2021`,     // quarter12021
+      `quarter ${qNum[1]}`,        // quarter 1
+      `Quarter ${qNum[1]}`,        // Quarter 1
+      `Quarter${qNum[1]}`,         // Quarter1
+      `Q${qNum[1]}`,               // Q1
+      `q${qNum[1]}_2020`,          // q1_2020
+      `q${qNum[1]}_2021`           // q1_2021
+    ];
+    
+    // Normalize all processed quarters for comparison
     const normalizedProcessed = processedQuarters.map(pq => normalizeQuarter(pq));
     console.log(`Normalized processed quarters:`, normalizedProcessed);
     
-    // Check if any processed quarter matches the normalized version of what we're checking
-    const result = normalizedProcessed.includes(normalizedQuarter);
-    console.log(`Quarter processed check result: ${result}`);
-    return result;
+    // First check if the normalized version is in the list
+    if (normalizedProcessed.includes(normalizedQuarter)) {
+      return true;
+    }
+    
+    // Then check if any of our generated formats match a processed quarter directly
+    for (const format of checkFormats) {
+      if (processedQuarters.includes(format)) {
+        return true;
+      }
+    }
+    
+    // If none of the above checks passed, it's not processed
+    return false;
   };
 
   // Connect to MongoDB queue API endpoint
@@ -302,23 +331,32 @@ const QueueDisplay = () => {
     setQueueItems(prevItems => 
       prevItems.map(queueItem => {
         if (queueItem.id === itemId) {
-          const processedQuarters = queueItem.submissionData?.processedQuarters || [];
+          // Deep copy of submissionData
+          const updatedData = queueItem.submissionData 
+            ? JSON.parse(JSON.stringify(queueItem.submissionData)) 
+            : {};
           
-          // Use normalized comparison to check if quarter exists
-          const normalizedQuarter = normalizeQuarter(quarter);
-          const quarterExists = processedQuarters.some(pq => 
-            normalizeQuarter(pq) === normalizedQuarter
-          );
-          
-          if (!quarterExists) {
-            return {
-              ...queueItem,
-              submissionData: {
-                ...queueItem.submissionData,
-                processedQuarters: [...processedQuarters, quarter]
-              }
-            };
+          // Initialize processedQuarters if it doesn't exist
+          if (!updatedData.processedQuarters) {
+            updatedData.processedQuarters = [];
           }
+          
+          // Normalize for comparison
+          const normalizedQuarter = normalizeQuarter(quarter);
+          const existingQuarters = updatedData.processedQuarters.map(q => normalizeQuarter(q));
+          
+          // Only add if it doesn't already exist
+          if (!existingQuarters.includes(normalizedQuarter)) {
+            // Add all formats of the quarter
+            updatedData.processedQuarters.push(quarter);
+            updatedData.processedQuarters.push(`Quarter ${quarter.replace(/[^0-9]/g, '')}`);
+            updatedData.processedQuarters.push(`Q${quarter.replace(/[^0-9]/g, '')}`);
+          }
+          
+          return {
+            ...queueItem,
+            submissionData: updatedData
+          };
         }
         return queueItem;
       })
@@ -433,7 +471,7 @@ const QueueDisplay = () => {
         quarterAnalysis.forEach(q => {
           if (q.quarter && q.revenues) {
             // Extract the quarter number from format like "Quarter 1"
-            const qNum = q.quarter.replace('Quarter ', '');
+            const qNum = q.quarter.replace(/[^0-9]/g, '');
             if (q.revenues.revenue2019) {
               businessData[`q${qNum}_2019`] = q.revenues.revenue2019.toString();
             }
@@ -454,8 +492,8 @@ const QueueDisplay = () => {
         if (!businessData.q4_2019) businessData.q4_2019 = '100000';
         
         // Add some decline in the selected quarter to make it qualify
-        const qNumber = quarter.replace('Q', '').split(' ')[0];
-        const qYear = quarter.split(' ')[1];
+        const qNumber = quarter.replace(/[^0-9]/g, '');
+        const qYear = quarter.includes('2021') ? '2021' : '2020';
         
         if (qYear === '2020') {
           // 2020 needs 50% decline to qualify
@@ -891,9 +929,9 @@ const QueueDisplay = () => {
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {selectedItem.submissionData.report.qualificationData.quarterAnalysis.map((quarter) => {
+                            {selectedItem.submissionData.report.qualificationData.quarterAnalysis.map((qAnalysis) => {
                               // Determine if this quarter is processed
-                              const quarterFormat = quarter.quarter;
+                              const quarterFormat = qAnalysis.quarter;
                               const isProcessed = isQuarterProcessed(
                                 quarterFormat, 
                                 selectedItem.submissionData?.processedQuarters || []

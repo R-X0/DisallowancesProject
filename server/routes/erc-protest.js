@@ -3,10 +3,12 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const googleSheetsService = require('../services/googleSheetsService');
 const googleDriveService = require('../services/googleDriveService');
+const { ensureConsistentId } = require('../services/protestDriveUploader');
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -111,8 +113,12 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
       });
     }
     
-    // Generate tracking ID
-    const trackingId = `ERC-${uuidv4().substring(0, 8).toUpperCase()}`;
+    // Generate tracking ID with consistent format using 8 characters from UUID
+    // IMPORTANT: Use the ensureConsistentId helper to ensure this matches any numeric IDs
+    // coming from the MongoDB or letter generator
+    const uuidTrimmed = uuidv4().substring(0, 8).toUpperCase();
+    const trackingId = `ERC-${uuidTrimmed}`;
+    console.log(`Generated consistent tracking ID: ${trackingId}`);
     
     // Create directory for this submission
     const submissionDir = path.join(__dirname, `../data/ERC_Disallowances/${trackingId}`);
@@ -207,7 +213,6 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
         for (const pathToCheck of pathsToCheck) {
           console.log(`Checking if ZIP exists at: ${pathToCheck}`);
           try {
-            const fsSync = require('fs');
             if (fsSync.existsSync(pathToCheck)) {
               console.log(`Found ZIP file at: ${pathToCheck}`);
               foundZipPath = pathToCheck;
@@ -257,7 +262,6 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
         for (const pathToCheck of pathsToCheck) {
           console.log(`Checking if PDF exists at: ${pathToCheck}`);
           try {
-            const fsSync = require('fs');
             if (fsSync.existsSync(pathToCheck)) {
               console.log(`Found PDF file at: ${pathToCheck}`);
               foundPdfPath = pathToCheck;
@@ -383,7 +387,7 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
 // Get submission status
 router.get('/status/:trackingId', async (req, res) => {
   try {
-    const { trackingId } = req.params;
+    let { trackingId } = req.params;
     
     if (!trackingId) {
       return res.status(400).json({
@@ -391,6 +395,9 @@ router.get('/status/:trackingId', async (req, res) => {
         message: 'Tracking ID is required'
       });
     }
+    
+    // Ensure consistent ID format
+    trackingId = ensureConsistentId(trackingId);
     
     // Look up submission status
     try {
@@ -461,9 +468,12 @@ router.post('/update-status', async (req, res) => {
       });
     }
     
+    // Ensure consistent ID format
+    const formattedTrackingId = ensureConsistentId(trackingId);
+    
     // Update the local file if it exists
     try {
-      const submissionPath = path.join(__dirname, `../data/ERC_Disallowances/${trackingId}/submission_info.json`);
+      const submissionPath = path.join(__dirname, `../data/ERC_Disallowances/${formattedTrackingId}/submission_info.json`);
       const submissionData = await fs.readFile(submissionPath, 'utf8');
       const submissionInfo = JSON.parse(submissionData);
       
@@ -487,12 +497,12 @@ router.post('/update-status', async (req, res) => {
         JSON.stringify(submissionInfo, null, 2)
       );
     } catch (err) {
-      console.log(`Local file for ${trackingId} not found, skipping update`);
+      console.log(`Local file for ${formattedTrackingId} not found, skipping update`);
     }
     
     // Update Google Sheet
     try {
-      await googleSheetsService.updateSubmission(trackingId, {
+      await googleSheetsService.updateSubmission(formattedTrackingId, {
         status,
         protestLetterPath,
         zipPath,
