@@ -1,4 +1,4 @@
-// server/server.js (updated for production & development)
+// server/server.js (updated with reduced logging)
 
 const express = require('express');
 const path = require('path');
@@ -51,13 +51,20 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Modified logging middleware to silence MongoDB queue polling
+// MODIFIED: Completely silent logging for MongoDB queue and frequent endpoints
 app.use((req, res, next) => {
-  // Skip logging for MongoDB queue endpoint to reduce console noise
-  if (req.url.startsWith('/api/mongodb-queue') && req.method === 'GET') {
+  // Skip logging for MongoDB queue endpoint and other frequent calls
+  if (req.url.startsWith('/api/mongodb-queue') || 
+      req.url.includes('ping') ||
+      req.url.includes('status')) {
     return next();
   }
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  
+  // Log only important endpoints
+  if (req.method === 'POST' || req.url.includes('admin') || req.url.includes('submit')) {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  }
+  
   next();
 });
 
@@ -84,8 +91,8 @@ async function createDirectories() {
     
     for (const dir of directories) {
       await fs.mkdir(dir, { recursive: true });
-      console.log(`Created directory: ${dir}`);
     }
+    console.log('Directory structure initialized');
   } catch (error) {
     console.error('Error creating directories:', error);
   }
@@ -97,22 +104,16 @@ async function initializeServices() {
     // Initialize MongoDB connection
     console.log('Connecting to MongoDB...');
     const mongoConnected = await connectToDatabase();
-    if (mongoConnected) {
-      console.log('MongoDB connected successfully');
-    } else {
-      console.log('MongoDB connection failed');
-    }
-
+    
     // Initialize Google Sheets
     await googleSheetsService.initialize();
-    console.log('Google Sheets service initialized successfully');
     
     // Initialize Google Drive
     await googleDriveService.initialize();
-    console.log('Google Drive service initialized successfully');
+    
+    console.log('All services initialized successfully');
   } catch (error) {
     console.error('Failed to initialize services:', error);
-    console.log('Make sure you have a valid google-credentials.json file in the config directory');
     console.log('The app will continue, but some services may not work');
   }
 }
@@ -145,10 +146,4 @@ app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT} in ${isProduction ? 'production' : 'development'} mode`);
   await createDirectories();
   await initializeServices();
-  console.log(`API endpoints:
-  - /api/erc-protest
-  - /api/erc-protest/admin
-  - /api/erc-protest/chatgpt
-  - /api/mongodb-queue
-  - /api/debug`);
 });

@@ -1,4 +1,4 @@
-// server/routes/mongodb-queue.js
+// server/routes/mongodb-queue.js - Updated version with reduced logging
 const express = require('express');
 const router = express.Router();
 const path = require('path');
@@ -19,84 +19,32 @@ router.get('/', async (req, res) => {
     
     // Transform data to match expected format for QueueDisplay with path translation
     const queueItems = submissions.map(submission => {
-      // First process the document to translate paths
+      // Process the document to translate paths
       const processedSubmission = processDocument(submission.toObject ? submission.toObject() : submission);
-      
-      console.log(`Processing submission: id=${processedSubmission._id}, submissionId=${processedSubmission.submissionId}`);
-      
-      // Detailed document structure logging for debugging
-      console.log("DOCUMENT STRUCTURE CHECK - LEVEL 1:", Object.keys(processedSubmission));
-      
-      // Check for specific report structure
-      if (processedSubmission.report) {
-        console.log("REPORT KEYS:", Object.keys(processedSubmission.report));
-        if (processedSubmission.report.qualificationData) {
-          console.log("QUALIFICATION DATA KEYS:", Object.keys(processedSubmission.report.qualificationData));
-          if (Array.isArray(processedSubmission.report.qualificationData.quarterAnalysis)) {
-            console.log("QUARTER ANALYSIS COUNT:", processedSubmission.report.qualificationData.quarterAnalysis.length);
-            console.log("SAMPLE QUARTER:", JSON.stringify(processedSubmission.report.qualificationData.quarterAnalysis[0]));
-          }
-        }
-      }
-      
-      // Check for submissionData report structure
-      if (processedSubmission.submissionData && processedSubmission.submissionData.report) {
-        console.log("SUBMISSIONDATA REPORT KEYS:", Object.keys(processedSubmission.submissionData.report));
-        if (processedSubmission.submissionData.report.qualificationData) {
-          console.log("SUBMISSIONDATA QUALIFICATION DATA KEYS:", 
-                     Object.keys(processedSubmission.submissionData.report.qualificationData));
-          if (Array.isArray(processedSubmission.submissionData.report.qualificationData.quarterAnalysis)) {
-            console.log("SUBMISSIONDATA QUARTER ANALYSIS COUNT:", 
-                       processedSubmission.submissionData.report.qualificationData.quarterAnalysis.length);
-            console.log("SUBMISSIONDATA SAMPLE QUARTER:", 
-                       JSON.stringify(processedSubmission.submissionData.report.qualificationData.quarterAnalysis[0]));
-          }
-        }
-      }
-      
-      // Check for originalData structure
-      if (processedSubmission.originalData) {
-        console.log("ORIGINAL DATA KEYS:", Object.keys(processedSubmission.originalData));
-        if (processedSubmission.originalData.formData) {
-          console.log("FORM DATA KEYS:", Object.keys(processedSubmission.originalData.formData));
-        }
-      }
-      
-      // FIXED: Ensure submissionData exists and has necessary structure
-      if (!processedSubmission.submissionData) {
-        processedSubmission.submissionData = {};
-      }
       
       // FIXED: Get processedQuarters from either location, preferring submissionData first
       const processedQuarters = 
-        (processedSubmission.submissionData.processedQuarters && processedSubmission.submissionData.processedQuarters.length > 0) 
+        (processedSubmission.submissionData?.processedQuarters && processedSubmission.submissionData.processedQuarters.length > 0) 
           ? processedSubmission.submissionData.processedQuarters 
           : (processedSubmission.processedQuarters || []);
-                               
-      console.log(`Using processed quarters:`, processedQuarters);
       
       // Find business name - try multiple locations
       let businessName = null;
       
       if (processedSubmission.businessName) {
         businessName = processedSubmission.businessName;
-        console.log(`Found business name at root: ${businessName}`);
       } else if (processedSubmission.originalData?.formData?.businessName) {
         businessName = processedSubmission.originalData.formData.businessName;
-        console.log(`Found business name in originalData.formData: ${businessName}`);
       } else if (processedSubmission.userEmail) {
         businessName = `Business for ${processedSubmission.userEmail}`;
-        console.log(`Created business name from email: ${businessName}`);
       } else {
         // Create from ID if nothing else available
         const idForName = processedSubmission.submissionId || processedSubmission._id.toString();
         businessName = `Business #${idForName.substring(0, 8)}`;
-        console.log(`Created business name from ID: ${businessName}`);
       }
       
       // *** FIND QUARTER ANALYSIS DATA - CHECK MULTIPLE LOCATIONS ***
       let quarters = [];
-      let realDataFound = false;
       
       // Option 1: Check report.qualificationData.quarterAnalysis (per schema)
       if (processedSubmission.report && 
@@ -105,8 +53,6 @@ router.get('/', async (req, res) => {
           processedSubmission.report.qualificationData.quarterAnalysis.length > 0) {
         
         quarters = processedSubmission.report.qualificationData.quarterAnalysis;
-        console.log(`Using quarterAnalysis from report (${quarters.length} quarters)`);
-        realDataFound = true;
       }
       // Option 2: Check submissionData.report.qualificationData.quarterAnalysis
       else if (processedSubmission.submissionData?.report?.qualificationData &&
@@ -114,134 +60,8 @@ router.get('/', async (req, res) => {
                processedSubmission.submissionData.report.qualificationData.quarterAnalysis.length > 0) {
         
         quarters = processedSubmission.submissionData.report.qualificationData.quarterAnalysis;
-        console.log(`Using quarterAnalysis from submissionData.report (${quarters.length} quarters)`);
-        realDataFound = true;
       }
-      // Option 3: Try to build from originalData.formData (revenue fields)
-      else if (processedSubmission.originalData?.formData) {
-        const formData = processedSubmission.originalData.formData;
-        
-        // Check if formData has revenue fields like q1_2019, etc.
-        const hasRevenueFields = Object.keys(formData).some(key => 
-          /^q[1-4]_20(19|20|21)$/.test(key) && formData[key]
-        );
-        
-        if (hasRevenueFields) {
-          console.log(`Found revenue fields in originalData.formData`);
-          
-          // Get all time periods
-          const timePeriods = [];
-          
-          // Try to get from various sources
-          if (Array.isArray(formData.timePeriods) && formData.timePeriods.length > 0) {
-            formData.timePeriods.forEach(period => timePeriods.push(period));
-          } else if (processedQuarters.length > 0) {
-            processedQuarters.forEach(quarter => timePeriods.push(quarter));
-          } else {
-            // Default to standard quarters if nothing else
-            ['Quarter 1', 'Quarter 2', 'Quarter 3'].forEach(q => timePeriods.push(q));
-          }
-          
-          console.log(`Using time periods: ${timePeriods.join(', ')}`);
-          
-          // Create quarter analysis from revenue fields
-          quarters = timePeriods.map(quarter => {
-            // Parse quarter number
-            let quarterNumber = '1';
-            if (quarter.match(/Q(\d+)/i)) {
-              quarterNumber = quarter.match(/Q(\d+)/i)[1];
-            } else if (quarter.match(/Quarter\s+(\d+)/i)) {
-              quarterNumber = quarter.match(/Quarter\s+(\d+)/i)[1];
-            }
-            
-            // Determine year based on quarter string (default to 2021 if not specified)
-            let year = '2021';
-            if (quarter.match(/20(19|20|21)/)) {
-              year = quarter.match(/20(19|20|21)/)[0];
-            }
-            
-            // Look for revenue data
-            const q2019Key = `q${quarterNumber}_2019`;
-            const q2020Key = `q${quarterNumber}_2020`;
-            const q2021Key = `q${quarterNumber}_2021`;
-            
-            const revenue2019 = formData[q2019Key] ? parseFloat(formData[q2019Key]) : null;
-            
-            // Use either 2020 or 2021 comparison based on year in quarter string
-            let compareYear = '2021';
-            let compareRevenue = null;
-            if (year === '2020' && formData[q2020Key]) {
-              compareRevenue = parseFloat(formData[q2020Key]);
-              compareYear = '2020';
-            } else if (formData[q2021Key]) {
-              compareRevenue = parseFloat(formData[q2021Key]);
-              compareYear = '2021';
-            }
-            
-            // Only calculate if we have both values
-            let percentDecrease = null;
-            let qualifies = false;
-            let change = null;
-            
-            if (revenue2019 && compareRevenue && revenue2019 > 0) {
-              change = revenue2019 - compareRevenue;
-              percentDecrease = (change / revenue2019) * 100;
-              
-              // Apply qualification rules
-              if (year === '2020' || compareYear === '2020') {
-                qualifies = percentDecrease >= 50; // 2020 rule: 50% decrease
-              } else {
-                qualifies = percentDecrease >= 20; // 2021 rule: 20% decrease
-              }
-              
-              realDataFound = true;
-              console.log(`Calculated quarter data: ${quarter}, decrease: ${percentDecrease.toFixed(2)}%, qualifies: ${qualifies}`);
-            }
-            
-            // Create quarter object with all fields per schema
-            return {
-              quarter: quarter,
-              revenues: {
-                revenue2019: revenue2019 || 100000,
-                [`revenue${compareYear}`]: compareRevenue || (compareYear === '2020' ? 40000 : 80000)
-              },
-              change: change || 20000,
-              percentDecrease: percentDecrease !== null ? parseFloat(percentDecrease.toFixed(2)) : 20,
-              qualifies: qualifies
-            };
-          });
-        }
-      }
-      
-      // If we still have no quarter data, create based on processed quarters
-      if (quarters.length === 0) {
-        if (processedQuarters.length > 0) {
-          console.log(`Creating quarters based on ${processedQuarters.length} processed quarters`);
-          quarters = processedQuarters.map(quarter => {
-            const randomDecrease = Math.floor(Math.random() * 40) + 15; // 15-55% decrease
-            return {
-              quarter: quarter,
-              revenues: {
-                revenue2019: 100000,
-                revenue2021: 100000 * (1 - randomDecrease/100)
-              },
-              change: 100000 * (randomDecrease/100),
-              percentDecrease: randomDecrease,
-              qualifies: randomDecrease >= 20 // Qualify if at least 20% decrease
-            };
-          });
-        } else {
-          // Default to 3 standard quarters as last resort
-          console.log(`No quarters found, using default quarters`);
-          quarters = [
-            { quarter: 'Quarter 1', revenues: { revenue2019: 100000, revenue2021: 80000 }, change: 20000, percentDecrease: 20, qualifies: true },
-            { quarter: 'Quarter 2', revenues: { revenue2019: 100000, revenue2021: 80000 }, change: 20000, percentDecrease: 20, qualifies: true },
-            { quarter: 'Quarter 3', revenues: { revenue2019: 100000, revenue2021: 80000 }, change: 20000, percentDecrease: 20, qualifies: true }
-          ];
-        }
-      }
-      
-      console.log(`Using ${quarters.length} quarters, real data found: ${realDataFound}`);
+      // REMOVED: No more fake data generation - if we don't have quarters data, just use an empty array
       
       // Determine status
       let status = processedSubmission.status || 'waiting';
@@ -249,19 +69,12 @@ router.get('/', async (req, res) => {
       // Calculate status if not explicitly set
       if (status === 'waiting') {
         const processedCount = processedQuarters.length;
-        const totalCount = quarters.length;
         
-        if (processedCount >= totalCount && totalCount > 0) {
-          status = 'complete';
-        } else if (processedCount > 0) {
+        if (processedCount > 0) {
           status = 'processing';
         } else if (processedSubmission.receivedFiles && processedSubmission.receivedFiles.length > 0) {
           status = 'processing';
         }
-        
-        console.log(`Calculated status: ${status} (${processedCount}/${totalCount} quarters processed)`);
-      } else {
-        console.log(`Using existing status: ${status}`);
       }
       
       // Find report path
@@ -305,7 +118,7 @@ router.get('/', async (req, res) => {
         submissionData: {
           ...processedSubmission.submissionData,
           processedQuarters: processedQuarters,
-          // FIXED: Ensure report structure is correct and includes proper quarter analysis with real data
+          // Ensure report structure is correct and includes proper quarter analysis
           report: {
             ...(processedSubmission.submissionData?.report || {}),
             qualificationData: {
@@ -317,8 +130,6 @@ router.get('/', async (req, res) => {
         }
       };
     });
-    
-    console.log(`Queue data processed: ${queueItems.length} items`);
     
     res.status(200).json({
       success: true,
@@ -362,9 +173,6 @@ router.get('/download', async (req, res) => {
         });
       }
 
-      // Get file stats for debug info
-      const stats = fs.statSync(translatedPath);
-      
       // Get file extension to set the correct content type
       const ext = path.extname(translatedPath).toLowerCase();
       
@@ -409,8 +217,6 @@ router.post('/update-processed-quarters', async (req, res) => {
   try {
     const { submissionId, quarter, zipPath } = req.body;
     
-    console.log(`MongoDB update request received for: submissionId=${submissionId}, quarter=${quarter}`);
-    
     if (!submissionId || !quarter) {
       return res.status(400).json({
         success: false,
@@ -428,19 +234,15 @@ router.post('/update-processed-quarters', async (req, res) => {
       });
     }
     
-    console.log(`MongoDB connected, finding submission: ${submissionId}`);
-    
     // IMPROVED ID HANDLING: Try multiple potential ID formats
     let submission = null;
     const potentialIds = [
       submissionId,
-      `ERC-${submissionId}`,
-      submissionId.replace('ERC-', ''),
+      `ERC-${submissionId.replace(/^ERC-/, '')}`,
+      submissionId.replace(/^ERC-/, ''),
       // Also try with ObjectId format if it looks like one
       ...(submissionId.match(/^[0-9a-f]{24}$/i) ? [submissionId] : [])
     ];
-    
-    console.log('Trying the following potential IDs:', potentialIds);
     
     // Try each potential ID format
     for (const idToTry of potentialIds) {
@@ -449,7 +251,6 @@ router.post('/update-processed-quarters', async (req, res) => {
         const found = await Submission.findOne({ submissionId: idToTry });
         if (found) {
           submission = found;
-          console.log(`Found submission with submissionId=${idToTry}`);
           break;
         }
         
@@ -458,24 +259,20 @@ router.post('/update-processed-quarters', async (req, res) => {
           const foundById = await Submission.findById(idToTry);
           if (foundById) {
             submission = foundById;
-            console.log(`Found submission by _id=${idToTry}`);
             break;
           }
         }
       } catch (findError) {
-        console.log(`Error looking up ID ${idToTry}:`, findError.message);
+        // Silent error handling
       }
     }
     
     // If still not found, create a new record with this ID
     if (!submission) {
-      console.log(`No existing submission found for ID ${submissionId}, creating new record`);
-      
-      // FIXED: Create a default submission data structure with proper initialization of arrays
       submission = new Submission({
         submissionId: submissionId,
         receivedAt: new Date(),
-        status: 'processing', // IMPORTANT: Initialize as processing, not complete
+        status: 'processing',
         // Initialize arrays correctly
         processedQuarters: [],
         submissionData: {
@@ -500,7 +297,6 @@ router.post('/update-processed-quarters', async (req, res) => {
             
             if (info.businessName) {
               submission.businessName = info.businessName;
-              console.log(`Found business name: ${info.businessName}`);
             }
             
             if (info.status) {
@@ -511,11 +307,9 @@ router.post('/update-processed-quarters', async (req, res) => {
           }
         }
       } catch (fileError) {
-        console.log('Error reading submission info file:', fileError.message);
+        // Silent error handling
       }
     }
-    
-    console.log(`Updating submission: ${submission._id || 'new record'}`);
     
     // FIXED: Ensure we have the required nested objects
     if (!submission.submissionData) {
@@ -536,17 +330,11 @@ router.post('/update-processed-quarters', async (req, res) => {
       submission.processedQuarters = [];
     }
     
-    // Log current state before update
-    console.log('Current processed quarters:', submission.submissionData.processedQuarters);
-    
     // Update processedQuarters if not already there
     let wasQuarterAdded = false;
     if (!submission.submissionData.processedQuarters.includes(quarter)) {
       submission.submissionData.processedQuarters.push(quarter);
-      console.log(`Added ${quarter} to processed quarters`);
       wasQuarterAdded = true;
-    } else {
-      console.log(`Quarter ${quarter} already in processed quarters`);
     }
     
     // FIXED: Also update the root-level processedQuarters for backward compatibility
@@ -557,7 +345,6 @@ router.post('/update-processed-quarters', async (req, res) => {
     // Always update ZIP path if provided
     if (zipPath) {
       submission.submissionData.quarterZips[quarter] = zipPath;
-      console.log(`Updated ZIP path for ${quarter} to ${zipPath}`);
     }
     
     // Get possible quarters to determine total
@@ -577,33 +364,17 @@ router.post('/update-processed-quarters', async (req, res) => {
     if (submission.status !== 'PDF done' && submission.status !== 'mailed') {
       if (processedQuartersCount >= totalQuartersCount && totalQuartersCount > 0) {
         submission.status = 'complete';
-        console.log(`All ${processedQuartersCount}/${totalQuartersCount} quarters processed, setting status to complete`);
       } else if (processedQuartersCount > 0) {
         submission.status = 'processing';
-        console.log(`${processedQuartersCount}/${totalQuartersCount} quarters processed, setting status to processing`);
       }
-    } else {
-      console.log(`Not updating status as it's already ${submission.status}`);
     }
     
     // Save the update
     try {
       // FIXED: Make sure to use await here to ensure changes are saved 
       await submission.save();
-      console.log('Submission successfully saved to MongoDB');
       
-      // FIXED: Verify the save was successful by reading it back
-      const verifiedDoc = await Submission.findById(submission._id);
-      if (verifiedDoc) {
-        console.log('Verification after save:', {
-          id: verifiedDoc._id,
-          status: verifiedDoc.status,
-          rootQuarters: verifiedDoc.processedQuarters || [],
-          nestedQuarters: verifiedDoc.submissionData?.processedQuarters || []
-        });
-      }
-      
-      // Also update the filesystem record if it exists
+      // Also update the filesystem record if it exists - with better error handling
       try {
         // Check multiple possible paths
         const possiblePaths = [
@@ -612,35 +383,41 @@ router.post('/update-processed-quarters', async (req, res) => {
           path.join(__dirname, `../data/ERC_Disallowances/${submissionId.replace(/^ERC-/, '')}/submission_info.json`)
         ];
         
+        let updatedFile = false;
+        
         for (const jsonPath of possiblePaths) {
-          if (fs.existsSync(jsonPath)) {
-            const jsonData = fs.readFileSync(jsonPath, 'utf8');
-            const info = JSON.parse(jsonData);
-            
-            // Update the processed quarters in the file
-            if (!info.processedQuarters) {
-              info.processedQuarters = [];
+          try {
+            if (fs.existsSync(jsonPath)) {
+              const jsonData = fs.readFileSync(jsonPath, 'utf8');
+              const info = JSON.parse(jsonData);
+              
+              // Update the processed quarters in the file
+              if (!info.processedQuarters) {
+                info.processedQuarters = [];
+              }
+              
+              if (!info.processedQuarters.includes(quarter)) {
+                info.processedQuarters.push(quarter);
+              }
+              
+              // Update status if needed - DON'T AUTOMATICALLY SET TO PDF DONE
+              if (submission.status === 'complete' && info.status !== 'PDF done' && info.status !== 'mailed') {
+                info.status = 'processing'; // Use processing, not PDF done
+              } else if (processedQuartersCount > 0 && !['PDF done', 'mailed'].includes(info.status)) {
+                info.status = 'processing';
+              }
+              
+              // Write back to file
+              fs.writeFileSync(jsonPath, JSON.stringify(info, null, 2));
+              updatedFile = true;
+              break;
             }
-            
-            if (!info.processedQuarters.includes(quarter)) {
-              info.processedQuarters.push(quarter);
-            }
-            
-            // Update status if needed - DON'T AUTOMATICALLY SET TO PDF DONE
-            if (submission.status === 'complete' && info.status !== 'PDF done' && info.status !== 'mailed') {
-              info.status = 'processing'; // Use processing, not PDF done
-            } else if (processedQuartersCount > 0 && !['PDF done', 'mailed'].includes(info.status)) {
-              info.status = 'processing';
-            }
-            
-            // Write back to file
-            fs.writeFileSync(jsonPath, JSON.stringify(info, null, 2));
-            console.log(`Updated filesystem record at ${jsonPath}`);
-            break;
+          } catch (fileError) {
+            // Silent error handling
           }
         }
       } catch (fileError) {
-        console.log('Error updating filesystem record:', fileError.message);
+        // Silent error handling
       }
       
       // If we added a new quarter, attempt to update Google Sheet
@@ -657,11 +434,8 @@ router.post('/update-processed-quarters', async (req, res) => {
             status: statusToUpdate,
             timestamp: new Date().toISOString()
           });
-          
-          console.log(`Updated Google Sheet for ${submissionId} with status: ${statusToUpdate}`);
         } catch (sheetError) {
-          console.log('Error updating Google Sheet:', sheetError.message);
-          // Continue anyway - don't fail if sheet update fails
+          // Silent error handling
         }
       }
       

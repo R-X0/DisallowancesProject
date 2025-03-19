@@ -1,4 +1,4 @@
-// db-connection.js
+// db-connection.js - Updated with reduced logging
 require('dotenv').config();
 const mongoose = require('mongoose');
 
@@ -9,7 +9,7 @@ const MONGODB_URI = process.env.MONGODB_URI;
 let isConnected = false;
 let connectionAttempted = false;
 // Add flag to prevent repeated logging
-let loggingEnabled = true;
+let loggingEnabled = false; // Changed to false to disable most logging
 
 // Define a proper schema with all necessary fields
 const submissionSchema = new mongoose.Schema({
@@ -52,9 +52,6 @@ const connectToDatabase = async () => {
       }
     }
     
-    // Disable further logging until app restarts
-    loggingEnabled = false;
-    
     if (!MONGODB_URI) {
       console.error('ERROR: No MongoDB URI provided in environment variables');
       return false;
@@ -82,26 +79,14 @@ const connectToDatabase = async () => {
     isConnected = true;
     console.log('Connected to MongoDB successfully');
     
-    // Verify we can access a collection
-    const collections = await mongoose.connection.db.listCollections().toArray();
-    console.log('Available collections:', collections.map(c => c.name).join(', '));
-    
     return true;
   } catch (error) {
     console.error('Error connecting to MongoDB:');
     console.error('- Message:', error.message);
-    console.error('- Code:', error.code);
-    console.error('- Name:', error.name);
     isConnected = false;
     return false;
   }
 };
-
-// Add a database name to your connection string if it's missing
-if (MONGODB_URI && !MONGODB_URI.includes('/?') && !MONGODB_URI.split('/')[3]) {
-  console.log('WARNING: Your MongoDB URI may be missing a database name');
-  console.log('Consider adding a database name: mongodb+srv://user:pass@cluster.domain/database_name?retryWrites=true&w=majority');
-}
 
 // Create the model
 const Submission = mongoose.model('Submission', submissionSchema);
