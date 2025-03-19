@@ -15,23 +15,42 @@ const { ensureConsistentId } = require('../services/protestDriveUploader');
 const normalizeQuarter = (quarter) => {
   if (!quarter) return '';
   
-  // Convert to string, lowercase, and remove all non-alphanumeric characters
-  const clean = quarter.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+  // Convert to string first in case a number is passed
+  const quarterStr = String(quarter).trim();
   
-  // Extract just the quarter number using regex
-  const match = clean.match(/q?([1-4])/);
-  if (match && match[1]) {
-    // Return standardized format: q1, q2, q3, q4
-    return `q${match[1]}`;
+  // Special case for empty strings
+  if (!quarterStr) return '';
+  
+  // Convert to lowercase and remove non-essential characters
+  const clean = quarterStr.toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+  // Special case for "Quarter X" format - most common in our app
+  if (clean.includes('quarter')) {
+    const quarterMatch = clean.match(/quarter([1-4])/);
+    if (quarterMatch && quarterMatch[1]) {
+      return `q${quarterMatch[1]}`;
+    }
   }
   
-  // If quarter includes year (e.g., "q2 2021"), extract quarter part
+  // Extract quarter number from "qX" format
+  const qMatch = clean.match(/q([1-4])/);
+  if (qMatch && qMatch[1]) {
+    return `q${qMatch[1]}`;
+  }
+  
+  // Handle year-specific formats (e.g., "q2 2021")
   const quarterYearMatch = clean.match(/q?([1-4]).*20([0-9]{2})/);
   if (quarterYearMatch && quarterYearMatch[1]) {
     return `q${quarterYearMatch[1]}`;
   }
   
-  // Return original if we couldn't normalize it
+  // Last attempt - look for a single digit 1-4 anywhere in the string
+  const digitMatch = clean.match(/[1-4]/);
+  if (digitMatch) {
+    return `q${digitMatch[0]}`;
+  }
+  
+  // If we couldn't normalize it, return a standardized version of original
   return clean;
 };
 
@@ -54,17 +73,24 @@ const getAllQuarterFormats = (quarter) => {
   if (qNumber && qNumber[1]) {
     const num = qNumber[1];
     
-    // Add all possible formats for this quarter number
+    // Generate comprehensive list of formats
     formats.push(`q${num}`);
     formats.push(`Q${num}`);
-    formats.push(`Quarter ${num}`);
+    formats.push(`quarter${num}`);
     formats.push(`Quarter${num}`);
+    formats.push(`quarter ${num}`);
+    formats.push(`Quarter ${num}`);
     formats.push(`q${num}_2020`);
     formats.push(`q${num}_2021`);
     formats.push(`Q${num} 2020`);
     formats.push(`Q${num} 2021`);
     formats.push(`Quarter ${num} 2020`);
     formats.push(`Quarter ${num} 2021`);
+    formats.push(`quarter${num}2020`);
+    formats.push(`quarter${num}2021`);
+    
+    // Add format with just the number
+    formats.push(num);
   }
   
   // Remove duplicates
@@ -293,46 +319,74 @@ router.post('/update-processed-quarters', async (req, res) => {
     // Ensure connected to database
     await connectToDatabase();
     
-    // Use consistent ID format
+    // IMPROVED: More flexible ID handling - try multiple formats
+    const originalId = submissionId;
     const formattedId = ensureConsistentId(submissionId);
+    const numericId = submissionId.toString().replace(/\D/g, ''); // Extract only numbers
     
-    // Check if the ID is a valid MongoDB ObjectId (24 character hex)
-    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(formattedId);
+    console.log(`ID formats: Original=${originalId}, Formatted=${formattedId}, Numeric=${numericId}`);
     
-    // Find the submission, but be careful about the query to avoid ObjectId casting errors
-    let submission;
-    
-    // Build a flexible query to find the submission by any potential ID format
+    // Build a more comprehensive query to find the submission by any potential ID format
     const orConditions = [
-      { submissionId: submissionId },
-      { submissionId: formattedId }
+      // Check all fields that might contain the ID
+      { submissionId: originalId },
+      { submissionId: formattedId },
+      { trackingId: originalId },
+      { trackingId: formattedId },
+      // Add numeric ID if we have one
+      { submissionId: numericId },
+      { trackingId: numericId }
     ];
     
-    // Add ObjectId conditions only if valid to avoid casting errors
+    // Add ObjectId condition only if valid format (24 hex chars)
+    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(originalId) || /^[0-9a-fA-F]{24}$/.test(formattedId);
     if (isValidObjectId) {
-      orConditions.push({ _id: formattedId });
-      orConditions.push({ _id: submissionId });
+      if (/^[0-9a-fA-F]{24}$/.test(originalId)) orConditions.push({ _id: originalId });
+      if (/^[0-9a-fA-F]{24}$/.test(formattedId)) orConditions.push({ _id: formattedId });
     }
     
-    // Find submission with flexible query
-    submission = await Submission.findOne({ $or: orConditions });
+    console.log(`Searching with query:`, JSON.stringify(orConditions));
+    
+    // Find submission with more flexible query
+    let submission = await Submission.findOne({ $or: orConditions });
     
     if (!submission) {
-      console.error(`Submission with ID ${submissionId} not found in MongoDB`);
-      return res.status(404).json({
-        success: false,
-        message: `Submission with ID ${submissionId} not found`
-      });
+      // If still not found, try a more aggressive approach with a partial text search
+      console.log(`No exact match found, attempting partial ID search...`);
+      
+      // Get all submissions
+      const allSubmissions = await Submission.find({});
+      console.log(`Checking ${allSubmissions.length} total submissions for partial matches`);
+      
+      // Look for partial matches in ID fields
+      for (const sub of allSubmissions) {
+        const subId = sub.submissionId || sub.trackingId || sub._id?.toString() || '';
+        const subOriginalId = sub.originalData?.trackingId || '';
+        
+        if (subId.includes(numericId) || numericId.includes(subId) || 
+            subOriginalId.includes(numericId) || numericId.includes(subOriginalId)) {
+          console.log(`Found partial match: ${subId}`);
+          submission = sub;
+          break;
+        }
+      }
+      
+      if (!submission) {
+        console.error(`Submission with ID ${submissionId} not found in MongoDB`);
+        return res.status(404).json({
+          success: false,
+          message: `Submission with ID ${submissionId} not found`
+        });
+      }
     }
     
     console.log(`Found submission: ${submission.id || submission._id}`);
     
-    // Ensure we have a submissionData object
+    // IMPROVED: Create the proper data structure if it doesn't exist
     if (!submission.submissionData) {
       submission.submissionData = {};
     }
     
-    // Ensure we have a processedQuarters array
     if (!submission.submissionData.processedQuarters) {
       submission.submissionData.processedQuarters = [];
     }
@@ -359,28 +413,68 @@ router.post('/update-processed-quarters', async (req, res) => {
       console.log(`Quarter ${quarter} (normalized: ${normalizedQuarter}) is already processed, skipping`);
     }
     
-    // If zipPath is provided, store it in a new quarterZips object
+    // IMPROVED: Enhanced ZIP path storage
     if (zipPath) {
       if (!submission.submissionData.quarterZips) {
         submission.submissionData.quarterZips = {};
       }
       
-      // Store under both the original format and normalized format
+      // Store under both the original format and normalized format for better matching
       submission.submissionData.quarterZips[quarter] = zipPath;
       submission.submissionData.quarterZips[normalizedQuarter] = zipPath;
+      
+      // Also store under common format variations
+      const qNum = normalizedQuarter.match(/q([1-4])/);
+      if (qNum && qNum[1]) {
+        submission.submissionData.quarterZips[`Q${qNum[1]}`] = zipPath;
+        submission.submissionData.quarterZips[`Quarter ${qNum[1]}`] = zipPath;
+      }
+      
       console.log(`Updated ZIP path for ${quarter} to: ${zipPath}`);
+    }
+    
+    // IMPROVED: Also store the quarter info in a top-level field for easier querying
+    if (!submission.processedQuarters) {
+      submission.processedQuarters = [];
+    }
+    
+    if (!submission.processedQuarters.includes(normalizedQuarter)) {
+      submission.processedQuarters.push(normalizedQuarter);
     }
     
     // Save the updated submission
     console.log(`Saving changes to MongoDB...`);
-    await submission.save();
-    console.log(`Successfully saved submission with updated data`);
+    try {
+      await submission.save();
+      console.log(`Successfully saved submission with updated data`);
+    } catch (saveErr) {
+      console.error('Error saving to MongoDB:', saveErr);
+      
+      // Fallback: Try updateOne if save fails
+      try {
+        const updateResult = await Submission.updateOne(
+          { _id: submission._id },
+          { 
+            $set: { 
+              submissionData: submission.submissionData,
+              processedQuarters: submission.processedQuarters
+            } 
+          }
+        );
+        console.log('Used updateOne as fallback, result:', updateResult);
+      } catch (updateErr) {
+        console.error('Even updateOne failed:', updateErr);
+        throw updateErr;
+      }
+    }
     
+    // Return success with the updated data
     res.status(200).json({
       success: true,
       message: `Quarter ${quarter} marked as processed for submission ${submissionId}`,
       processedQuarters: submission.submissionData.processedQuarters,
-      quarterZips: submission.submissionData.quarterZips || {}
+      quarterZips: submission.submissionData.quarterZips || {},
+      submissionId: submission.id || submission._id
     });
   } catch (error) {
     console.error(`Error updating processed quarters for submission ${req.body.submissionId}:`, error);

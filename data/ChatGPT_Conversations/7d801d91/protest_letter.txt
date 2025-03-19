@@ -1,0 +1,57 @@
+03/19/2025
+Internal Revenue Service
+Ogden, UT 84201
+
+EIN: 00-0000000  
+Taxpayer Name: 45's Business  
+RE: Formal Protest to IRS Disallowance of ERC for Quarter 3 2021  
+Tax Period: 3rd Quarter 2021 (2021Q3)  
+Claim Amount: [Claim Amount as Appropriate]
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing 45's Business’ Employee Retention Credit (ERC) claim for the third quarter of 2021. The disallowance was based on an assertion that our operations were not fully or partially suspended by any government order during this period. We respectfully disagree. Multiple government orders were in effect during Quarter 3 2021 that imposed COVID‑19 related restrictions causing a full or partial suspension of our business operations. In addition, our significant revenue decline qualifies us for the ERC under the applicable thresholds. In this letter, we provide a detailed timeline of the relevant government orders and include a dedicated “REVENUE DECLINE DATA” section demonstrating the exact revenue figures for audit purposes.
+
+Below, we set forth the COVID‑19 government orders that affected our operations in Quarter 3 2021 in the following required format:
+
+• Order Name: U.S. COVID‑19 National Emergency  
+  • Order Number: N/A  
+  • Date Enacted: 03/13/2020  
+  • Date Rescinded: Still in effect  
+  • Order Summary: This order declared a national emergency due to COVID‑19 and activated broad federal emergency powers, thereby providing the legal foundation for subsequent pandemic-related measures. The declaration mandated adherence to various federal safety protocols impacting business operations nationwide.  
+  • Impact on Quarter: During Q3 2021, the ongoing national emergency required our law firm to implement comprehensive safety measures and operational limitations, thereby contributing to a partial suspension of our normal business activities.
+
+• Order Name: HHS Public Health Emergency (COVID‑19)  
+  • Order Number: N/A  
+  • Date Enacted: 01/31/2020  
+  • Date Rescinded: Still in effect  
+  • Order Summary: This order maintained a public health emergency status under the auspices of the Department of Health and Human Services, enforcing extensive public health guidelines and directives. It provided continuous reinforcement for COVID‑19-related operational restrictions and safety measures affecting employers nationwide.  
+  • Impact on Quarter: In Q3 2021, the continuing public health emergency compelled our firm to modify in‐office practices, limit in-person interactions, and adopt remote working protocols where possible—factors which materially curtailed our standard operations.
+
+REVENUE DECLINE DATA
+
+This section is provided solely for audit purposes to demonstrate that 45's Business experienced a significant revenue decline consistent with ERC qualification thresholds. The following narrative sets forth the precise revenue figures as documented for the relevant quarters.
+
+For the main quarter being protested, Quarter 3 2021, the recorded revenue was EXACTLY $345 compared to Quarter 3 2019 revenue of EXACTLY $3245345. This constitutes an EXACT decline of $3245000, which is an EXACT 99.99% decline. Based on the applicable revenue reduction thresholds (20%+ for 2021), 45's Business clearly qualifies for the ERC for Quarter 3 2021.
+
+Additional quarters that also qualify under the ERC criteria are as follows:
+• Q1 2021: EXACTLY $345 compared to Q1 2019: EXACTLY $54325234 = EXACTLY 100.00% decline.
+• Q2 2021: EXACTLY $345 compared to Q2 2019: EXACTLY $3552452345 = EXACTLY 100.00% decline.
+
+In conclusion, 45's Business, a law firm located in Unknown Location, NY, was significantly impacted during Quarter 3 2021 by both the governmental COVID‑19 orders and the dramatic decline in revenue. The federal and public health emergency orders necessitated the adoption of restrictive safety protocols that effectively limited normal business operations. In tandem with this, the documented revenue reductions meet the statutory criteria, thereby establishing our eligibility for the Employee Retention Credit.
+
+We respectfully request that the IRS reconsider and reverse the disallowance of our ERC claim for Quarter 3 2021. We have enclosed copies of the relevant government orders and supporting documentation detailing the verifiable revenue figures. Should you require further information or clarification regarding any of the enclosed evidence, please do not hesitate to contact us.
+
+Attestation: “Under penalties of perjury, I declare that I submitted the protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated in the protest and accompanying documents is true, correct, and complete.”
+
+Sincerely,
+
+______________________________  
+[Authorized Representative Name]  
+Authorized Representative for  
+45's Business
+
+Enclosures:  
+• Copies of Government Orders (U.S. COVID‑19 National Emergency and HHS Public Health Emergency)  
+• Detailed ERC Revenue Decline Documentation for Q1, Q2, and Q3 2021  
+• Supporting IRS Guidance Documentation
