@@ -8,94 +8,17 @@ const { translatePath, processDocument } = require('../utils/pathTranslator');
 const { ensureConsistentId } = require('../services/protestDriveUploader');
 
 /**
- * Normalize quarter format to a consistent standard for comparison
- * @param {string} quarter - Any quarter format (Quarter 1, Q1, etc.)
- * @returns {string} - Normalized format (q1, q2, etc.)
+ * Simple quarter normalization - just get the quarter number
+ * @param {string} quarter - Any quarter format (Quarter 3, Q3, etc.)
+ * @returns {string} - Normalized quarter number (3, 2, etc.)
  */
-const normalizeQuarter = (quarter) => {
+function normalizeQuarter(quarter) {
   if (!quarter) return '';
   
-  // Convert to string first in case a number is passed
-  const quarterStr = String(quarter).trim();
-  
-  // Special case for empty strings
-  if (!quarterStr) return '';
-  
-  // Convert to lowercase and remove non-essential characters
-  const clean = quarterStr.toLowerCase().replace(/[^a-z0-9]/g, '');
-  
-  // Special case for "Quarter X" format - most common in our app
-  if (clean.includes('quarter')) {
-    const quarterMatch = clean.match(/quarter([1-4])/);
-    if (quarterMatch && quarterMatch[1]) {
-      return `q${quarterMatch[1]}`;
-    }
-  }
-  
-  // Extract quarter number from "qX" format
-  const qMatch = clean.match(/q([1-4])/);
-  if (qMatch && qMatch[1]) {
-    return `q${qMatch[1]}`;
-  }
-  
-  // Handle year-specific formats (e.g., "q2 2021")
-  const quarterYearMatch = clean.match(/q?([1-4]).*20([0-9]{2})/);
-  if (quarterYearMatch && quarterYearMatch[1]) {
-    return `q${quarterYearMatch[1]}`;
-  }
-  
-  // Last attempt - look for a single digit 1-4 anywhere in the string
-  const digitMatch = clean.match(/[1-4]/);
-  if (digitMatch) {
-    return `q${digitMatch[0]}`;
-  }
-  
-  // If we couldn't normalize it, return a standardized version of original
-  return clean;
-};
-
-/**
- * Add ALL possible standard formats of a quarter to an array
- * @param {string} quarter - The quarter to standardize
- * @returns {Array} - Array of standardized quarter formats
- */
-const getAllQuarterFormats = (quarter) => {
-  const formats = [];
-  
-  // Start with the original format
-  formats.push(quarter);
-  
-  // Extract just the quarter number, ignoring year
-  const normalizedQuarter = normalizeQuarter(quarter);
-  
-  // Get quarter number (1-4)
-  const qNumber = normalizedQuarter.match(/q([1-4])/);
-  if (qNumber && qNumber[1]) {
-    const num = qNumber[1];
-    
-    // Generate comprehensive list of formats
-    formats.push(`q${num}`);
-    formats.push(`Q${num}`);
-    formats.push(`quarter${num}`);
-    formats.push(`Quarter${num}`);
-    formats.push(`quarter ${num}`);
-    formats.push(`Quarter ${num}`);
-    formats.push(`q${num}_2020`);
-    formats.push(`q${num}_2021`);
-    formats.push(`Q${num} 2020`);
-    formats.push(`Q${num} 2021`);
-    formats.push(`Quarter ${num} 2020`);
-    formats.push(`Quarter ${num} 2021`);
-    formats.push(`quarter${num}2020`);
-    formats.push(`quarter${num}2021`);
-    
-    // Add format with just the number
-    formats.push(num);
-  }
-  
-  // Remove duplicates
-  return [...new Set(formats)];
-};
+  // Just get the quarter number
+  const match = String(quarter).match(/[1-4]/);
+  return match ? match[0] : '';
+}
 
 // Get all submissions for queue display
 router.get('/', async (req, res) => {
@@ -180,23 +103,6 @@ router.get('/', async (req, res) => {
               type: file.mimetype || 'application/octet-stream',
               size: file.size || 0
             });
-          }
-        });
-      }
-      
-      // Add normalized processedQuarters for more reliable matching
-      if (processedSubmission.submissionData?.processedQuarters) {
-        // Normalize each quarter for better matching
-        processedSubmission.submissionData.normalizedProcessedQuarters = 
-          processedSubmission.submissionData.processedQuarters.map(quarter => normalizeQuarter(quarter));
-      }
-      
-      // Also add standardized quarter data to the quarterAnalysis for easier matching
-      if (processedSubmission.submissionData?.report?.qualificationData?.quarterAnalysis) {
-        processedSubmission.submissionData.report.qualificationData.quarterAnalysis.forEach(qAnalysis => {
-          // Add normalized version of the quarter for comparison
-          if (qAnalysis.quarter) {
-            qAnalysis.normalizedQuarter = normalizeQuarter(qAnalysis.quarter);
           }
         });
       }
@@ -299,7 +205,7 @@ router.get('/download', async (req, res) => {
   }
 });
 
-// Key fixed function: Update processed quarters for a submission with deduplication
+// Key fixed route: Update processed quarters for a submission with simple, reliable approach
 router.post('/update-processed-quarters', async (req, res) => {
   try {
     const { submissionId, quarter, zipPath } = req.body;
@@ -319,70 +225,76 @@ router.post('/update-processed-quarters', async (req, res) => {
     // Ensure connected to database
     await connectToDatabase();
     
-    // IMPROVED: More flexible ID handling - try multiple formats
-    const originalId = submissionId;
-    const formattedId = ensureConsistentId(submissionId);
-    const numericId = submissionId.toString().replace(/\D/g, ''); // Extract only numbers
-    
-    console.log(`ID formats: Original=${originalId}, Formatted=${formattedId}, Numeric=${numericId}`);
-    
-    // Build a more comprehensive query to find the submission by any potential ID format
-    const orConditions = [
-      // Check all fields that might contain the ID
-      { submissionId: originalId },
-      { submissionId: formattedId },
-      { trackingId: originalId },
-      { trackingId: formattedId },
-      // Add numeric ID if we have one
-      { submissionId: numericId },
-      { trackingId: numericId }
+    // FIXED: Simple ID handling - just try multiple formats directly
+    // Don't do complex transformations
+    const possibleIds = [
+      submissionId,
+      `ERC-${submissionId}`,
+      submissionId.toString().replace('ERC-', ''),
+      submissionId.toString().replace(/\D/g, '') // Just the numeric part
     ];
     
-    // Add ObjectId condition only if valid format (24 hex chars)
-    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(originalId) || /^[0-9a-fA-F]{24}$/.test(formattedId);
-    if (isValidObjectId) {
-      if (/^[0-9a-fA-F]{24}$/.test(originalId)) orConditions.push({ _id: originalId });
-      if (/^[0-9a-fA-F]{24}$/.test(formattedId)) orConditions.push({ _id: formattedId });
+    // Try each ID format until we find a match
+    let submission = null;
+    for (const idToTry of possibleIds) {
+      try {
+        const result = await Submission.findOne({
+          $or: [
+            { submissionId: idToTry },
+            { trackingId: idToTry },
+            { _id: idToTry }
+          ]
+        });
+        
+        if (result) {
+          submission = result;
+          console.log(`Found submission with ID format: ${idToTry}`);
+          break;
+        }
+      } catch (err) {
+        console.log(`Error trying ID format ${idToTry}:`, err.message);
+      }
     }
     
-    console.log(`Searching with query:`, JSON.stringify(orConditions));
-    
-    // Find submission with more flexible query
-    let submission = await Submission.findOne({ $or: orConditions });
-    
+    // If still not found, try a more aggressive approach with partial matching
     if (!submission) {
-      // If still not found, try a more aggressive approach with a partial text search
-      console.log(`No exact match found, attempting partial ID search...`);
+      console.log('No exact ID match found, trying partial matching...');
       
       // Get all submissions
       const allSubmissions = await Submission.find({});
-      console.log(`Checking ${allSubmissions.length} total submissions for partial matches`);
+      console.log(`Checking ${allSubmissions.length} submissions for partial matches`);
       
-      // Look for partial matches in ID fields
+      // Extract numeric part of the ID for matching
+      const numericPart = submissionId.toString().replace(/\D/g, '');
+      
+      // Find any submission that contains the numeric part in any ID field
       for (const sub of allSubmissions) {
-        const subId = sub.submissionId || sub.trackingId || sub._id?.toString() || '';
-        const subOriginalId = sub.originalData?.trackingId || '';
+        const subId = sub.submissionId || '';
+        const subTrackingId = sub.trackingId || '';
+        const subObjId = sub._id?.toString() || '';
         
-        if (subId.includes(numericId) || numericId.includes(subId) || 
-            subOriginalId.includes(numericId) || numericId.includes(subOriginalId)) {
-          console.log(`Found partial match: ${subId}`);
+        if (subId.includes(numericPart) || 
+            subTrackingId.includes(numericPart) || 
+            subObjId.includes(numericPart) ||
+            numericPart.includes(subId) ||
+            numericPart.includes(subTrackingId) ||
+            numericPart.includes(subObjId)) {
           submission = sub;
+          console.log(`Found partial match: submission._id = ${sub._id}`);
           break;
         }
       }
-      
-      if (!submission) {
-        console.error(`Submission with ID ${submissionId} not found in MongoDB`);
-        return res.status(404).json({
-          success: false,
-          message: `Submission with ID ${submissionId} not found`
-        });
-      }
     }
     
-    console.log(`Found submission: ${submission.id || submission._id}`);
+    if (!submission) {
+      console.error(`Submission with ID ${submissionId} not found in MongoDB after all attempts`);
+      return res.status(404).json({
+        success: false,
+        message: `Submission with ID ${submissionId} not found`
+      });
+    }
     
-    // IMPROVED: Create the proper data structure if it doesn't exist
+    // Make sure we have the necessary data structures
     if (!submission.submissionData) {
       submission.submissionData = {};
     }
@@ -391,55 +303,37 @@ router.post('/update-processed-quarters', async (req, res) => {
       submission.submissionData.processedQuarters = [];
     }
     
-    // Get normalized version of the quarter
-    const normalizedQuarter = normalizeQuarter(quarter);
-    
-    // Check if we already processed this quarter (normalized comparison)
-    const existingNormalizedQuarters = submission.submissionData.processedQuarters.map(q => normalizeQuarter(q));
-    const alreadyProcessed = existingNormalizedQuarters.includes(normalizedQuarter);
-    
-    // Log existing processed quarters for debugging
-    console.log(`Existing processed quarters:`, submission.submissionData.processedQuarters);
-    
-    if (!alreadyProcessed) {
-      // Get ALL possible standardized formats of this quarter
-      const quarterFormats = getAllQuarterFormats(quarter);
-      console.log(`Adding standardized formats:`, quarterFormats);
-      
-      // Add ALL formats to the processedQuarters array
-      submission.submissionData.processedQuarters.push(...quarterFormats);
-      console.log(`Added ${quarterFormats.length} formats for ${quarter} to processed quarters`);
-    } else {
-      console.log(`Quarter ${quarter} (normalized: ${normalizedQuarter}) is already processed, skipping`);
+    // FIXED: Store quarter in multiple simple formats
+    // Original format
+    if (!submission.submissionData.processedQuarters.includes(quarter)) {
+      submission.submissionData.processedQuarters.push(quarter);
     }
     
-    // IMPROVED: Enhanced ZIP path storage
+    // Also store just the number for simple matching
+    const quarterNum = normalizeQuarter(quarter);
+    if (quarterNum && !submission.submissionData.processedQuarters.includes(quarterNum)) {
+      submission.submissionData.processedQuarters.push(quarterNum);
+    }
+    
+    // FIXED: Store ZIP path in multiple ways for reliable access
     if (zipPath) {
+      // Store at top level for backwards compatibility
+      submission.zipPath = zipPath;
+      
+      // Create quarterZips structure if it doesn't exist
       if (!submission.submissionData.quarterZips) {
         submission.submissionData.quarterZips = {};
       }
       
-      // Store under both the original format and normalized format for better matching
+      // Store under original format
       submission.submissionData.quarterZips[quarter] = zipPath;
-      submission.submissionData.quarterZips[normalizedQuarter] = zipPath;
       
-      // Also store under common format variations
-      const qNum = normalizedQuarter.match(/q([1-4])/);
-      if (qNum && qNum[1]) {
-        submission.submissionData.quarterZips[`Q${qNum[1]}`] = zipPath;
-        submission.submissionData.quarterZips[`Quarter ${qNum[1]}`] = zipPath;
+      // Also store under quarter number for simple access
+      if (quarterNum) {
+        submission.submissionData.quarterZips[quarterNum] = zipPath;
       }
       
       console.log(`Updated ZIP path for ${quarter} to: ${zipPath}`);
-    }
-    
-    // IMPROVED: Also store the quarter info in a top-level field for easier querying
-    if (!submission.processedQuarters) {
-      submission.processedQuarters = [];
-    }
-    
-    if (!submission.processedQuarters.includes(normalizedQuarter)) {
-      submission.processedQuarters.push(normalizedQuarter);
     }
     
     // Save the updated submission
@@ -457,7 +351,7 @@ router.post('/update-processed-quarters', async (req, res) => {
           { 
             $set: { 
               submissionData: submission.submissionData,
-              processedQuarters: submission.processedQuarters
+              zipPath: zipPath || submission.zipPath
             } 
           }
         );

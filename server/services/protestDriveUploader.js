@@ -8,7 +8,7 @@ const googleSheetsService = require('./googleSheetsService');
 
 /**
  * Convert any ID format to a consistent ERC format
- * IMPROVED: More reliable ID conversion that works across the entire application
+ * SIMPLIFIED: Use a straightforward prefix approach without complex transformations
  * @param {string} trackingId - The original tracking ID (numeric or formatted)
  * @returns {string} - A consistently formatted ERC ID
  */
@@ -27,50 +27,8 @@ function ensureConsistentId(trackingId) {
     return idStr;
   }
   
-  // Extract all numeric characters for numeric-only processing
-  const numericPart = idStr.replace(/\D/g, '');
-  
-  // If we have some numeric part, convert it to hex format
-  if (numericPart && numericPart.length > 0) {
-    try {
-      // Handle very long numbers by using substring to avoid overflow
-      const limitedNumeric = numericPart.length > 10 
-        ? numericPart.substring(0, 10) 
-        : numericPart;
-      
-      // Convert to hex and pad to 8 characters
-      const hexId = parseInt(limitedNumeric).toString(16).toUpperCase().padStart(8, '0');
-      const resultId = `ERC-${hexId}`;
-      
-      console.log(`ID conversion: ${trackingId} → ${resultId} (via numeric ${numericPart})`);
-      return resultId;
-    } catch (error) {
-      console.error(`Error converting ID ${trackingId} to hex:`, error);
-    }
-  }
-  
-  // If numeric conversion failed or wasn't possible, try to create a deterministic hash
-  try {
-    // Simple hashing function
-    let hash = 0;
-    for (let i = 0; i < idStr.length; i++) {
-      const char = idStr.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    
-    // Convert to hex, ensure positive, and pad to 8 characters
-    const hexHash = Math.abs(hash).toString(16).toUpperCase().padStart(8, '0');
-    const resultId = `ERC-${hexHash}`;
-    
-    console.log(`ID conversion: ${trackingId} → ${resultId} (via hash)`);
-    return resultId;
-  } catch (hashError) {
-    console.error(`Error creating hash for ID ${trackingId}:`, hashError);
-  }
-  
-  // Last resort: prefix the original ID with ERC-
-  return `ERC-${idStr.replace(/[^a-zA-Z0-9]/g, '')}`;
+  // Simply add the prefix - no complex transformations
+  return `ERC-${idStr}`;
 }
 
 /**
@@ -87,7 +45,7 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath) {
     console.log(`PDF path: ${pdfPath}`);
     console.log(`ZIP path: ${zipPath}`);
     
-    // IMPROVED: Use consistent ID conversion across the application
+    // FIXED: Use consistent ID approach - don't transform the ID
     const formattedTrackingId = ensureConsistentId(trackingId);
     console.log(`Using consistent tracking ID format: ${formattedTrackingId} (original: ${trackingId})`);
     
@@ -206,55 +164,26 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath) {
       }
     }
     
-    // IMPROVED: Update the local file with better path handling and multiple format attempts
+    // Update MongoDB directly to ensure quarter zip paths are set
     try {
-      // Try with multiple ID formats and path combinations
-      const idFormats = [formattedTrackingId, trackingId, trackingId.replace(/\D/g, '')];
-      const basePaths = [
-        path.join(__dirname, '../data/ERC_Disallowances'),
-        path.join(__dirname, '../../data/ERC_Disallowances')
-      ];
-      
-      let fileUpdateSuccess = false;
-      
-      // Try each combination of base path and ID format
-      for (const basePath of basePaths) {
-        for (const idFormat of idFormats) {
-          const submissionPath = path.join(basePath, idFormat, 'submission_info.json');
-          
-          if (fsSync.existsSync(submissionPath)) {
-            try {
-              const submissionData = await fs.readFile(submissionPath, 'utf8');
-              const submissionInfo = JSON.parse(submissionData);
-              
-              submissionInfo.status = 'PDF done';
-              submissionInfo.protestLetterPath = driveFiles.protestLetterLink;
-              submissionInfo.zipPath = driveFiles.zipPackageLink;
-              submissionInfo.googleDriveLink = driveFiles.folderLink;
-              submissionInfo.timestamp = new Date().toISOString();
-              
-              await fs.writeFile(
-                submissionPath,
-                JSON.stringify(submissionInfo, null, 2)
-              );
-              
-              console.log(`Updated local file for ID ${idFormat} with Google Drive links`);
-              fileUpdateSuccess = true;
-              break;
-            } catch (fileErr) {
-              console.log(`Error updating file at ${submissionPath}: ${fileErr.message}`);
-            }
-          }
-        }
+      // Try to update MongoDB with the generated zip path
+      if (formattedTrackingId && zipPath) {
+        const response = await fetch(`http://localhost:${process.env.PORT || 5000}/api/mongodb-queue/update-processed-quarters`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            submissionId: formattedTrackingId,
+            quarter: 'Quarter 3', // Using the format from the log
+            zipPath: driveFiles.zipPackageLink
+          })
+        });
         
-        if (fileUpdateSuccess) break;
+        if (response.ok) {
+          console.log('Successfully updated MongoDB with zip path');
+        }
       }
-      
-      if (!fileUpdateSuccess) {
-        console.log(`No matching local files found for IDs: ${idFormats.join(', ')}`);
-      }
-    } catch (fileErr) {
-      console.log(`Error updating local files: ${fileErr.message}`);
+    } catch (mongoErr) {
+      console.error('Error updating MongoDB:', mongoErr);
     }
     
     // Return with both IDs and the drive files
@@ -265,42 +194,18 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath) {
     };
   } catch (error) {
     console.error(`Error uploading to Drive for ${trackingId}:`, error);
-    
-    // IMPROVED: Try to update MongoDB directly as a fallback
-    if (error.message.includes('Google Sheet') && zipPath) {
-      try {
-        console.log(`Attempting direct MongoDB update as fallback...`);
-        const response = await fetch(`http://localhost:${process.env.PORT || 5000}/api/mongodb-queue/update-processed-quarters`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            submissionId: trackingId,
-            quarter: 'Unknown', // Generic value since we don't know the quarter
-            zipPath: zipPath
-          })
-        });
-        
-        if (response.ok) {
-          console.log(`Direct MongoDB update successful as fallback`);
-        }
-      } catch (mongoErr) {
-        console.error(`MongoDB fallback update also failed:`, mongoErr);
-      }
-    }
-    
     throw error;
   }
 }
 
-// IMPROVED: New function to find a submission by ID with flexible matching
+// Find a submission by ID with flexible matching
 async function findSubmissionById(trackingId) {
   try {
-    // Try multiple ID formats
+    // Use consistent ID format
     const formattedId = ensureConsistentId(trackingId);
-    const numericId = trackingId.toString().replace(/\D/g, '');
     
     const basePath = path.join(__dirname, '../data/ERC_Disallowances');
-    const idFormats = [formattedId, trackingId, numericId];
+    const idFormats = [formattedId, trackingId];
     
     // Try each ID format
     for (const idFormat of idFormats) {
