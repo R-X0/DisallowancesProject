@@ -260,7 +260,7 @@ const updateMongoDBWithLetterData = async (trackingId, quarter, zipPath) => {
   }
 };
 
-// Update the generateProtestLetter function to better handle timePeriod formats
+// Update the generateProtestLetter function with the fix
 const generateProtestLetter = async () => {
   setGenerating(true);
   setError(null);
@@ -304,7 +304,7 @@ const generateProtestLetter = async () => {
       businessType: businessType,
       trackingId: formData.trackingId || '',
       documentType: documentType,
-      // Add revenue data
+      // Include all quarterly revenue data
       q1_2019: formData.q1_2019 || '',
       q2_2019: formData.q2_2019 || '',
       q3_2019: formData.q3_2019 || '',
@@ -316,7 +316,7 @@ const generateProtestLetter = async () => {
       q1_2021: formData.q1_2021 || '',
       q2_2021: formData.q2_2021 || '',
       q3_2021: formData.q3_2021 || '',
-      // Also pass additional context
+      // Include additional context
       revenueReductionInfo: formData.revenueReductionInfo || '',
       governmentOrdersInfo: formData.governmentOrdersInfo || '',
       // Pass revenue decline metadata
@@ -325,7 +325,18 @@ const generateProtestLetter = async () => {
       approachFocus: currentApproach // Use the confirmed approach
     };
     
-    // [... processing steps and API call ...]
+    // Set processing message and update step
+    setProcessingMessage("Contacting server to generate document...");
+    setProcessingStep(1);
+    
+    // Make API call to generate the protest letter
+    console.log('Making API call to generate protest letter...');
+    const response = await generateERCProtestLetter(letterData);
+    console.log('Received API response:', response);
+    
+    // Update processing status
+    setProcessingMessage("Document generated, processing attachments...");
+    setProcessingStep(3);
     
     if (response.success) {
       setProtestLetter(response.letter);
@@ -340,6 +351,10 @@ const generateProtestLetter = async () => {
       
       console.log('Setting package data:', newPackageData);
       setPackageData(newPackageData);
+      
+      // Update processing status
+      setProcessingMessage("Finalizing document package...");
+      setProcessingStep(4);
       
       // IMPORTANT: Update MongoDB with the generated zipPath
       // This ensures the quarter is marked as processed and the zip is stored
@@ -369,6 +384,9 @@ const generateProtestLetter = async () => {
         onGenerated(newPackageData);
       }
       
+      // Complete processing and show dialog
+      setProcessingMessage("Document package complete!");
+      setProcessingStep(5);
       setDialogOpen(true);
       setProcessing(false);
     } else {
