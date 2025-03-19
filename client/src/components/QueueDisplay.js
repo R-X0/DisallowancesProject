@@ -57,33 +57,50 @@ const QueueDisplay = () => {
   /**
    * Normalize quarter format to a consistent standard for comparison
    * @param {string} quarter - Any quarter format (Quarter 1, Q1, etc.)
-   * @returns {string} - Normalized format (q1, q2, etc.)
+   * @returns {string} - Normalized format (q1_2021, q2_2020, etc.)
    */
   const normalizeQuarter = (quarter) => {
     if (!quarter) return '';
     
-    // Convert to string, lowercase, and remove all non-alphanumeric characters
-    const clean = quarter.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+    // Convert to string, lowercase, and clean up non-alphanumeric except underscore
+    const clean = quarter.toString().toLowerCase().replace(/[^a-z0-9_]/g, '');
     
-    // Extract just the quarter number using regex
-    const match = clean.match(/q?([1-4])/);
-    if (match && match[1]) {
-      // Return standardized format: q1, q2, q3, q4
-      return `q${match[1]}`;
+    // Special case for "Quarter X" format
+    if (clean.startsWith('quarter')) {
+      // Extract quarter number
+      const match = clean.match(/quarter([1-4])/);
+      if (match && match[1]) {
+        const qNum = match[1];
+        
+        // If there's a year in the string, extract and append it
+        const yearMatch = clean.match(/(20\d{2})/);
+        if (yearMatch && yearMatch[1]) {
+          return `q${qNum}_${yearMatch[1]}`;
+        }
+        
+        // Without year, just return the quarter number
+        return `q${qNum}`;
+      }
     }
     
-    // If quarter includes year (e.g., "q2 2021"), extract quarter part
-    const quarterYearMatch = clean.match(/q?([1-4]).*20([0-9]{2})/);
-    if (quarterYearMatch && quarterYearMatch[1]) {
-      return `q${quarterYearMatch[1]}`;
+    // Handle "QX 20XX" format (most common)
+    const qYearMatch = clean.match(/q([1-4])[\s_]*(20\d{2})/);
+    if (qYearMatch && qYearMatch[1] && qYearMatch[2]) {
+      return `q${qYearMatch[1]}_${qYearMatch[2]}`;
     }
     
-    // Return original if we couldn't normalize it
+    // Handle just "QX" format
+    const justQMatch = clean.match(/q([1-4])$/);
+    if (justQMatch && justQMatch[1]) {
+      return `q${justQMatch[1]}`;
+    }
+    
+    // If we still can't normalize it, return the cleaned version
     return clean;
   };
 
   /**
-   * Check if a quarter has been processed already
+   * Check if a quarter has been processed already using improved normalization
    * @param {string} quarter - The quarter to check
    * @param {Array} processedQuarters - Array of processed quarters
    * @returns {boolean} - Whether the quarter is processed
@@ -97,12 +114,14 @@ const QueueDisplay = () => {
     const normalizedQuarter = normalizeQuarter(quarter);
     
     // Debug logging
-    console.log(`Quarter check: "${quarter}" vs processed:`, processedQuarters);
-    console.log(`Normalized comparison: "${normalizedQuarter}" vs`, 
-      processedQuarters.map(pq => normalizeQuarter(pq)));
+    console.log(`Quarter check: "${quarter}" (normalized to "${normalizedQuarter}") vs processed:`, processedQuarters);
     
-    // Check if any processed quarter matches when normalized
-    const result = processedQuarters.some(pq => normalizeQuarter(pq) === normalizedQuarter);
+    // Map all processed quarters to their normalized versions
+    const normalizedProcessed = processedQuarters.map(pq => normalizeQuarter(pq));
+    console.log(`Normalized processed quarters:`, normalizedProcessed);
+    
+    // Check if any processed quarter matches the normalized version of what we're checking
+    const result = normalizedProcessed.includes(normalizedQuarter);
     console.log(`Quarter processed check result: ${result}`);
     return result;
   };
@@ -849,6 +868,126 @@ const QueueDisplay = () => {
                   </Paper>
                 </Box>
               )}
+
+              {/* Letter Generation Status */}
+              <Box mt={3}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Letter Generation Status
+                </Typography>
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                  <Box mb={2}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      <strong>Quarters Needing Letters:</strong>
+                    </Typography>
+                    {selectedItem.submissionData?.report?.qualificationData?.quarterAnalysis ? (
+                      <TableContainer>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Quarter</TableCell>
+                              <TableCell>Normalized Format</TableCell>
+                              <TableCell>Status</TableCell>
+                              <TableCell>Letter Path</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {selectedItem.submissionData.report.qualificationData.quarterAnalysis.map((quarter) => {
+                              // Determine if this quarter is processed
+                              const quarterFormat = quarter.quarter;
+                              const isProcessed = isQuarterProcessed(
+                                quarterFormat, 
+                                selectedItem.submissionData?.processedQuarters || []
+                              );
+                              
+                              // Get the ZIP path for this quarter if available
+                              const normalizedQuarter = normalizeQuarter(quarterFormat);
+                              const zipPath = selectedItem.submissionData?.quarterZips?.[normalizedQuarter] ||
+                                            selectedItem.submissionData?.quarterZips?.[quarterFormat] || '';
+                              
+                              return (
+                                <TableRow key={quarterFormat}>
+                                  <TableCell>{quarterFormat}</TableCell>
+                                  <TableCell><code>{normalizeQuarter(quarterFormat)}</code></TableCell>
+                                  <TableCell>
+                                    {isProcessed ? (
+                                      <Chip 
+                                        icon={<CheckCircle fontSize="small" />}
+                                        label="Letter Generated" 
+                                        color="success" 
+                                        size="small"
+                                      />
+                                    ) : (
+                                      <Chip 
+                                        icon={<HourglassEmpty fontSize="small" />}
+                                        label="Needs Letter" 
+                                        color="warning" 
+                                        size="small"
+                                      />
+                                    )}
+                                  </TableCell>
+                                  <TableCell>
+                                    {zipPath ? (
+                                      <Button
+                                        size="small"
+                                        startIcon={<CloudDownload />}
+                                        onClick={() => handleDownloadFile(zipPath)}
+                                      >
+                                        Download
+                                      </Button>
+                                    ) : (
+                                      <Typography variant="caption" color="text.secondary">
+                                        No letter available
+                                      </Typography>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        No quarter analysis available
+                      </Typography>
+                    )}
+                  </Box>
+                  
+                  <Box mt={3}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      <strong>Raw Processed Quarters:</strong>
+                    </Typography>
+                    <code style={{ 
+                      display: 'block', 
+                      backgroundColor: '#f5f5f5', 
+                      padding: '8px', 
+                      borderRadius: '4px',
+                      maxHeight: '100px',
+                      overflow: 'auto'
+                    }}>
+                      {JSON.stringify(selectedItem.submissionData?.processedQuarters || [], null, 2)}
+                    </code>
+                  </Box>
+                  
+                  <Box mt={2} mb={1}>
+                    <Button 
+                      variant="outlined" 
+                      color="primary"
+                      size="small"
+                      startIcon={<Refresh />}
+                      onClick={() => {
+                        // Force refresh the queue data
+                        fetch('/api/mongodb-queue?refresh=true')
+                          .then(() => fetchQueue())
+                          .then(() => setDialogOpen(false))
+                          .then(() => setTimeout(() => handleItemClick(selectedItem), 200));
+                      }}
+                    >
+                      Refresh Letter Status
+                    </Button>
+                  </Box>
+                </Paper>
+              </Box>
 
               {/* Excel Report Section */}
               {selectedItem.reportPath ? (

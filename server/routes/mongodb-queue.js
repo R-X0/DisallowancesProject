@@ -9,29 +9,102 @@ const { translatePath, processDocument } = require('../utils/pathTranslator');
 /**
  * Normalize quarter format to a consistent standard for comparison
  * @param {string} quarter - Any quarter format (Quarter 1, Q1, etc.)
- * @returns {string} - Normalized format (q1, q2, etc.)
+ * @returns {string} - Normalized format (q1_2021, q2_2020, etc.)
  */
 const normalizeQuarter = (quarter) => {
   if (!quarter) return '';
   
-  // Convert to string, lowercase, and remove all non-alphanumeric characters
-  const clean = quarter.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+  // Convert to string, lowercase, and clean up non-alphanumeric except underscore
+  const clean = quarter.toString().toLowerCase().replace(/[^a-z0-9_]/g, '');
   
-  // Extract just the quarter number using regex
-  const match = clean.match(/q?([1-4])/);
-  if (match && match[1]) {
-    // Return standardized format: q1, q2, q3, q4
-    return `q${match[1]}`;
+  // Special case for "Quarter X" format
+  if (clean.startsWith('quarter')) {
+    // Extract quarter number
+    const match = clean.match(/quarter([1-4])/);
+    if (match && match[1]) {
+      const qNum = match[1];
+      
+      // If there's a year in the string, extract and append it
+      const yearMatch = clean.match(/(20\d{2})/);
+      if (yearMatch && yearMatch[1]) {
+        return `q${qNum}_${yearMatch[1]}`;
+      }
+      
+      // Without year, just return the quarter number
+      return `q${qNum}`;
+    }
   }
   
-  // If quarter includes year (e.g., "q2 2021"), extract quarter part
-  const quarterYearMatch = clean.match(/q?([1-4]).*20([0-9]{2})/);
-  if (quarterYearMatch && quarterYearMatch[1]) {
-    return `q${quarterYearMatch[1]}`;
+  // Handle "QX 20XX" format (most common)
+  const qYearMatch = clean.match(/q([1-4])[\s_]*(20\d{2})/);
+  if (qYearMatch && qYearMatch[1] && qYearMatch[2]) {
+    return `q${qYearMatch[1]}_${qYearMatch[2]}`;
   }
   
-  // Return original if we couldn't normalize it
+  // Handle just "QX" format
+  const justQMatch = clean.match(/q([1-4])$/);
+  if (justQMatch && justQMatch[1]) {
+    return `q${justQMatch[1]}`;
+  }
+  
+  // If we still can't normalize it, return the cleaned version
   return clean;
+};
+
+/**
+ * Add ALL possible standard formats of a quarter to an array
+ * @param {string} quarter - The quarter to standardize
+ * @returns {Array} - Array of standardized quarter formats
+ */
+const getAllQuarterFormats = (quarter) => {
+  const formats = [];
+  
+  // Start with the original format
+  formats.push(quarter);
+  
+  // Try to extract the quarter number and year
+  const normalized = normalizeQuarter(quarter);
+  
+  // Pattern: q1_2021
+  const fullMatch = normalized.match(/q([1-4])_?(20\d{2})/);
+  if (fullMatch && fullMatch[1] && fullMatch[2]) {
+    const qNum = fullMatch[1];
+    const year = fullMatch[2];
+    
+    // Add every possible format
+    formats.push(`q${qNum}_${year}`);
+    formats.push(`q${qNum}${year}`);
+    formats.push(`q${qNum} ${year}`);
+    formats.push(`Q${qNum}_${year}`);
+    formats.push(`Q${qNum}${year}`);
+    formats.push(`Q${qNum} ${year}`);
+    formats.push(`Quarter ${qNum}_${year}`);
+    formats.push(`Quarter ${qNum} ${year}`);
+    formats.push(`Quarter${qNum}`);
+    formats.push(`Quarter ${qNum}`);
+    formats.push(`q${qNum}`);
+    formats.push(`Q${qNum}`);
+    
+    // Also add year-first formats
+    formats.push(`${year}_q${qNum}`);
+    formats.push(`${year} q${qNum}`);
+    formats.push(`${year}_Q${qNum}`);
+    formats.push(`${year} Q${qNum}`);
+  } else {
+    // Pattern: q1 (no year)
+    const qMatch = normalized.match(/q([1-4])/);
+    if (qMatch && qMatch[1]) {
+      const qNum = qMatch[1];
+      
+      formats.push(`q${qNum}`);
+      formats.push(`Q${qNum}`);
+      formats.push(`Quarter ${qNum}`);
+      formats.push(`Quarter${qNum}`);
+    }
+  }
+  
+  // Remove duplicates
+  return [...new Set(formats)];
 };
 
 // Get all submissions for queue display
@@ -240,39 +313,6 @@ router.get('/download', async (req, res) => {
   }
 });
 
-/**
- * Add standardized quarter formats to the processed quarters array
- * @param {string} quarter - The quarter to add
- * @param {Array} processedQuarters - Existing processed quarters array
- * @returns {Array} - Updated array with standard formats added
- */
-const addQuarterFormats = (quarter, processedQuarters = []) => {
-  const normalized = normalizeQuarter(quarter);
-  
-  // Only add if not already present (normalized comparison)
-  if (!processedQuarters.some(pq => normalizeQuarter(pq) === normalized)) {
-    // Add the original format
-    processedQuarters.push(quarter);
-    
-    // Add standard formats based on the quarter number
-    if (normalized === 'q1') {
-      processedQuarters.push('Q1');
-      processedQuarters.push('Quarter 1');
-    } else if (normalized === 'q2') {
-      processedQuarters.push('Q2');
-      processedQuarters.push('Quarter 2');
-    } else if (normalized === 'q3') {
-      processedQuarters.push('Q3');
-      processedQuarters.push('Quarter 3');
-    } else if (normalized === 'q4') {
-      processedQuarters.push('Q4');
-      processedQuarters.push('Quarter 4');
-    }
-  }
-  
-  return processedQuarters;
-};
-
 // Update processed quarters for a submission
 router.post('/update-processed-quarters', async (req, res) => {
   try {
@@ -322,11 +362,6 @@ router.post('/update-processed-quarters', async (req, res) => {
     
     console.log(`Found submission: ${submission.id || submission._id}`);
     
-    // Log the formats of existing quarters for debugging
-    if (submission.submissionData && submission.submissionData.processedQuarters) {
-      console.log(`Existing processedQuarters: ${JSON.stringify(submission.submissionData.processedQuarters)}`);
-    }
-    
     // Ensure we have a submissionData object
     if (!submission.submissionData) {
       submission.submissionData = {};
@@ -337,27 +372,35 @@ router.post('/update-processed-quarters', async (req, res) => {
       submission.submissionData.processedQuarters = [];
     }
     
-    // Add standardized quarter formats
-    submission.submissionData.processedQuarters = addQuarterFormats(
-      quarter, 
-      submission.submissionData.processedQuarters
-    );
+    // Get ALL possible standardized formats of this quarter
+    const quarterFormats = getAllQuarterFormats(quarter);
+    
+    // Log existing processed quarters for debugging
+    console.log(`Existing processed quarters:`, submission.submissionData.processedQuarters);
+    console.log(`Adding standardized formats:`, quarterFormats);
+    
+    // Check if any format of this quarter is already processed
+    const normalizedExisting = submission.submissionData.processedQuarters.map(q => normalizeQuarter(q));
+    const normalizedQuarter = normalizeQuarter(quarter);
+    
+    if (!normalizedExisting.includes(normalizedQuarter)) {
+      // Add ALL formats to the processedQuarters array
+      submission.submissionData.processedQuarters.push(...quarterFormats);
+      console.log(`Added ${quarterFormats.length} formats for ${quarter} to processed quarters`);
+    } else {
+      console.log(`Quarter ${quarter} (normalized: ${normalizedQuarter}) is already processed, skipping`);
+    }
     
     // If zipPath is provided, store it in a new quarterZips object
-    let zipWasUpdated = false;
     if (zipPath) {
       if (!submission.submissionData.quarterZips) {
         submission.submissionData.quarterZips = {};
       }
       
-      // Check if the ZIP path has changed
-      if (submission.submissionData.quarterZips[quarter] !== zipPath) {
-        submission.submissionData.quarterZips[quarter] = zipPath;
-        zipWasUpdated = true;
-        console.log(`Updated ZIP path for ${quarter} to: ${zipPath}`);
-      } else {
-        console.log(`ZIP path for ${quarter} unchanged: ${zipPath}`);
-      }
+      // Store under both the original format and normalized format
+      submission.submissionData.quarterZips[quarter] = zipPath;
+      submission.submissionData.quarterZips[normalizedQuarter] = zipPath;
+      console.log(`Updated ZIP path for ${quarter} to: ${zipPath}`);
     }
     
     // Save the updated submission

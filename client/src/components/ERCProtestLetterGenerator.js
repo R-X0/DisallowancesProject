@@ -251,41 +251,77 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
     setSelectedTimePeriod(event.target.value);
   };
 
-// Function to update MongoDB with letter data
-const updateMongoDBWithLetterData = async (trackingId, quarter, zipPath) => {
+// Function to update MongoDB with letter data with retry capability
+const updateMongoDBWithLetterData = async (trackingId, quarter, zipPath, retryCount = 3) => {
   if (!trackingId || !quarter || !zipPath) {
     console.log('Missing required data for MongoDB update:', { trackingId, quarter, zipPath });
     return { success: false, message: 'Missing required data' };
   }
   
-  try {
-    console.log(`Updating MongoDB for tracking ID: ${trackingId}, quarter: ${quarter}`);
-    console.log(`ZIP path: ${zipPath}`);
-    
-    const response = await fetch('/api/mongodb-queue/update-processed-quarters', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        submissionId: trackingId,
-        quarter: quarter,  // Use the exact quarter format that was passed in
-        zipPath: zipPath
-      })
-    });
-    
-    if (!response.ok) {
-      console.error(`Error updating MongoDB: ${response.status} - ${response.statusText}`);
-      return { success: false, message: 'Server error' };
+  // Keep track of attempts
+  let currentAttempt = 0;
+  let lastError = null;
+  
+  while (currentAttempt < retryCount) {
+    currentAttempt++;
+    try {
+      console.log(`Updating MongoDB for tracking ID: ${trackingId}, quarter: ${quarter} (attempt ${currentAttempt}/${retryCount})`);
+      console.log(`ZIP path: ${zipPath}`);
+      
+      const response = await fetch('/api/mongodb-queue/update-processed-quarters', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          submissionId: trackingId,
+          quarter: quarter,
+          zipPath: zipPath
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error updating MongoDB: ${response.status} - ${response.statusText} - ${errorText}`);
+        lastError = new Error(`Server responded with ${response.status}: ${errorText}`);
+        
+        // Wait before retry (exponential backoff)
+        if (currentAttempt < retryCount) {
+          const delay = Math.pow(2, currentAttempt) * 500; // 1s, 2s, 4s
+          console.log(`Retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        throw lastError;
+      }
+      
+      const result = await response.json();
+      console.log('MongoDB update successful:', result);
+      
+      // Force refresh of the queue display immediately
+      try {
+        const refreshResponse = await fetch('/api/mongodb-queue?refresh=true');
+        console.log('Queue refresh after update:', refreshResponse.ok ? 'success' : 'failed');
+      } catch (refreshError) {
+        console.warn('Non-critical error refreshing queue:', refreshError);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error(`Error updating MongoDB (attempt ${currentAttempt}/${retryCount}):`, error);
+      lastError = error;
+      
+      // Wait before retry (exponential backoff)
+      if (currentAttempt < retryCount) {
+        const delay = Math.pow(2, currentAttempt) * 500; // 1s, 2s, 4s
+        console.log(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
-    
-    const result = await response.json();
-    console.log('MongoDB update successful:', result);
-    return result;
-  } catch (error) {
-    console.error('Error updating MongoDB:', error);
-    return { success: false, error: error.message };
   }
+  
+  // If we get here, all retries failed
+  return { success: false, error: lastError?.message || 'Unknown error after multiple retries' };
 };
 
 // Update the generateProtestLetter function with the fix
@@ -482,7 +518,8 @@ const generateProtestLetter = async () => {
     );
   };
 
-  const downloadProtestPackage = () => {
+  // Also modify the downloadProtestPackage function to ensure updates happen BEFORE the download starts
+  const downloadProtestPackage = async () => {
     if (packageData && packageData.zipPath) {
       console.log("Downloading protest package with path:", packageData.zipPath);
       
@@ -490,13 +527,23 @@ const generateProtestLetter = async () => {
       if (formData.trackingId || formData.submissionId) {
         const trackingId = formData.trackingId || formData.submissionId;
         console.log(`Ensuring MongoDB is updated with ZIP for ${trackingId}`);
-        updateMongoDBWithLetterData(trackingId, selectedTimePeriod, packageData.zipPath)
-          .then(result => {
-            console.log("MongoDB update during download:", result);
-          })
-          .catch(err => {
-            console.error("Error updating MongoDB during download:", err);
-          });
+        
+        try {
+          // Wait for the update to complete BEFORE starting download
+          await updateMongoDBWithLetterData(trackingId, selectedTimePeriod, packageData.zipPath);
+          console.log("MongoDB successfully updated before download");
+          
+          // Force a refresh of the queue display
+          try {
+            await fetch('/api/mongodb-queue?refresh=true');
+            console.log("Queue refresh triggered");
+          } catch (refreshError) {
+            console.error("Failed to refresh queue:", refreshError);
+          }
+        } catch (err) {
+          console.error("Error updating MongoDB during download:", err);
+          // Continue with download even if update fails
+        }
       }
       
       // Check if it's a Google Drive URL (starts with http/https)
@@ -504,7 +551,7 @@ const generateProtestLetter = async () => {
         // Open it directly in a new tab
         window.open(packageData.zipPath, '_blank');
       } else {
-        // Use the public API endpoint for local file downloads (updated to use the new public endpoint)
+        // Use the public API endpoint for local file downloads
         window.open(`/api/erc-protest/download?path=${encodeURIComponent(packageData.zipPath)}`, '_blank');
       }
       
@@ -512,16 +559,6 @@ const generateProtestLetter = async () => {
       if (onGenerated) {
         console.log("Triggering onGenerated again during download", packageData);
         onGenerated(packageData);
-      }
-      
-      // Force a refresh of the queue display
-      try {
-        console.log("Forcing queue refresh after download");
-        fetch('/api/mongodb-queue?refresh=true')
-          .then(response => console.log("Queue refresh status:", response.ok ? "success" : "failed"))
-          .catch(err => console.error("Error during queue refresh:", err));
-      } catch (refreshError) {
-        console.error("Failed to refresh queue:", refreshError);
       }
     } else {
       console.warn("No package data or zipPath available for download");
