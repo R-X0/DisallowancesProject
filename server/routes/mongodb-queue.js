@@ -239,75 +239,48 @@ router.post('/update-processed-quarters', async (req, res) => {
     
     console.log(`MongoDB connected, finding submission: ${submissionId}`);
     
-    // Check if the ID is a valid MongoDB ObjectId (24 character hex)
-    const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(submissionId);
-    console.log(`Is valid ObjectId format: ${isValidObjectId}`);
-    
-    // Find the submission with expanded search capabilities
+    // IMPROVED ID HANDLING: Try multiple potential ID formats
     let submission = null;
+    const potentialIds = [
+      submissionId,
+      `ERC-${submissionId}`,
+      submissionId.replace('ERC-', ''),
+      // Also try with ObjectId format if it looks like one
+      ...(submissionId.match(/^[0-9a-f]{24}$/i) ? [submissionId] : [])
+    ];
     
-    // First, try to find by submissionId (string field)
-    submission = await Submission.findOne({ submissionId: submissionId });
+    console.log('Trying the following potential IDs:', potentialIds);
     
-    // If not found and it's a valid ObjectId, try to find by _id
-    if (!submission && isValidObjectId) {
-      submission = await Submission.findById(submissionId);
-    }
-    
-    // If still not found, try to find by numeric ID converted to string
-    if (!submission) {
-      // If the ID is numeric, try to find with additional formatting
-      if (!isNaN(parseInt(submissionId))) {
-        // Try formatted versions like "ERC-12345" or similar pattern
-        const possibleFormats = [
-          submissionId,
-          `ERC-${submissionId}`,
-          `ERC-${submissionId.substring(0, 8)}`
-        ];
+    // Try each potential ID format
+    for (const idToTry of potentialIds) {
+      try {
+        // Try by submissionId field
+        const found = await Submission.findOne({ submissionId: idToTry });
+        if (found) {
+          submission = found;
+          console.log(`Found submission with submissionId=${idToTry}`);
+          break;
+        }
         
-        for (const format of possibleFormats) {
-          submission = await Submission.findOne({ submissionId: format });
-          if (submission) {
-            console.log(`Found submission using format: ${format}`);
+        // Also try by _id if it's a valid ObjectId
+        if (idToTry.match(/^[0-9a-f]{24}$/i)) {
+          const foundById = await Submission.findById(idToTry);
+          if (foundById) {
+            submission = foundById;
+            console.log(`Found submission by _id=${idToTry}`);
             break;
           }
         }
+      } catch (findError) {
+        console.log(`Error looking up ID ${idToTry}:`, findError.message);
       }
     }
     
-    // If still not found, check if a map exists to resolve the ID
-    if (!submission) {
-      try {
-        const mapDir = path.join(__dirname, '../data/id_mappings');
-        // Check if directory exists
-        if (fs.existsSync(mapDir)) {
-          const files = fs.readdirSync(mapDir);
-          for (const file of files) {
-            if (file.startsWith(`${submissionId}_to_`)) {
-              console.log(`Found ID mapping file: ${file}`);
-              const mapPath = path.join(mapDir, file);
-              const mapData = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
-              if (mapData.formattedId) {
-                console.log(`Looking up mapped ID: ${mapData.formattedId}`);
-                submission = await Submission.findOne({ submissionId: mapData.formattedId });
-                if (submission) {
-                  console.log(`Found submission using mapped ID: ${mapData.formattedId}`);
-                  break;
-                }
-              }
-            }
-          }
-        }
-      } catch (mapError) {
-        console.error('Error checking ID mappings:', mapError);
-      }
-    }
-    
-    // If still not found, create a new record
+    // If still not found, create a new record with this ID
     if (!submission) {
       console.log(`No existing submission found for ID ${submissionId}, creating new record`);
       
-      // Create a new MongoDB record with this submissionId
+      // Create a default submission data structure
       submission = new Submission({
         submissionId: submissionId,
         receivedAt: new Date(),
@@ -318,111 +291,154 @@ router.post('/update-processed-quarters', async (req, res) => {
         }
       });
       
-      // Try to get some info from the filesystem if available
+      // Try to get business name from filesystem
       try {
-        // Check if there's a submission_info.json file
-        let jsonPath = '';
-        // Check if it starts with ERC-
-        if (submissionId.startsWith('ERC-')) {
-          jsonPath = path.join(__dirname, `../data/ERC_Disallowances/${submissionId}/submission_info.json`);
-        } else {
-          jsonPath = path.join(__dirname, `../data/ERC_Disallowances/ERC-${submissionId}/submission_info.json`);
-        }
+        // Look in multiple possible locations
+        const possiblePaths = [
+          path.join(__dirname, `../data/ERC_Disallowances/${submissionId}/submission_info.json`),
+          path.join(__dirname, `../data/ERC_Disallowances/ERC-${submissionId}/submission_info.json`),
+          path.join(__dirname, `../data/ERC_Disallowances/${submissionId.replace('ERC-', '')}/submission_info.json`)
+        ];
         
-        if (fs.existsSync(jsonPath)) {
-          const jsonData = fs.readFileSync(jsonPath, 'utf8');
-          const info = JSON.parse(jsonData);
-          
-          // Add business name if available
-          if (info.businessName) {
-            submission.businessName = info.businessName;
-          }
-          
-          // Add status if available
-          if (info.status) {
-            submission.status = info.status;
+        for (const jsonPath of possiblePaths) {
+          if (fs.existsSync(jsonPath)) {
+            const jsonData = fs.readFileSync(jsonPath, 'utf8');
+            const info = JSON.parse(jsonData);
+            
+            if (info.businessName) {
+              submission.businessName = info.businessName;
+              console.log(`Found business name: ${info.businessName}`);
+            }
+            
+            if (info.status) {
+              submission.status = info.status;
+            }
+            
+            break;
           }
         }
       } catch (fileError) {
-        console.error('Error reading submission info file:', fileError);
+        console.log('Error reading submission info file:', fileError.message);
       }
     }
     
-    console.log(`Found submission: ${submission._id}, creating update...`);
+    console.log(`Updating submission: ${submission._id || 'new record'}`);
     
-    // Log the full submission object for debugging
-    console.log('Full submission data:', JSON.stringify(submission, null, 2));
-
-    // Ensure submissionId is properly saved in the document
-    if (!submission.submissionId && submissionId) {
-      submission.submissionId = submissionId;
-      console.log(`Added missing submissionId ${submissionId} to document`);
-    }
-    
-    // Ensure we have a submissionData object
+    // Ensure we have the required nested objects
     if (!submission.submissionData) {
       submission.submissionData = {};
     }
     
-    // Ensure we have a processedQuarters array
     if (!submission.submissionData.processedQuarters) {
       submission.submissionData.processedQuarters = [];
+    }
+    
+    if (!submission.submissionData.quarterZips) {
+      submission.submissionData.quarterZips = {};
     }
     
     // Log current state before update
     console.log('Current processed quarters:', submission.submissionData.processedQuarters);
     
-    // Check if the quarter is already in the processedQuarters array
+    // Update processedQuarters if not already there
+    let wasQuarterAdded = false;
     if (!submission.submissionData.processedQuarters.includes(quarter)) {
-      // Add the quarter to the processedQuarters array
       submission.submissionData.processedQuarters.push(quarter);
       console.log(`Added ${quarter} to processed quarters`);
-      
-      // If zipPath is provided, store it in a new quarterZips object
-      if (zipPath) {
-        if (!submission.submissionData.quarterZips) {
-          submission.submissionData.quarterZips = {};
-        }
-        submission.submissionData.quarterZips[quarter] = zipPath;
-        console.log(`Stored zipPath for ${quarter}`);
-      }
+      wasQuarterAdded = true;
     } else {
-      console.log(`Quarter ${quarter} already processed, updating zipPath if needed`);
-      // Still update the zipPath if provided, even if quarter is already processed
-      if (zipPath) {
-        if (!submission.submissionData.quarterZips) {
-          submission.submissionData.quarterZips = {};
-        }
-        submission.submissionData.quarterZips[quarter] = zipPath;
-        console.log(`Updated zipPath for ${quarter}`);
-      }
+      console.log(`Quarter ${quarter} already in processed quarters`);
     }
     
-    // Check if we should update the status based on processed quarters
-    const allProcessedQuarters = submission.submissionData.processedQuarters;
-    const totalQuarters = submission.submissionData?.report?.qualificationData?.quarterAnalysis?.length || 0;
-    
-    // If there are no quarters in the analysis, just check if we have ANY processed quarters
-    if (totalQuarters === 0 && allProcessedQuarters.length > 0) {
-      submission.status = 'complete';
-      console.log('Updated status to complete (no quarter analysis, but quarters processed)');
-    } 
-    // If all quarters have been processed, mark as complete
-    else if (totalQuarters > 0 && allProcessedQuarters.length >= totalQuarters) {
-      submission.status = 'complete';
-      console.log(`Updated status to complete (all ${totalQuarters} quarters processed)`);
+    // Always update ZIP path if provided
+    if (zipPath) {
+      submission.submissionData.quarterZips[quarter] = zipPath;
+      console.log(`Updated ZIP path for ${quarter} to ${zipPath}`);
     }
-    // If we have some quarters processed but not all, mark as processing
-    else if (allProcessedQuarters.length > 0) {
+    
+    // Update status if needed
+    const processedQuartersCount = submission.submissionData.processedQuarters.length;
+    const totalQuartersCount = submission.submissionData?.report?.qualificationData?.quarterAnalysis?.length || 3; // Default to 3 if not specified
+    
+    if (processedQuartersCount >= totalQuartersCount) {
+      submission.status = 'complete';
+      console.log(`All ${processedQuartersCount}/${totalQuartersCount} quarters processed, setting status to complete`);
+    } else if (processedQuartersCount > 0) {
       submission.status = 'processing';
-      console.log('Updated status to processing');
+      console.log(`${processedQuartersCount}/${totalQuartersCount} quarters processed, setting status to processing`);
     }
     
-    // Save the updated submission with explicit error handling
+    // Save the update
     try {
-      console.log('Saving submission update to MongoDB...');
       await submission.save();
-      console.log('Submission successfully saved');
+      console.log('Submission successfully saved to MongoDB');
+      
+      // Also update the filesystem record if it exists
+      try {
+        // Check multiple possible paths
+        const possiblePaths = [
+          path.join(__dirname, `../data/ERC_Disallowances/${submissionId}/submission_info.json`),
+          path.join(__dirname, `../data/ERC_Disallowances/ERC-${submissionId}/submission_info.json`),
+          path.join(__dirname, `../data/ERC_Disallowances/${submissionId.replace('ERC-', '')}/submission_info.json`)
+        ];
+        
+        for (const jsonPath of possiblePaths) {
+          if (fs.existsSync(jsonPath)) {
+            const jsonData = fs.readFileSync(jsonPath, 'utf8');
+            const info = JSON.parse(jsonData);
+            
+            // Update the processed quarters in the file
+            if (!info.processedQuarters) {
+              info.processedQuarters = [];
+            }
+            
+            if (!info.processedQuarters.includes(quarter)) {
+              info.processedQuarters.push(quarter);
+            }
+            
+            // Update status if needed
+            if (submission.status === 'complete') {
+              info.status = 'PDF done';
+            }
+            
+            // Write back to file
+            fs.writeFileSync(jsonPath, JSON.stringify(info, null, 2));
+            console.log(`Updated filesystem record at ${jsonPath}`);
+            break;
+          }
+        }
+      } catch (fileError) {
+        console.log('Error updating filesystem record:', fileError.message);
+      }
+      
+      // If we added a new quarter, attempt to update Google Sheet
+      if (wasQuarterAdded) {
+        try {
+          // Safely import the Google Sheets service
+          const googleSheetsService = require('../services/googleSheetsService');
+          
+          // Update the Google Sheet with progress
+          await googleSheetsService.updateSubmission(submissionId, {
+            status: submission.status === 'complete' ? 'PDF done' : 'processing',
+            timestamp: new Date().toISOString()
+          });
+          
+          console.log(`Updated Google Sheet for ${submissionId}`);
+        } catch (sheetError) {
+          console.log('Error updating Google Sheet:', sheetError.message);
+          // Continue anyway - don't fail if sheet update fails
+        }
+      }
+      
+      // Return success with updated data
+      res.status(200).json({
+        success: true,
+        message: `Quarter ${quarter} marked as processed for submission ${submissionId}`,
+        processedQuarters: submission.submissionData.processedQuarters,
+        quarterZips: submission.submissionData.quarterZips || {},
+        totalQuarters: totalQuartersCount,
+        progress: `${processedQuartersCount}/${totalQuartersCount}`
+      });
     } catch (saveError) {
       console.error('Error saving submission:', saveError);
       return res.status(500).json({
@@ -430,15 +446,6 @@ router.post('/update-processed-quarters', async (req, res) => {
         message: `Database save failed: ${saveError.message}`
       });
     }
-    
-    // Return success with updated data
-    console.log(`Successfully updated processed quarters for ${submissionId}`);
-    res.status(200).json({
-      success: true,
-      message: `Quarter ${quarter} marked as processed for submission ${submissionId}`,
-      processedQuarters: submission.submissionData.processedQuarters,
-      quarterZips: submission.submissionData.quarterZips || {}
-    });
   } catch (error) {
     console.error(`Error updating processed quarters for submission ${req.body?.submissionId}:`, error);
     res.status(500).json({

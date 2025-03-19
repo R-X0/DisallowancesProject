@@ -224,7 +224,9 @@ class GoogleSheetsService {
     await this.ensureInitialized();
     
     try {
-      // First, find the row with the matching tracking ID
+      console.log(`Attempting to update Google Sheet for tracking ID: ${trackingId}`);
+      
+      // First, find the row with the matching tracking ID - with enhanced ID handling
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId: this.spreadsheetId,
         range: 'ERC Tracking!A:A',
@@ -233,20 +235,93 @@ class GoogleSheetsService {
       const rows = response.data.values || [];
       let rowIndex = -1;
       
+      // Try finding the tracking ID in various formats
+      const possibleFormats = [
+        trackingId,                             // Original format
+        trackingId.toString(),                  // As string
+        `ERC-${trackingId.replace(/^ERC-/, '')}`, // With ERC- prefix
+        trackingId.replace(/^ERC-/, '')         // Without ERC- prefix
+      ];
+      
+      console.log(`Looking for tracking ID in formats: ${possibleFormats.join(', ')}`);
+      
+      // Find the first row that matches any of the possible formats
       for (let i = 0; i < rows.length; i++) {
-        if (rows[i][0] === trackingId) {
+        const cellValue = rows[i][0];
+        if (cellValue && possibleFormats.includes(cellValue)) {
           rowIndex = i + 1; // +1 because sheets are 1-indexed
+          console.log(`Found match at row ${rowIndex} with value "${cellValue}"`);
           break;
         }
       }
       
+      // If not found, try a more flexible approach
       if (rowIndex === -1) {
-        throw new Error(`Submission with tracking ID ${trackingId} not found`);
+        console.log('No exact match found, trying partial match...');
+        
+        const baseId = trackingId.replace(/^ERC-/, '');
+        
+        for (let i = 0; i < rows.length; i++) {
+          const cellValue = (rows[i][0] || '').toString();
+          
+          // Check if the row contains this ID in any form
+          if (
+            cellValue.includes(trackingId) || 
+            cellValue.includes(baseId) ||
+            trackingId.includes(cellValue) ||
+            baseId.includes(cellValue)
+          ) {
+            rowIndex = i + 1;
+            console.log(`Found partial match at row ${rowIndex} with value "${cellValue}"`);
+            break;
+          }
+        }
       }
       
-      console.log(`Found submission ${trackingId} at row ${rowIndex}`);
+      // If still not found, we need to add it rather than update
+      if (rowIndex === -1) {
+        console.log(`No row found for tracking ID ${trackingId}, will add new row instead`);
+        
+        // Get the minimum required data for a new row
+        const { 
+          status = 'Processing',
+          timestamp = new Date().toISOString(),
+          protestLetterPath = '',
+          zipPath = '',
+          trackingNumber = '',
+          googleDriveLink = '',
+          businessName = 'Unknown Business'
+        } = updateData;
+        
+        // Try to get more details from updateData or use placeholders
+        const addData = {
+          trackingId: trackingId,
+          businessName: businessName || updateData.businessName || 'Unknown Business',
+          ein: updateData.ein || '00-0000000',
+          location: updateData.location || 'Unknown Location',
+          businessWebsite: updateData.businessWebsite || '',
+          naicsCode: updateData.naicsCode || '',
+          timePeriod: updateData.timePeriod || 'Unknown',
+          additionalInfo: updateData.additionalInfo || '',
+          status,
+          timestamp,
+          protestLetterPath,
+          zipPath,
+          trackingNumber,
+          googleDriveLink
+        };
+        
+        // Add the new row instead
+        await this.addSubmission(addData);
+        console.log(`Added new row for tracking ID ${trackingId} instead of updating`);
+        return { success: true, action: 'added' };
+      }
       
-      // Now we know which row to update
+      console.log(`Found submission ${trackingId} at row ${rowIndex}, updating...`);
+      
+      // Create update batches for cleaner code
+      const updateBatches = [];
+      
       const {
         status,
         timestamp = new Date().toISOString(),
@@ -255,7 +330,7 @@ class GoogleSheetsService {
         trackingNumber,
         googleDriveLink
       } = updateData;
-
+  
       // Log the update data for debugging
       console.log('Updating submission with data:', {
         status,
@@ -269,73 +344,94 @@ class GoogleSheetsService {
       // Create update data, only including fields that are provided
       if (status !== undefined) {
         // Status is now in column I (index 8)
-        console.log(`Updating status to "${status}" in cell I${rowIndex}`);
-        await this.sheets.spreadsheets.values.update({
-          spreadsheetId: this.spreadsheetId,
+        updateBatches.push({
           range: `ERC Tracking!I${rowIndex}`,
-          valueInputOption: 'RAW',
-          resource: { values: [[status]] },
+          values: [[status]]
         });
       }
       
       // Always update timestamp (now column J)
-      console.log(`Updating timestamp to "${timestamp}" in cell J${rowIndex}`);
-      await this.sheets.spreadsheets.values.update({
-        spreadsheetId: this.spreadsheetId,
+      updateBatches.push({
         range: `ERC Tracking!J${rowIndex}`,
-        valueInputOption: 'RAW',
-        resource: { values: [[timestamp]] },
+        values: [[timestamp]]
       });
       
       if (protestLetterPath !== undefined) {
         // Protest Letter Path is now column K
-        console.log(`Updating protest letter path to "${protestLetterPath}" in cell K${rowIndex}`);
-        await this.sheets.spreadsheets.values.update({
-          spreadsheetId: this.spreadsheetId,
+        updateBatches.push({
           range: `ERC Tracking!K${rowIndex}`,
-          valueInputOption: 'RAW',
-          resource: { values: [[protestLetterPath]] },
+          values: [[protestLetterPath]]
         });
       }
       
       if (zipPath !== undefined) {
         // ZIP Path is now column L
-        console.log(`Updating ZIP path to "${zipPath}" in cell L${rowIndex}`);
-        await this.sheets.spreadsheets.values.update({
-          spreadsheetId: this.spreadsheetId,
+        updateBatches.push({
           range: `ERC Tracking!L${rowIndex}`,
-          valueInputOption: 'RAW',
-          resource: { values: [[zipPath]] },
+          values: [[zipPath]]
         });
       }
       
       if (trackingNumber !== undefined) {
         // Tracking Number is now column M
-        console.log(`Updating tracking number to "${trackingNumber}" in cell M${rowIndex}`);
-        await this.sheets.spreadsheets.values.update({
-          spreadsheetId: this.spreadsheetId,
+        updateBatches.push({
           range: `ERC Tracking!M${rowIndex}`,
-          valueInputOption: 'RAW',
-          resource: { values: [[trackingNumber]] },
+          values: [[trackingNumber]]
         });
       }
       
       if (googleDriveLink !== undefined) {
         // Google Drive Link is now column N
-        console.log(`Updating Google Drive link to "${googleDriveLink}" in cell N${rowIndex}`);
-        await this.sheets.spreadsheets.values.update({
-          spreadsheetId: this.spreadsheetId,
+        updateBatches.push({
           range: `ERC Tracking!N${rowIndex}`,
-          valueInputOption: 'RAW',
-          resource: { values: [[googleDriveLink]] },
+          values: [[googleDriveLink]]
         });
       }
       
-      console.log(`Updated submission ${trackingId} in Google Sheet`);
-      return { success: true, rowIndex };
+      // Execute all updates in one batch
+      if (updateBatches.length > 0) {
+        console.log(`Executing ${updateBatches.length} update batches for row ${rowIndex}`);
+        
+        try {
+          // Use batchUpdate for efficiency if multiple fields are updated
+          if (updateBatches.length > 1) {
+            const batchRequest = {
+              spreadsheetId: this.spreadsheetId,
+              resource: {
+                valueInputOption: 'RAW',
+                data: updateBatches
+              }
+            };
+            
+            await this.sheets.spreadsheets.values.batchUpdate(batchRequest);
+          } else {
+            // Use single update for just one field
+            const singleUpdate = updateBatches[0];
+            await this.sheets.spreadsheets.values.update({
+              spreadsheetId: this.spreadsheetId,
+              range: singleUpdate.range,
+              valueInputOption: 'RAW',
+              resource: { values: singleUpdate.values },
+            });
+          }
+          
+          console.log(`Updated submission ${trackingId} in Google Sheet successfully`);
+        } catch (updateError) {
+          console.error(`Error during Sheet update operation:`, updateError);
+          throw updateError;
+        }
+      } else {
+        console.log(`No fields to update for ${trackingId}`);
+      }
+      
+      return { success: true, rowIndex, action: 'updated' };
     } catch (error) {
       console.error(`Error updating submission ${trackingId} in Google Sheet:`, error);
-      throw error;
+      
+      // Add more context to the error for easier debugging
+      const enhancedError = new Error(`Failed to update Google Sheet for ${trackingId}: ${error.message}`);
+      enhancedError.originalError = error;
+      throw enhancedError;
     }
   }
 

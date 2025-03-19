@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const googleSheetsService = require('../services/googleSheetsService');
@@ -142,25 +143,43 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
     
     // First look for an existing submission with this trackingId to determine if it's an update
     let isUpdate = false;
-    const submissionPath = path.join(__dirname, `../data/ERC_Disallowances/${trackingId}/submission_info.json`);
     
-    // Try to find existing submission info
+    // Try multiple possible paths to find existing submission
+    const possiblePaths = [
+      path.join(__dirname, `../data/ERC_Disallowances/${trackingId}/submission_info.json`),
+      path.join(__dirname, `../data/ERC_Disallowances/ERC-${trackingId.replace(/^ERC-/, '')}/submission_info.json`),
+      path.join(__dirname, `../data/ERC_Disallowances/${trackingId.replace(/^ERC-/, '')}/submission_info.json`)
+    ];
+    
+    let submissionPath = null;
     let submissionInfo = {};
-    try {
-      if (fs.existsSync(submissionPath)) {
-        const existingData = await fs.readFile(submissionPath, 'utf8');
-        submissionInfo = JSON.parse(existingData);
-        isUpdate = true;
-        console.log(`Found existing submission data for ${trackingId}`);
+    
+    for (const testPath of possiblePaths) {
+      try {
+        if (fsSync.existsSync(testPath)) {
+          const existingData = await fs.readFile(testPath, 'utf8');
+          submissionInfo = JSON.parse(existingData);
+          submissionPath = testPath;
+          isUpdate = true;
+          console.log(`Found existing submission data at ${testPath}`);
+          break;
+        }
+      } catch (readError) {
+        console.log(`Error checking path ${testPath}:`, readError.message);
       }
-    } catch (readError) {
-      console.log(`No existing data found for ${trackingId} (${readError.message}), creating new entry`);
-      // Continue with creating new entry
+    }
+    
+    if (!isUpdate) {
+      console.log(`No existing data found for ${trackingId}, creating new entry`);
     }
     
     // Create directory for this submission if it doesn't exist
     const submissionDir = path.join(__dirname, `../data/ERC_Disallowances/${trackingId}`);
     await fs.mkdir(submissionDir, { recursive: true });
+    
+    if (!submissionPath) {
+      submissionPath = path.join(submissionDir, 'submission_info.json');
+    }
     
     // Move uploaded files to submission directory
     const fileInfo = [];
@@ -177,6 +196,16 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
     
     // For display in the Google Sheet, join multiple time periods with a comma
     const timePeriodsDisplay = timePeriods.join(', ');
+    
+    // Ensure processedQuarters exists and includes the current quarter if specified
+    if (!submissionInfo.processedQuarters) {
+      submissionInfo.processedQuarters = [];
+    }
+    
+    if (processedQuarter && !submissionInfo.processedQuarters.includes(processedQuarter)) {
+      submissionInfo.processedQuarters.push(processedQuarter);
+      console.log(`Added ${processedQuarter} to processed quarters`);
+    }
     
     // Update or create submission info
     submissionInfo = {
@@ -269,7 +298,6 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
         for (const pathToCheck of pathsToCheck) {
           console.log(`Checking if ZIP exists at: ${pathToCheck}`);
           try {
-            const fsSync = require('fs');
             if (fsSync.existsSync(pathToCheck)) {
               console.log(`Found ZIP file at: ${pathToCheck}`);
               foundZipPath = pathToCheck;
@@ -319,7 +347,6 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
         for (const pathToCheck of pathsToCheck) {
           console.log(`Checking if PDF exists at: ${pathToCheck}`);
           try {
-            const fsSync = require('fs');
             if (fsSync.existsSync(pathToCheck)) {
               console.log(`Found PDF file at: ${pathToCheck}`);
               foundPdfPath = pathToCheck;
@@ -357,7 +384,7 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
     
     // Save updated submission info
     await fs.writeFile(
-      path.join(submissionDir, 'submission_info.json'),
+      submissionPath,
       JSON.stringify(submissionInfo, null, 2)
     );
     
@@ -413,137 +440,117 @@ router.post('/submit', upload.array('disallowanceNotices', 5), async (req, res) 
           throw new Error('Database connection failed');
         }
         
-        // First, check if the document exists by trackingId
-        let submission;
-        
-        // Try different formats of the ID to find the right document
+        // Check different formats of the tracking ID to find the right document
         const idsToCheck = [
           trackingId,
           trackingId.replace(/^ERC-/, ''), // Try without ERC- prefix
-          `ERC-${trackingId}` // Try with ERC- prefix
+          `ERC-${trackingId.replace(/^ERC-/, '')}`, // Try with ERC- prefix
+          // For MongoDB ObjectId format
+          ...(trackingId.match(/^[0-9a-f]{24}$/i) ? [trackingId] : [])
         ];
         
         console.log(`Checking MongoDB with these possible IDs: ${idsToCheck.join(', ')}`);
         
+        let submission = null;
+        
         // Try each possible ID format
         for (const idToCheck of idsToCheck) {
-          const found = await Submission.findOne({ submissionId: idToCheck });
-          if (found) {
-            submission = found;
-            console.log(`Found MongoDB document with submissionId=${idToCheck}`);
-            break;
+          try {
+            const found = await Submission.findOne({ submissionId: idToCheck });
+            if (found) {
+              submission = found;
+              console.log(`Found MongoDB document with submissionId=${idToCheck}`);
+              break;
+            }
+          } catch (findError) {
+            console.log(`Error looking up ID ${idToCheck}:`, findError.message);
           }
         }
         
-        // Also try by MongoDB _id if we have a valid ObjectId format
-        if (!submission && /^[0-9a-fA-F]{24}$/.test(trackingId)) {
-          const foundById = await Submission.findById(trackingId);
-          if (foundById) {
-            submission = foundById;
-            console.log(`Found MongoDB document by _id=${trackingId}`);
-          }
-        }
-        
-        // Prepare submission data with default values
-        const submissionData = {
-          submissionId: trackingId, // Use the clean tracking ID
-          businessName,
-          status: submissionInfo.status,
-          receivedAt: new Date(),
-          submissionData: {
-            processedQuarters: timePeriods,
-            quarterZips: {}
-          }
-        };
-        
-        // If we have a processedQuarter, make sure it's in the processed quarters list
-        if (processedQuarter) {
-          // Ensure it's added to the processed quarters
-          if (!submissionData.submissionData.processedQuarters.includes(processedQuarter)) {
-            submissionData.submissionData.processedQuarters.push(processedQuarter);
-          }
-        }
-        
-        // If we have a zipPath, store it in the quarterZips object
-        if (submissionInfo.zipPath && timePeriods.length > 0) {
-          // Store for each time period
-          timePeriods.forEach(quarter => {
-            submissionData.submissionData.quarterZips[quarter] = submissionInfo.zipPath;
-          });
-          
-          // Especially for the processedQuarter if we have one
-          if (processedQuarter) {
-            submissionData.submissionData.quarterZips[processedQuarter] = submissionInfo.zipPath;
+        // If not found, try to find by _id if it's in the ObjectId format
+        if (!submission && trackingId.match(/^[0-9a-f]{24}$/i)) {
+          try {
+            submission = await Submission.findById(trackingId);
+            if (submission) {
+              console.log(`Found MongoDB document by _id=${trackingId}`);
+            }
+          } catch (idError) {
+            console.log(`Error looking up by _id ${trackingId}:`, idError.message);
           }
         }
         
         if (submission) {
-          // Update existing record
           console.log(`Updating existing MongoDB record for ${trackingId}`);
           
-          // Make sure submissionId is set correctly
-          submission.submissionId = trackingId;
+          // Ensure required nested objects exist
+          if (!submission.submissionData) {
+            submission.submissionData = {};
+          }
           
-          // Ensure all required objects exist
-          if (!submission.submissionData) submission.submissionData = {};
           if (!submission.submissionData.processedQuarters) {
             submission.submissionData.processedQuarters = [];
           }
+          
           if (!submission.submissionData.quarterZips) {
             submission.submissionData.quarterZips = {};
           }
           
-          // Add all quarters as processed
-          timePeriods.forEach(quarter => {
-            if (!submission.submissionData.processedQuarters.includes(quarter)) {
-              submission.submissionData.processedQuarters.push(quarter);
-              console.log(`Added ${quarter} to processed quarters list`);
-            } else {
-              console.log(`Quarter ${quarter} already in processed quarters list`);
-            }
-            
-            // Add zip path for each quarter if available
-            if (submissionInfo.zipPath) {
-              submission.submissionData.quarterZips[quarter] = submissionInfo.zipPath;
-            }
-          });
-          
-          // If we have a processedQuarter, make sure it's in the list
+          // Add processed quarter if specified and not already included
           if (processedQuarter && !submission.submissionData.processedQuarters.includes(processedQuarter)) {
             submission.submissionData.processedQuarters.push(processedQuarter);
-            console.log(`Added processed quarter ${processedQuarter} to the list`);
+            console.log(`Added ${processedQuarter} to processed quarters list`);
             
-            // Add zip path for this quarter if available
+            // Add ZIP path for this quarter if available
             if (submissionInfo.zipPath) {
               submission.submissionData.quarterZips[processedQuarter] = submissionInfo.zipPath;
             }
           }
           
-          // Update status and other fields
-          submission.status = submissionInfo.status;
+          // Update business name and status
           submission.businessName = businessName;
+          submission.status = submissionInfo.status;
           
           await submission.save();
           console.log(`Updated MongoDB record for ${trackingId}. Processed quarters now:`, 
             submission.submissionData.processedQuarters);
         } else {
-          // Create new record
           console.log(`Creating new MongoDB record for ${trackingId}`);
-          submission = await Submission.create(submissionData);
-          console.log(`Created new MongoDB record for ${trackingId} with processed quarters:`,
-            submissionData.submissionData.processedQuarters);
+          
+          // Create a new document
+          const submissionData = {
+            submissionId: trackingId,
+            businessName,
+            status: submissionInfo.status,
+            receivedAt: new Date(),
+            submissionData: {
+              processedQuarters: [],
+              quarterZips: {}
+            }
+          };
+          
+          // Add processed quarter if specified
+          if (processedQuarter) {
+            submissionData.submissionData.processedQuarters.push(processedQuarter);
+            console.log(`Added ${processedQuarter} to new MongoDB record`);
+            
+            // Add ZIP path for this quarter if available
+            if (submissionInfo.zipPath) {
+              submissionData.submissionData.quarterZips[processedQuarter] = submissionInfo.zipPath;
+            }
+          }
+          
+          const newSubmission = await Submission.create(submissionData);
+          console.log(`Created new MongoDB record for ${trackingId} with ID: ${newSubmission._id}`);
         }
         
         // Log the updated MongoDB record for debugging
         const updatedDoc = await Submission.findOne({ submissionId: trackingId });
-        if (updatedDoc) {
-          console.log('Final MongoDB document state:');
-          console.log('- ID:', updatedDoc._id);
-          console.log('- SubmissionId:', updatedDoc.submissionId);
-          console.log('- Status:', updatedDoc.status);
-          console.log('- Processed Quarters:', updatedDoc.submissionData?.processedQuarters || []);
-          console.log('- Quarter ZIPs:', updatedDoc.submissionData?.quarterZips || {});
-        }
+        console.log('Final MongoDB document state:');
+        console.log('- ID:', updatedDoc?._id);
+        console.log('- SubmissionId:', updatedDoc?.submissionId);
+        console.log('- Status:', updatedDoc?.status);
+        console.log('- Processed Quarters:', updatedDoc?.submissionData?.processedQuarters || []);
+        console.log('- Quarter ZIPs:', updatedDoc?.submissionData?.quarterZips || {});
         
       } catch (mongoError) {
         console.error('Error updating MongoDB:', mongoError);
