@@ -1,0 +1,59 @@
+03/19/2025
+Internal Revenue Service
+Ogden, UT 84201
+
+EIN: 00-0000000  
+Taxpayer Name: Business #17420945  
+RE: Formal Protest to Letter [Reference Number] – ERC Disallowance for Quarter 2 2021  
+Tax Period: Quarter 2 2021  
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing Business #17420945’s Employee Retention Credit (ERC) claim for Quarter 2 2021. The disallowance was based on the assertion that no COVID‑19 related government orders or other qualifying adverse circumstances existed to cause a suspension of our normal business operations. We respectfully disagree. Our business, a law firm operating in Unknown Location, NY, experienced significant operational hurdles due to the continuing impact of COVID‑19 federal orders that, in turn, influenced statewide directives. Furthermore, our business suffered dramatic revenue declines during this period that clearly qualify for ERC under IRS guidelines. In this protest letter, we provide (1) a detailed timeline of relevant government orders that impacted our operations in Quarter 2 2021 and (2) a dedicated REVENUE DECLINE DATA section containing the exact figures required for audit purposes.
+
+Below is a chronological timeline of critical COVID‑19 government orders that affected our business operations in Quarter 2 2021:
+
+• 
+– Order Name: Proclamation 9994 – National Emergency Concerning COVID‑19  
+– Order Number: 9994  
+– Date Enacted: 03/13/2020  
+– Date Rescinded: Still in effect  
+– Order Summary: This proclamation declared a nationwide emergency due to COVID‑19, activating federal emergency powers and funding. It provided the legal basis for subsequent state and local orders that imposed operational restrictions on businesses.  
+– Impact on Quarter: During Quarter 2 2021, the ongoing federal emergency declaration under Proclamation 9994 contributed to a regulatory environment that influenced state governments and indirectly imposed operational limitations on our business activities.
+
+• 
+– Order Name: CDC/FAA Mask Mandates for Travel  
+– Order Number: Not applicable  
+– Date Enacted: 01/21/2021  
+– Date Rescinded: Still in effect  
+– Order Summary: This mandate required masks to be worn during interstate travel on airplanes, trains, buses, and in airports. It set a precedent for enhanced health and safety protocols that later influenced broader COVID‑19 related guidelines affecting business operations.  
+– Impact on Quarter: In Quarter 2 2021, the CDC/FAA Mask Mandates for Travel contributed to an environment necessitating additional safety measures for employee and client travel, thereby indirectly influencing our firm’s operational dynamics during the pandemic.
+
+REVENUE DECLINE DATA
+
+The purpose of this section is to present the exact revenue figures that demonstrate a substantial decline in gross receipts, qualifying our business for the Employee Retention Credit. It is a legal and audit requirement that the precise revenue figures be reported without alteration.
+
+For the main quarter under protest, Quarter 2 2021, the revenue figures are as follows: Our revenue for Quarter 2 2021 was EXACTLY $345 compared to Quarter 2 2019, which was EXACTLY $3552452345. This reflects an EXACT decline of revenue that is quantified as a 100.00% decrease from the comparison quarter. Based on the ERC eligibility thresholds requiring a decline of at least 20% for 2021, this severe revenue reduction clearly qualifies our business for the credit.
+
+Additional quarters for reference are provided below:
+• Q1 2021: EXACTLY $345 compared to Q1 2019: EXACTLY $54325234 = EXACTLY 100.00% decline (Qualifies for ERC)
+• Q3 2021: EXACTLY $345 compared to Q3 2019: EXACTLY $3245345 = EXACTLY 99.99% decline (Qualifies for ERC)
+
+In conclusion, the combination of a partial suspension of our operations—stemming from the enduring impact of federal COVID‑19 government orders—and the substantial and verifiable decline in revenue unequivocally meets the criteria for ERC qualification under applicable IRS guidelines. We respectfully request that the IRS reconsider and reverse the disallowance of our Quarter 2 2021 ERC claim.
+
+Thank you for your thoughtful review of this protest. Should you require any additional information or clarification, please do not hesitate to contact us.
+
+Under penalties of perjury, I declare that I have examined the facts stated in this protest and, to the best of my personal knowledge and belief, the information set forth herein is true, correct, and complete.
+
+Sincerely,
+
+[Signature]
+
+____________________________  
+Authorized Representative  
+Business #17420945
+
+Enclosures:  
+• Copies of the Government Orders (Proclamation 9994 – National Emergency Concerning COVID‑19; CDC/FAA Mask Mandates for Travel)  
+• Detailed REVENUE DECLINE DATA as provided above  
+• Additional supporting documentation as applicable
