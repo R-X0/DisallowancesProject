@@ -14,9 +14,6 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Table,
   TableBody,
   TableCell,
@@ -24,21 +21,14 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Tooltip,
-  Alert,
-  TextField,
-  DialogContentText
+  Tooltip
 } from '@mui/material';
 import { 
   AccessTime, 
   CheckCircle, 
   HourglassEmpty, 
-  ExpandMore,
-  CloudDownload,
   Info,
   Refresh,
-  TableChartOutlined,
-  Delete as DeleteIcon,
   GavelOutlined,
   TrendingDownOutlined
 } from '@mui/icons-material';
@@ -49,10 +39,6 @@ const QueueDisplay = () => {
   const [error, setError] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteConfirmation, setDeleteConfirmation] = useState('');
-  const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState(null);
 
   // Connect to MongoDB queue API endpoint
   const fetchQueue = async () => {
@@ -102,15 +88,19 @@ const QueueDisplay = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-
-
   // Get status chip based on status and processed quarters
   const getStatusChip = (item) => {
     const status = item.status;
-    const qualifyingQuarters = item.submissionData?.report?.qualificationData?.qualifyingQuarters || [];
     
-    // If no qualifying quarters, just show the basic status
-    if (qualifyingQuarters.length === 0) {
+    // Get count of processed quarters
+    const processedQuarters = item.submissionData?.processedQuarters || [];
+    const processedCount = processedQuarters.length;
+    
+    // Use all quarters in the analysis, not just qualifying ones
+    const totalCount = item.submissionData?.report?.qualificationData?.quarterAnalysis?.length || 0;
+    
+    // If no quarters in analysis, just show the basic status
+    if (totalCount === 0) {
       switch(status) {
         case 'waiting':
         case 'received':
@@ -139,37 +129,22 @@ const QueueDisplay = () => {
       }
     }
     
-    // Get count of processed quarters
-    const processedQuarters = item.submissionData?.processedQuarters || [];
-    const processedCount = processedQuarters.length;
-    
-    // If all quarters have letters
-    if (processedCount >= qualifyingQuarters.length) {
+    // Show letter count for all statuses when there are quarters to process
+    if (processedCount >= totalCount && totalCount > 0) {
       return <Chip 
         icon={<CheckCircle fontSize="small" />} 
-        label="All Letters Generated" 
+        label={`${processedCount}/${totalCount} Letters Complete`} 
         color="success" 
         size="small" 
       />;
-    }
-    
-    // If some but not all quarters have letters
-    if (processedCount > 0) {
+    } else if (totalCount > 0) {
       return <Chip 
         icon={<AccessTime fontSize="small" />} 
-        label={`${processedCount}/${qualifyingQuarters.length} Letters`} 
+        label={`${processedCount}/${totalCount} Letters`} 
         color="info" 
         size="small" 
       />;
     }
-    
-    // If no quarters have letters yet
-    return <Chip 
-      icon={<HourglassEmpty fontSize="small" />} 
-      label="Needs Letters" 
-      color="warning" 
-      size="small" 
-    />;
   };
 
   // Function to handle clicking on a queue item
@@ -262,17 +237,17 @@ const QueueDisplay = () => {
       
       console.log(`Generating letter for ${quarter} using ${approachToUse} approach`);
       
-      // Prepare business data for prefill - IMPROVED VERSION WITH MORE COMPLETE DATA
+      // Prepare business data for prefill
       const businessData = {
         businessName: item.businessName || 'Business Name Required',
         ein: item.submissionData?.originalData?.formData?.ein || '00-0000000',
         location: item.submissionData?.originalData?.formData?.location || 'Unknown Location, NY',
         businessWebsite: item.submissionData?.originalData?.formData?.businessWebsite || '',
-        naicsCode: item.submissionData?.originalData?.formData?.naicsCode || '541110', // Default to law firm if missing
+        naicsCode: item.submissionData?.originalData?.formData?.naicsCode || '541110',
         timePeriods: [quarter],
-        approach: approachToUse,  // Add the approach to the data
-        timestamp: new Date().getTime(), // Add timestamp to ensure it's treated as new data
-        submissionId: item.id // Store the submission ID for later use
+        approach: approachToUse,
+        timestamp: new Date().getTime(),
+        submissionId: item.id
       };
       
       // Add additional context information if available
@@ -336,7 +311,6 @@ const QueueDisplay = () => {
       }
       
       // Fill in default values for each quarter if we're missing any
-      // This ensures the revenue computation doesn't break
       if (approachToUse === 'revenueReduction') {
         // Ensure we have at least something for key quarters
         if (!businessData.q1_2019) businessData.q1_2019 = '100000';
@@ -357,12 +331,12 @@ const QueueDisplay = () => {
         }
       }
       
-      console.log('Saving data to both localStorage and sessionStorage:', businessData);
+      console.log('Saving data to localStorage and sessionStorage:', businessData);
       
       // Store in BOTH localStorage and sessionStorage with a unique timestamp
       const dataString = JSON.stringify(businessData);
       localStorage.setItem('prefillData', dataString);
-      sessionStorage.setItem('prefillData', dataString); // Backup in case localStorage gets cleared
+      sessionStorage.setItem('prefillData', dataString);
       
       // Update MongoDB to mark this quarter as processed immediately
       console.log("Updating MongoDB to mark quarter as processing");
@@ -370,7 +344,7 @@ const QueueDisplay = () => {
       // After marking as processed in MongoDB, also update local UI for immediate feedback
       updateLocalUI(item.id, quarter);
       
-      // Use a longer delay to ensure storage is written before navigation
+      // Use a delay to ensure storage is written before navigation
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Navigate to the form - this will cause a reload, but sessionStorage will persist
@@ -385,90 +359,6 @@ const QueueDisplay = () => {
   // Function to close the dialog
   const handleCloseDialog = () => {
     setDialogOpen(false);
-  };
-
-  // Function to download a file
-  const handleDownloadFile = (filePath) => {
-    if (!filePath) {
-      console.error('No file path provided');
-      return;
-    }
-    
-    console.log(`Attempting to download file: ${filePath}`);
-    
-    // Check if it's a URL or a local path
-    if (filePath.startsWith('http')) {
-      window.open(filePath, '_blank');
-    } else {
-      // Use the MongoDB endpoint
-      const endpoint = `/api/mongodb-queue/download?path=${encodeURIComponent(filePath)}`;
-      console.log(`Opening download endpoint: ${endpoint}`);
-      window.open(endpoint, '_blank');
-    }
-  };
-
-  // Function to open delete confirmation dialog
-  const handleOpenDeleteDialog = (item, event) => {
-    // Stop propagation to prevent the item click handler from firing
-    event.stopPropagation();
-    
-    setSelectedItem(item);
-    setDeleteConfirmation('');
-    setDeleteError(null);
-    setDeleteDialogOpen(true);
-  };
-  
-  // Function to handle delete confirmation
-  const handleDeleteConfirmation = async () => {
-    if (deleteConfirmation !== 'DELETE') {
-      setDeleteError('Please type DELETE to confirm');
-      return;
-    }
-    
-    if (!selectedItem || !selectedItem.id) {
-      setDeleteError('No item selected for deletion');
-      return;
-    }
-    
-    setDeleting(true);
-    setDeleteError(null);
-    
-    try {
-      const response = await fetch(`/api/mongodb-queue/${selectedItem.id}`, {
-        method: 'DELETE'
-      });
-      
-      const result = await response.json();
-      
-      if (response.ok) {
-        console.log('Delete successful:', result);
-        
-        // Close the dialog
-        setDeleteDialogOpen(false);
-        
-        // Remove the item from the queue list
-        setQueueItems(prev => prev.filter(item => item.id !== selectedItem.id));
-        
-        // If the details dialog for this item is open, close it too
-        if (dialogOpen && selectedItem) {
-          setDialogOpen(false);
-        }
-      } else {
-        setDeleteError(result.message || 'Failed to delete submission');
-      }
-    } catch (error) {
-      console.error('Error deleting submission:', error);
-      setDeleteError(`Error: ${error.message}`);
-    } finally {
-      setDeleting(false);
-    }
-  };
-  
-  // Function to handle delete dialog close
-  const handleCloseDeleteDialog = () => {
-    setDeleteDialogOpen(false);
-    setDeleteConfirmation('');
-    setDeleteError(null);
   };
   
   // Helper function to check if an item needs letters
@@ -574,15 +464,6 @@ const QueueDisplay = () => {
                       <Info fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Delete Submission">
-                    <IconButton 
-                      edge="end" 
-                      color="error"
-                      onClick={(e) => handleOpenDeleteDialog(item, e)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
                 </Box>
               </ListItem>
             </React.Fragment>
@@ -619,72 +500,21 @@ const QueueDisplay = () => {
                   <Table size="small">
                     <TableBody>
                       <TableRow>
-                        <TableCell variant="head" width="30%">ID</TableCell>
-                        <TableCell>{selectedItem.id}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell variant="head">Business Name</TableCell>
+                        <TableCell variant="head" width="30%">Business Name</TableCell>
                         <TableCell>{selectedItem.businessName}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell variant="head">Status</TableCell>
-                        <TableCell>{selectedItem.status}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell variant="head">Timestamp</TableCell>
                         <TableCell>{new Date(selectedItem.timestamp).toLocaleString()}</TableCell>
                       </TableRow>
-                      {selectedItem.reportPath && (
-                        <TableRow>
-                          <TableCell variant="head">Report Path</TableCell>
-                          <TableCell>{selectedItem.reportPath}</TableCell>
-                        </TableRow>
-                      )}
                     </TableBody>
                   </Table>
                 </TableContainer>
               </Box>
 
-              {/* Files Section */}
-              {selectedItem.files && selectedItem.files.length > 0 && (
-                <Box mt={3}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Attached Files
-                  </Typography>
-                  <TableContainer component={Paper} variant="outlined">
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Filename</TableCell>
-                          <TableCell>Type</TableCell>
-                          <TableCell>Size</TableCell>
-                          <TableCell>Actions</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {selectedItem.files.map((file, index) => (
-                          <TableRow key={index}>
-                            <TableCell>{file.name}</TableCell>
-                            <TableCell>{file.type}</TableCell>
-                            <TableCell>{formatFileSize(file.size)}</TableCell>
-                            <TableCell>
-                              <Button
-                                size="small"
-                                startIcon={<CloudDownload />}
-                                onClick={() => handleDownloadFile(file.path)}
-                              >
-                                Download
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Box>
-              )}
+              {/* Files Section removed as requested */}
 
-              {/* Qualification Analysis Section - STREAMLINED */}
+              {/* Qualification Analysis Section */}
               {selectedItem.submissionData?.report?.qualificationData && (
                 <Box mt={3}>
                   <Typography variant="subtitle1" gutterBottom>
@@ -699,7 +529,7 @@ const QueueDisplay = () => {
                       }
                     </Typography>
                     
-                    {/* Table view with ALL quarters - This is the ONLY place with buttons now */}
+                    {/* Table view with ALL quarters */}
                     {selectedItem.submissionData.report.qualificationData.quarterAnalysis && (
                       <TableContainer component={Paper} variant="outlined" sx={{ mt: 2 }}>
                         <Table size="small">
@@ -749,7 +579,7 @@ const QueueDisplay = () => {
                                           quarter.qualifies ? 'revenueReduction' : 'governmentOrders'
                                         )}
                                       >
-                                        {quarter.qualifies ? 'Revenue Approach' : 'Gov Orders'}
+                                        Create Letter
                                       </Button>
                                     )}
                                   </TableCell>
@@ -764,64 +594,7 @@ const QueueDisplay = () => {
                 </Box>
               )}
 
-              {/* Excel Report Section */}
-              {selectedItem.reportPath ? (
-                <Box mt={3}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    Generated Excel Report
-                  </Typography>
-                  <Paper variant="outlined" sx={{ p: 2 }}>
-                    <Box display="flex" alignItems="center" justifyContent="space-between">
-                      <Box display="flex" alignItems="center">
-                        <TableChartOutlined sx={{ mr: 1, color: 'primary.main' }} />
-                        <Typography>{selectedItem.reportPath.split('/').pop()}</Typography>
-                      </Box>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        startIcon={<CloudDownload />}
-                        onClick={() => handleDownloadFile(selectedItem.reportPath)}
-                      >
-                        Download Excel Report
-                      </Button>
-                    </Box>
-                  </Paper>
-                </Box>
-              ) : (
-                <Box mt={3}>
-                  <Alert severity="info">
-                    No Excel report is available for this submission.
-                  </Alert>
-                </Box>
-              )}
-
-              {/* Debug section for reportPath */}
-              <Box mt={3}>
-                <Typography variant="subtitle1" gutterBottom>
-                  Debug Information
-                </Typography>
-                <Accordion>
-                  <AccordionSummary expandIcon={<ExpandMore />}>
-                    <Typography>Raw Data Structure</Typography>
-                  </AccordionSummary>
-                  <AccordionDetails>
-                    <Box
-                      component="pre"
-                      sx={{
-                        p: 2,
-                        bgcolor: 'grey.100',
-                        borderRadius: 1,
-                        overflow: 'auto',
-                        fontSize: '0.75rem',
-                        maxHeight: '400px'
-                      }}
-                    >
-                      {JSON.stringify(selectedItem.submissionData, null, 2)}
-                    </Box>
-                  </AccordionDetails>
-                </Accordion>
-              </Box>
+              {/* Excel Report Section removed as requested */}
             </DialogContent>
             <DialogActions>
               <Button 
@@ -830,82 +603,12 @@ const QueueDisplay = () => {
               >
                 Close
               </Button>
-              <Button 
-                onClick={(e) => handleOpenDeleteDialog(selectedItem, e)}
-                variant="contained"
-                color="error"
-                startIcon={<DeleteIcon />}
-              >
-                Delete Submission
-              </Button>
             </DialogActions>
           </>
         )}
       </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
-        aria-labelledby="delete-dialog-title"
-      >
-        <DialogTitle id="delete-dialog-title" sx={{ bgcolor: 'error.light', color: 'error.contrastText' }}>
-          Confirm Deletion
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ mt: 2, mb: 2 }}>
-            Are you sure you want to delete this submission? This action cannot be undone.
-          </DialogContentText>
-          <DialogContentText sx={{ fontWeight: 'bold' }}>
-            To confirm, please type DELETE in the field below:
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Type DELETE to confirm"
-            fullWidth
-            variant="outlined"
-            value={deleteConfirmation}
-            onChange={(e) => setDeleteConfirmation(e.target.value)}
-            error={!!deleteError}
-            helperText={deleteError}
-            sx={{ mt: 2 }}
-          />
-          {selectedItem && (
-            <Box mt={3}>
-              <Typography variant="subtitle2">Submission Details:</Typography>
-              <Typography variant="body2">ID: {selectedItem.id}</Typography>
-              <Typography variant="body2">Business: {selectedItem.businessName}</Typography>
-              <Typography variant="body2">Date: {new Date(selectedItem.timestamp).toLocaleString()}</Typography>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog} variant="outlined">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleDeleteConfirmation} 
-            color="error" 
-            variant="contained"
-            disabled={deleteConfirmation !== 'DELETE' || deleting}
-            startIcon={deleting ? <CircularProgress size={20} /> : <DeleteIcon />}
-          >
-            {deleting ? 'Deleting...' : 'Delete'}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Paper>
   );
-};
-
-// Helper function for formatting file size
-const formatFileSize = (bytes) => {
-  if (!bytes) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
 export default QueueDisplay;
