@@ -102,8 +102,6 @@ const QueueDisplay = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-
-
   // Get status chip based on status and processed quarters
   const getStatusChip = (item) => {
     const status = item.status;
@@ -245,6 +243,41 @@ const QueueDisplay = () => {
     );
   };
 
+  // Helper function to check if an item needs letters
+  const needsLetters = (item) => {
+    // Get the quarter analysis and processed quarters
+    const quarterAnalysis = item.submissionData?.report?.qualificationData?.quarterAnalysis || [];
+    const processedQuarters = item.submissionData?.processedQuarters || [];
+    
+    // For debugging
+    console.log("quarterAnalysis:", quarterAnalysis.map(q => q.quarter));
+    console.log("processedQuarters:", processedQuarters);
+    
+    // Check if there are quarters that need processing
+    if (quarterAnalysis.length === 0) return false;
+    
+    // Don't just compare lengths - check if each quarter has been processed
+    for (const quarterData of quarterAnalysis) {
+      // The quarter in analysis might be in format like "Quarter 2"
+      const quarter = quarterData.quarter;
+      
+      // Check if this quarter appears in processedQuarters
+      if (!processedQuarters.some(pq => 
+        // Exact match
+        pq === quarter || 
+        // Handle format conversion (e.g., "Quarter 2" vs "Q2 2020")
+        pq.includes(quarter) || 
+        quarter.includes(pq)
+      )) {
+        // Found a quarter that hasn't been processed
+        return true;
+      }
+    }
+    
+    // All quarters have been processed
+    return false;
+  };
+
   // Function to handle generating a letter for a specific quarter with a specified approach
   const handleGenerateLetter = async (item, quarter, approach = 'auto') => {
     setSelectedItem(item);
@@ -269,10 +302,12 @@ const QueueDisplay = () => {
         location: item.submissionData?.originalData?.formData?.location || 'Unknown Location, NY',
         businessWebsite: item.submissionData?.originalData?.formData?.businessWebsite || '',
         naicsCode: item.submissionData?.originalData?.formData?.naicsCode || '541110', // Default to law firm if missing
+        // Use the exact quarter format as it appears in the analysis
         timePeriods: [quarter],
-        approach: approachToUse,  // Add the approach to the data
-        timestamp: new Date().getTime(), // Add timestamp to ensure it's treated as new data
-        submissionId: item.id // Store the submission ID for later use
+        approach: approachToUse,
+        timestamp: new Date().getTime(),
+        submissionId: item.id,
+        trackingId: item.id
       };
       
       // Add additional context information if available
@@ -364,8 +399,8 @@ const QueueDisplay = () => {
       localStorage.setItem('prefillData', dataString);
       sessionStorage.setItem('prefillData', dataString); // Backup in case localStorage gets cleared
       
-      // Update MongoDB to mark this quarter as processed immediately
-      console.log("Updating MongoDB to mark quarter as processing");
+      // Update MongoDB to mark this quarter as processing immediately
+      console.log(`Updating MongoDB to mark ${quarter} as processing`);
       await updateProcessedQuarters(item.id, quarter);
       // After marking as processed in MongoDB, also update local UI for immediate feedback
       updateLocalUI(item.id, quarter);
@@ -469,13 +504,6 @@ const QueueDisplay = () => {
     setDeleteDialogOpen(false);
     setDeleteConfirmation('');
     setDeleteError(null);
-  };
-  
-  // Helper function to check if an item needs letters
-  const needsLetters = (item) => {
-    const quarterAnalysis = item.submissionData?.report?.qualificationData?.quarterAnalysis || [];
-    const processedQuarters = item.submissionData?.processedQuarters || [];
-    return quarterAnalysis.length > processedQuarters.length;
   };
   
   return (

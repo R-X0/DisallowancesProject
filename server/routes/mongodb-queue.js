@@ -199,6 +199,11 @@ router.post('/update-processed-quarters', async (req, res) => {
       });
     }
     
+    console.log(`Processing update request for submission ${submissionId}, quarter ${quarter}`);
+    if (zipPath) {
+      console.log(`With ZIP path: ${zipPath}`);
+    }
+    
     // Ensure connected to database
     await connectToDatabase();
     
@@ -222,11 +227,24 @@ router.post('/update-processed-quarters', async (req, res) => {
     }
     
     if (!submission) {
+      console.error(`Submission with ID ${submissionId} not found in MongoDB`);
       return res.status(404).json({
         success: false,
         message: `Submission with ID ${submissionId} not found`
       });
     }
+    
+    console.log(`Found submission: ${submission.id || submission._id}`);
+    
+    // Log the formats of existing quarters for debugging
+    if (submission.submissionData && submission.submissionData.processedQuarters) {
+      console.log(`Existing processedQuarters: ${JSON.stringify(submission.submissionData.processedQuarters)}`);
+    }
+    
+    // Normalize quarter format for comparison
+    const normalizeQuarter = (q) => {
+      return q.toLowerCase().replace(/\s+/g, '').trim();
+    };
     
     // Ensure we have a submissionData object
     if (!submission.submissionData) {
@@ -238,27 +256,48 @@ router.post('/update-processed-quarters', async (req, res) => {
       submission.submissionData.processedQuarters = [];
     }
     
-    // Check if the quarter is already in the processedQuarters array
-    if (!submission.submissionData.processedQuarters.includes(quarter)) {
-      // Add the quarter to the processedQuarters array
+    // Check if the quarter is already in the processedQuarters array (with format-insensitive comparison)
+    const normalizedNewQuarter = normalizeQuarter(quarter);
+    let quarterWasAdded = false;
+    let quarterAlreadyExists = submission.submissionData.processedQuarters.some(existingQuarter => 
+      normalizeQuarter(existingQuarter) === normalizedNewQuarter || 
+      existingQuarter === quarter
+    );
+    
+    if (!quarterAlreadyExists) {
+      // Add the quarter to the processedQuarters array using the EXACT format provided
       submission.submissionData.processedQuarters.push(quarter);
-      
-      // If zipPath is provided, store it in a new quarterZips object
-      if (zipPath) {
-        if (!submission.submissionData.quarterZips) {
-          submission.submissionData.quarterZips = {};
-        }
-        submission.submissionData.quarterZips[quarter] = zipPath;
-      }
-      
-      // Save the updated submission
-      await submission.save();
+      quarterWasAdded = true;
+      console.log(`Added ${quarter} to processedQuarters array`);
     } else {
-      // Still update the zipPath if provided, even if quarter is already processed
-      if (zipPath && submission.submissionData.quarterZips) {
-        submission.submissionData.quarterZips[quarter] = zipPath;
-        await submission.save();
+      console.log(`Quarter ${quarter} was already in processedQuarters array`);
+    }
+    
+    // If zipPath is provided, store it in a new quarterZips object
+    let zipWasUpdated = false;
+    if (zipPath) {
+      if (!submission.submissionData.quarterZips) {
+        submission.submissionData.quarterZips = {};
       }
+      
+      // Check if the ZIP path has changed
+      if (submission.submissionData.quarterZips[quarter] !== zipPath) {
+        submission.submissionData.quarterZips[quarter] = zipPath;
+        zipWasUpdated = true;
+        console.log(`Updated ZIP path for ${quarter} to: ${zipPath}`);
+      } else {
+        console.log(`ZIP path for ${quarter} unchanged: ${zipPath}`);
+      }
+    }
+    
+    // Only save if we made changes
+    if (quarterWasAdded || zipWasUpdated) {
+      // Save the updated submission
+      console.log(`Saving changes to MongoDB...`);
+      await submission.save();
+      console.log(`Successfully saved submission with updated data`);
+    } else {
+      console.log(`No changes needed, skipping save operation`);
     }
     
     res.status(200).json({

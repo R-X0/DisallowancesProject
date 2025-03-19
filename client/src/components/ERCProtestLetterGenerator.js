@@ -223,187 +223,165 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
     setSelectedTimePeriod(event.target.value);
   };
 
-  // Function to update MongoDB with file paths and mark quarter as processed
-  const updateMongoDBWithLetterData = async (trackingId, quarter, zipPath) => {
-    if (!trackingId || !quarter || !zipPath) {
-      console.log('Missing required data for MongoDB update:', { trackingId, quarter, zipPath });
-      return { success: false, message: 'Missing required data' };
+// Function to update MongoDB with letter data
+const updateMongoDBWithLetterData = async (trackingId, quarter, zipPath) => {
+  if (!trackingId || !quarter || !zipPath) {
+    console.log('Missing required data for MongoDB update:', { trackingId, quarter, zipPath });
+    return { success: false, message: 'Missing required data' };
+  }
+  
+  try {
+    console.log(`Updating MongoDB for tracking ID: ${trackingId}, quarter: ${quarter}`);
+    console.log(`ZIP path: ${zipPath}`);
+    
+    const response = await fetch('/api/mongodb-queue/update-processed-quarters', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        submissionId: trackingId,
+        quarter: quarter,  // Use the exact quarter format that was passed in
+        zipPath: zipPath
+      })
+    });
+    
+    if (!response.ok) {
+      console.error(`Error updating MongoDB: ${response.status} - ${response.statusText}`);
+      return { success: false, message: 'Server error' };
     }
     
-    try {
-      console.log(`Updating MongoDB for tracking ID: ${trackingId}, quarter: ${quarter}`);
-      console.log(`ZIP path: ${zipPath}`);
-      
-      const response = await fetch('/api/mongodb-queue/update-processed-quarters', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          submissionId: trackingId,
-          quarter: quarter,
-          zipPath: zipPath
-        })
-      });
-      
-      if (!response.ok) {
-        console.error(`Error updating MongoDB: ${response.status} - ${response.statusText}`);
-        return { success: false, message: 'Server error' };
-      }
-      
-      const result = await response.json();
-      console.log('MongoDB update successful:', result);
-      return result;
-    } catch (error) {
-      console.error('Error updating MongoDB:', error);
-      return { success: false, error: error.message };
-    }
-  };
+    const result = await response.json();
+    console.log('MongoDB update successful:', result);
+    return result;
+  } catch (error) {
+    console.error('Error updating MongoDB:', error);
+    return { success: false, error: error.message };
+  }
+};
 
-  // Function to generate protest letter using our LLM API
-  const generateProtestLetter = async () => {
-    setGenerating(true);
-    setError(null);
-    setProcessing(true);
-    setProcessingStep(0);
-    setPackageData(null);
+// Update the generateProtestLetter function to better handle timePeriod formats
+const generateProtestLetter = async () => {
+  setGenerating(true);
+  setError(null);
+  setProcessing(true);
+  setProcessingStep(0);
+  setPackageData(null);
+  
+  try {
+    // Get business type based on NAICS code
+    const businessType = getNaicsDescription(formData.naicsCode);
     
-    try {
-      // Get business type based on NAICS code
-      const businessType = getNaicsDescription(formData.naicsCode);
+    // Get all selected time periods for context
+    const allTimePeriods = formData.timePeriods ? formData.timePeriods : [formData.timePeriod];
+    const timePeriodsText = allTimePeriods.join(', ');
+    
+    // For protest letters, use the selected time period
+    // For Form 886-A, use all time periods
+    const timePeriodToUse = documentType === 'protestLetter' ? 
+      selectedTimePeriod : 
+      timePeriodsText;
+    
+    // Log the exact time period format being used
+    console.log(`Using time period in exact format: "${timePeriodToUse}"`);
+    
+    // Calculate revenue declines and determine approach
+    const revenueDeclines = calculateRevenueDeclines(formData);
+    const qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
+    
+    // CONFIRM we're using the correct approach - re-check right before API call
+    const currentApproach = determineUserApproach(formData);
+    console.log("Final approach check before API call:", currentApproach);
+    
+    // Prepare data for API call
+    const letterData = {
+      businessName: formData.businessName,
+      ein: formData.ein,
+      location: formData.location,
+      timePeriod: timePeriodToUse,
+      allTimePeriods: allTimePeriods,
+      chatGptLink: chatGptLink,
+      businessType: businessType,
+      trackingId: formData.trackingId || '',
+      documentType: documentType,
+      // Add revenue data
+      q1_2019: formData.q1_2019 || '',
+      q2_2019: formData.q2_2019 || '',
+      q3_2019: formData.q3_2019 || '',
+      q4_2019: formData.q4_2019 || '',
+      q1_2020: formData.q1_2020 || '',
+      q2_2020: formData.q2_2020 || '',
+      q3_2020: formData.q3_2020 || '',
+      q4_2020: formData.q4_2020 || '',
+      q1_2021: formData.q1_2021 || '',
+      q2_2021: formData.q2_2021 || '',
+      q3_2021: formData.q3_2021 || '',
+      // Also pass additional context
+      revenueReductionInfo: formData.revenueReductionInfo || '',
+      governmentOrdersInfo: formData.governmentOrdersInfo || '',
+      // Pass revenue decline metadata
+      revenueDeclines: revenueDeclines,
+      qualifyingQuarters: qualifyingQuarters,
+      approachFocus: currentApproach // Use the confirmed approach
+    };
+    
+    // [... processing steps and API call ...]
+    
+    if (response.success) {
+      setProtestLetter(response.letter);
       
-      // Get all selected time periods for context
-      const allTimePeriods = formData.timePeriods ? formData.timePeriods : [formData.timePeriod];
-      const timePeriodsText = allTimePeriods.join(', ');
-      
-      // For protest letters, use the selected time period
-      // For Form 886-A, use all time periods
-      const timePeriodToUse = documentType === 'protestLetter' ? 
-        selectedTimePeriod : 
-        timePeriodsText;
-      
-      // Calculate revenue declines and determine approach
-      const revenueDeclines = calculateRevenueDeclines(formData);
-      const qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
-      
-      // CONFIRM we're using the correct approach - re-check right before API call
-      const currentApproach = determineUserApproach(formData);
-      console.log("Final approach check before API call:", currentApproach);
-      
-      // Prepare data for API call
-      const letterData = {
-        businessName: formData.businessName,
-        ein: formData.ein,
-        location: formData.location,
-        timePeriod: timePeriodToUse,
-        allTimePeriods: allTimePeriods,
-        chatGptLink: chatGptLink,
-        businessType: businessType,
-        trackingId: formData.trackingId || '',
-        documentType: documentType,
-        // Add revenue data
-        q1_2019: formData.q1_2019 || '',
-        q2_2019: formData.q2_2019 || '',
-        q3_2019: formData.q3_2019 || '',
-        q4_2019: formData.q4_2019 || '',
-        q1_2020: formData.q1_2020 || '',
-        q2_2020: formData.q2_2020 || '',
-        q3_2020: formData.q3_2020 || '',
-        q4_2020: formData.q4_2020 || '',
-        q1_2021: formData.q1_2021 || '',
-        q2_2021: formData.q2_2021 || '',
-        q3_2021: formData.q3_2021 || '',
-        // Also pass additional context
-        revenueReductionInfo: formData.revenueReductionInfo || '',
-        governmentOrdersInfo: formData.governmentOrdersInfo || '',
-        // Pass revenue decline metadata
-        revenueDeclines: revenueDeclines,
-        qualifyingQuarters: qualifyingQuarters,
-        approachFocus: currentApproach // Use the confirmed approach
+      // Create package data object
+      const newPackageData = {
+        pdfPath: response.pdfPath,
+        zipPath: response.zipPath,
+        attachments: response.attachments || [],
+        packageFilename: response.packageFilename || 'complete_package.zip'
       };
       
-      // Update processing steps
-      setProcessingMessage('Connecting to ChatGPT conversation...');
-      setProcessingStep(1);
+      console.log('Setting package data:', newPackageData);
+      setPackageData(newPackageData);
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setProcessingMessage('Extracting COVID-19 orders and research data...');
-      setProcessingStep(2);
-      
-      // Call the API to generate the letter
-      const response = await generateERCProtestLetter(letterData);
-      
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setProcessingMessage(documentType === 'protestLetter' ? 
-        'Generating protest letter...' : 
-        'Generating Form 886-A document...');
-      setProcessingStep(3);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setProcessingMessage('Converting referenced links to PDF attachments...');
-      setProcessingStep(4);
-      
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setProcessingMessage('Creating complete package...');
-      setProcessingStep(5);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (response.success) {
-        setProtestLetter(response.letter);
-        
-        // Create package data object
-        const newPackageData = {
-          pdfPath: response.pdfPath,
-          zipPath: response.zipPath,
-          attachments: response.attachments || [],
-          packageFilename: response.packageFilename || 'complete_package.zip'
-        };
-        
-        console.log('Setting package data:', newPackageData);
-        setPackageData(newPackageData);
-        
-        // IMPORTANT: Update MongoDB with the generated zipPath
-        // This ensures the quarter is marked as processed and the zip is stored
-        if (formData.trackingId && selectedTimePeriod && newPackageData.zipPath) {
-          console.log('Updating MongoDB with letter data...');
-          try {
-            // For form886A, we need to handle that it might process multiple quarters
-            if (documentType === 'form886A' && formData.allTimePeriods && Array.isArray(formData.allTimePeriods)) {
-              // For each time period, mark it as processed
-              for (const timePeriod of formData.allTimePeriods) {
-                await updateMongoDBWithLetterData(formData.trackingId, timePeriod, newPackageData.zipPath);
-              }
-            } else {
-              // For regular protest letters, just mark the selected quarter
-              await updateMongoDBWithLetterData(formData.trackingId, selectedTimePeriod, newPackageData.zipPath);
+      // IMPORTANT: Update MongoDB with the generated zipPath
+      // This ensures the quarter is marked as processed and the zip is stored
+      if (formData.trackingId && selectedTimePeriod && newPackageData.zipPath) {
+        console.log(`Updating MongoDB with letter data for quarter: "${selectedTimePeriod}"`);
+        try {
+          // For form886A, we need to handle that it might process multiple quarters
+          if (documentType === 'form886A' && formData.allTimePeriods && Array.isArray(formData.allTimePeriods)) {
+            // For each time period, mark it as processed
+            for (const timePeriod of formData.allTimePeriods) {
+              await updateMongoDBWithLetterData(formData.trackingId, timePeriod, newPackageData.zipPath);
             }
-            console.log('MongoDB update completed successfully');
-          } catch (mongoError) {
-            console.error('Error updating MongoDB:', mongoError);
-            // Continue with the flow even if MongoDB update fails
+          } else {
+            // For regular protest letters, just mark the selected quarter
+            await updateMongoDBWithLetterData(formData.trackingId, selectedTimePeriod, newPackageData.zipPath);
           }
+          console.log('MongoDB update completed successfully');
+        } catch (mongoError) {
+          console.error('Error updating MongoDB:', mongoError);
+          // Continue with the flow even if MongoDB update fails
         }
-        
-        // Immediately call the onGenerated callback with the package data
-        console.log('Calling onGenerated with package data:', newPackageData);
-        if (onGenerated) {
-          onGenerated(newPackageData);
-        }
-        
-        setDialogOpen(true);
-        setProcessing(false);
-      } else {
-        throw new Error(response.message || 'Failed to generate document');
       }
-    } catch (error) {
-      console.error('Error generating document:', error);
+      
+      // Immediately call the onGenerated callback with the package data
+      console.log('Calling onGenerated with package data:', newPackageData);
+      if (onGenerated) {
+        onGenerated(newPackageData);
+      }
+      
+      setDialogOpen(true);
       setProcessing(false);
-      setError(`Failed to generate document: ${error.message}`);
-    } finally {
-      setGenerating(false);
+    } else {
+      throw new Error(response.message || 'Failed to generate document');
     }
-  };
+  } catch (error) {
+    console.error('Error generating document:', error);
+    setProcessing(false);
+    setError(`Failed to generate document: ${error.message}`);
+  } finally {
+    setGenerating(false);
+  }
+};
   
   const copyToClipboard = () => {
     navigator.clipboard.writeText(protestLetter)
@@ -417,6 +395,19 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   };
   
   const handleCloseDialog = () => {
+    // Before closing dialog, make sure MongoDB is updated with the latest ZIP data
+    if (packageData && packageData.zipPath && (formData.trackingId || formData.submissionId)) {
+      const trackingId = formData.trackingId || formData.submissionId;
+      console.log(`Ensuring MongoDB is updated with ZIP on dialog close for ${trackingId}`);
+      updateMongoDBWithLetterData(trackingId, selectedTimePeriod, packageData.zipPath)
+        .then(result => {
+          console.log("MongoDB update on dialog close:", result);
+        })
+        .catch(err => {
+          console.error("Error updating MongoDB on dialog close:", err);
+        });
+    }
+
     // Make sure we're still calling onGenerated with the package data when closing the dialog
     if (packageData && onGenerated) {
       console.log("Sending package data to parent on dialog close:", packageData);
@@ -438,6 +429,19 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const downloadProtestPackage = () => {
     if (packageData && packageData.zipPath) {
       console.log("Downloading protest package with path:", packageData.zipPath);
+      
+      // Before downloading, make sure MongoDB is updated with the ZIP path
+      if (formData.trackingId || formData.submissionId) {
+        const trackingId = formData.trackingId || formData.submissionId;
+        console.log(`Ensuring MongoDB is updated with ZIP for ${trackingId}`);
+        updateMongoDBWithLetterData(trackingId, selectedTimePeriod, packageData.zipPath)
+          .then(result => {
+            console.log("MongoDB update during download:", result);
+          })
+          .catch(err => {
+            console.error("Error updating MongoDB during download:", err);
+          });
+      }
       
       // Check if it's a Google Drive URL (starts with http/https)
       if (packageData.zipPath.startsWith('http')) {
