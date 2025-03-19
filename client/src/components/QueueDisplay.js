@@ -39,6 +39,7 @@ const QueueDisplay = () => {
   const [error, setError] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [refreshCount, setRefreshCount] = useState(0); // Added to track refreshes
 
   // Connect to MongoDB queue API endpoint
   const fetchQueue = async () => {
@@ -71,6 +72,14 @@ const QueueDisplay = () => {
     }
   };
 
+  // Force an immediate refresh
+  const forceRefresh = () => {
+    console.log('Forcing immediate queue refresh');
+    // Update the refresh counter to trigger the effect
+    setRefreshCount(prev => prev + 1);
+    fetchQueue();
+  };
+
   // Initial data load
   useEffect(() => {
     fetchQueue();
@@ -81,6 +90,30 @@ const QueueDisplay = () => {
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
   }, []);
+  
+  // Additional effect to listen for refresh events from other components
+  useEffect(() => {
+    const handleRefreshEvent = () => {
+      console.log('Refresh event received');
+      forceRefresh();
+    };
+    
+    // Add event listener
+    window.addEventListener('refreshQueue', handleRefreshEvent);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('refreshQueue', handleRefreshEvent);
+    };
+  }, []);
+  
+  // Additional effect that runs when refreshCount changes
+  useEffect(() => {
+    if (refreshCount > 0) {
+      console.log(`Running refresh #${refreshCount}`);
+      fetchQueue();
+    }
+  }, [refreshCount]);
 
   // Helper function to format the timestamp
   const formatTime = (timestamp) => {
@@ -92,7 +125,7 @@ const QueueDisplay = () => {
   const getStatusChip = (item) => {
     const status = item.status;
     
-    // Get count of processed quarters
+    // FIXED: Get count of processed quarters from the right location
     const processedQuarters = item.submissionData?.processedQuarters || [];
     const processedCount = processedQuarters.length;
     
@@ -189,12 +222,26 @@ const QueueDisplay = () => {
       // Also update local UI for immediate feedback
       updateLocalUI(itemId, quarter);
       
+      // FIXED: Force a refresh after a successful update with a delay to ensure
+      // the server has time to process the update
+      setTimeout(() => {
+        console.log("Force refresh after quarter update");
+        forceRefresh();
+      }, 1000);
+      
       return result;
     } catch (error) {
       console.error('Error updating processed quarters:', error);
       // Fall back to local UI update
       console.log("Falling back to local UI update due to error");
       updateLocalUI(itemId, quarter);
+      
+      // FIXED: Still try to refresh after a delay
+      setTimeout(() => {
+        console.log("Force refresh after error recovery");
+        forceRefresh();
+      }, 1000);
+      
       return { success: false, error: error.message };
     }
   };
@@ -211,12 +258,12 @@ const QueueDisplay = () => {
           // Create a deep copy to avoid mutation issues
           const updatedItem = JSON.parse(JSON.stringify(queueItem));
           
-          // Ensure we have the necessary structure
+          // FIXED: Ensure we have the necessary structure
           if (!updatedItem.submissionData) {
             updatedItem.submissionData = {};
           }
           
-          // Initialize processedQuarters if it doesn't exist
+          // FIXED: Initialize processedQuarters if it doesn't exist
           if (!updatedItem.submissionData.processedQuarters) {
             updatedItem.submissionData.processedQuarters = [];
           }
@@ -246,12 +293,6 @@ const QueueDisplay = () => {
         return queueItem;
       })
     );
-    
-    // Force a refresh after a short delay to ensure state is properly updated
-    setTimeout(() => {
-      console.log('Forcing queue refresh after UI update');
-      fetchQueue();
-    }, 2000);
   };
 
   // Function to handle generating a letter for a specific quarter with a specified approach
@@ -375,18 +416,29 @@ const QueueDisplay = () => {
       // Update MongoDB to mark this quarter as processed immediately
       console.log("Updating MongoDB to mark quarter as processing");
       await updateProcessedQuarters(item.id, quarter);
-      // After marking as processed in MongoDB, also update local UI for immediate feedback
-      updateLocalUI(item.id, quarter);
       
       // Use a delay to ensure storage is written before navigation
       await new Promise(resolve => setTimeout(resolve, 500));
       
+      // FIXED: Dispatch an event that other components can listen for
+      window.dispatchEvent(new CustomEvent('refreshQueue'));
+      
       // Navigate to the form - this will cause a reload, but sessionStorage will persist
       window.location.href = '/';
+      
+      // FIXED: Force a refresh after the navigation to ensure the queue updates
+      setTimeout(() => {
+        forceRefresh();
+      }, 2000);
       
     } catch (error) {
       console.error('Error initiating letter generation:', error);
       alert("An error occurred. Please try again.");
+      
+      // Try to refresh the queue to recover
+      setTimeout(() => {
+        forceRefresh();
+      }, 1000);
     }
   };
 
@@ -397,6 +449,7 @@ const QueueDisplay = () => {
   
   // Helper function to check if an item needs letters
   const needsLetters = (item) => {
+    // FIXED: Use the correct path for processed quarters
     const quarterAnalysis = item.submissionData?.report?.qualificationData?.quarterAnalysis || [];
     const processedQuarters = item.submissionData?.processedQuarters || [];
     return quarterAnalysis.length > processedQuarters.length;
@@ -416,7 +469,7 @@ const QueueDisplay = () => {
         <Box display="flex" alignItems="center">
           <IconButton 
             size="small" 
-            onClick={fetchQueue} 
+            onClick={forceRefresh} 
             title="Refresh Queue"
           >
             <Refresh />
@@ -557,7 +610,7 @@ const QueueDisplay = () => {
                   <Paper variant="outlined" sx={{ p: 2 }}>
                     <Typography variant="body2" gutterBottom>
                       <strong>Qualifying Quarters by Revenue:</strong> {
-                        selectedItem.submissionData.report.qualificationData.qualifyingQuarters.length > 0 
+                        selectedItem.submissionData.report.qualificationData.qualifyingQuarters?.length > 0 
                           ? selectedItem.submissionData.report.qualificationData.qualifyingQuarters.join(', ') 
                           : 'None'
                       }
@@ -578,14 +631,15 @@ const QueueDisplay = () => {
                             </TableRow>
                           </TableHead>
                           <TableBody>
-                            {selectedItem.submissionData.report.qualificationData.quarterAnalysis.map((quarter) => {
+                            {selectedItem.submissionData.report.qualificationData.quarterAnalysis.map((quarter, index) => {
+                              // FIXED: Check the right place for processed quarters
                               const isProcessed = selectedItem.submissionData?.processedQuarters?.includes(quarter.quarter);
                               return (
-                                <TableRow key={quarter.quarter}>
+                                <TableRow key={index}>
                                   <TableCell>{quarter.quarter}</TableCell>
-                                  <TableCell>${quarter.revenues.revenue2019.toLocaleString()}</TableCell>
-                                  <TableCell>${quarter.revenues.revenue2021.toLocaleString()}</TableCell>
-                                  <TableCell>{quarter.percentDecrease}%</TableCell>
+                                  <TableCell>${(quarter.revenues?.revenue2019 || 0).toLocaleString()}</TableCell>
+                                  <TableCell>${(quarter.revenues?.revenue2021 || 0).toLocaleString()}</TableCell>
+                                  <TableCell>{quarter.percentDecrease || "0"}%</TableCell>
                                   <TableCell>
                                     <Chip 
                                       label={quarter.qualifies ? "Yes" : "No"}

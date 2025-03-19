@@ -24,19 +24,44 @@ router.get('/', async (req, res) => {
       
       // Log submission data for debugging
       console.log(`Processing submission: id=${processedSubmission._id}, submissionId=${processedSubmission.submissionId}`);
-      console.log(`Processed quarters:`, processedSubmission.submissionData?.processedQuarters || []);
-      console.log(`Quarter analysis:`, processedSubmission.submissionData?.report?.qualificationData?.quarterAnalysis?.length || 0);
+      
+      // FIXED: Ensure submissionData exists and has necessary structure
+      if (!processedSubmission.submissionData) {
+        processedSubmission.submissionData = {};
+      }
+      
+      // FIXED: Ensure we handle both possible data structures
+      const processedQuarters = processedSubmission.submissionData.processedQuarters || 
+                                processedSubmission.processedQuarters || 
+                                [];
+                               
+      // Log both possible locations for processed quarters
+      console.log(`Processed quarters (from submissionData):`, processedSubmission.submissionData?.processedQuarters || []);
+      console.log(`Processed quarters (from root):`, processedSubmission.processedQuarters || []);
+      console.log(`Using processed quarters:`, processedQuarters);
+      
+      // Get quarter analysis count
+      const quarterAnalysis = processedSubmission.submissionData?.report?.qualificationData?.quarterAnalysis?.length || 
+                             (processedSubmission.timePeriods?.length || 3); // Default to 3 if not specified
+      
+      console.log(`Quarter analysis:`, quarterAnalysis);
       
       // Extract a meaningful identifier based on data structure
       let businessName = 'Unnamed Business';
       
       try {
-        const originalData = processedSubmission.originalData || {};
-        const formData = originalData.formData || {};
+        // Get business name from various possible locations
+        if (processedSubmission.businessName) {
+          businessName = processedSubmission.businessName;
+        } else if (processedSubmission.submissionData?.originalData?.formData?.businessName) {
+          businessName = processedSubmission.submissionData.originalData.formData.businessName;
+        } else if (processedSubmission.originalData?.formData?.businessName) {
+          businessName = processedSubmission.originalData.formData.businessName;
+        }
         
         // Try to create a business identifier from owner information
-        if (formData.ownershipStructure && formData.ownershipStructure.length > 0) {
-          const primaryOwner = formData.ownershipStructure.sort((a, b) => 
+        if (businessName === 'Unnamed Business' && processedSubmission.submissionData?.originalData?.formData?.ownershipStructure?.length > 0) {
+          const primaryOwner = processedSubmission.submissionData.originalData.formData.ownershipStructure.sort((a, b) => 
             parseInt(b.ownership_percentage) - parseInt(a.ownership_percentage)
           )[0];
           
@@ -45,28 +70,11 @@ router.get('/', async (req, res) => {
           }
         }
         
-        // If we have a user email, use that instead
-        if (formData.userEmail && formData.userEmail.trim()) {
-          businessName = `Submission from ${formData.userEmail}`;
+        // If we have a user email, use that instead if still unnamed
+        if (businessName === 'Unnamed Business' && processedSubmission.submissionData?.originalData?.formData?.userEmail) {
+          businessName = `Submission from ${processedSubmission.submissionData.originalData.formData.userEmail}`;
         }
         
-        // Try to get business name directly if it exists
-        if (formData.businessName) {
-          businessName = formData.businessName;
-        }
-        
-        // Check if we have a business name directly on the submission
-        if (processedSubmission.businessName) {
-          businessName = processedSubmission.businessName;
-        }
-        
-        // Use timestamp as last resort
-        if (businessName === 'Unnamed Business') {
-          const date = new Date(processedSubmission.receivedAt);
-          if (!isNaN(date.getTime())) {
-            businessName = `Submission from ${date.toLocaleDateString()}`;
-          }
-        }
       } catch (err) {
         console.log('Error extracting business name:', err);
         businessName = `Submission #${processedSubmission.submissionId || processedSubmission._id}`;
@@ -79,8 +87,20 @@ router.get('/', async (req, res) => {
         status = processedSubmission.status;
       } else if (processedSubmission.report && processedSubmission.report.generated) {
         status = 'complete';
+      } else if (processedQuarters && processedQuarters.length > 0) {
+        // FIXED: If we have processed quarters, status should be at least 'processing'
+        status = 'processing';
       } else if (processedSubmission.receivedFiles && processedSubmission.receivedFiles.length > 0) {
         status = 'processing';
+      }
+      
+      // FIXED: Calculate true count of processed quarters
+      const processedCount = processedQuarters.length;
+      const totalCount = quarterAnalysis;
+      
+      // FIXED: If all quarters are processed, status should be 'complete'
+      if (processedCount >= totalCount && totalCount > 0) {
+        status = 'complete';
       }
       
       // Find report path if it exists
@@ -115,7 +135,19 @@ router.get('/', async (req, res) => {
         files,
         reportPath,
         // Include the complete submission data for detailed view
-        submissionData: processedSubmission
+        // FIXED: Ensure processedQuarters is in the right place for QueueDisplay component
+        submissionData: {
+          ...processedSubmission.submissionData,
+          processedQuarters: processedQuarters,
+          report: {
+            ...processedSubmission.submissionData?.report,
+            qualificationData: {
+              ...(processedSubmission.submissionData?.report?.qualificationData || {}),
+              quarterAnalysis: new Array(totalCount).fill({ quarter: 'Quarter', qualifies: true }),
+              qualifyingQuarters: processedQuarters
+            }
+          }
+        }
       };
     });
     
@@ -285,10 +317,13 @@ router.post('/update-processed-quarters', async (req, res) => {
         submissionId: submissionId,
         receivedAt: new Date(),
         status: 'processing',
+        // FIXED: Ensure the processedQuarters are in the right place
         submissionData: {
           processedQuarters: [],
           quarterZips: {}
-        }
+        },
+        // Also add at root level for backward compatibility
+        processedQuarters: []
       });
       
       // Try to get business name from filesystem
@@ -324,7 +359,7 @@ router.post('/update-processed-quarters', async (req, res) => {
     
     console.log(`Updating submission: ${submission._id || 'new record'}`);
     
-    // Ensure we have the required nested objects
+    // FIXED: Ensure we have the required nested objects
     if (!submission.submissionData) {
       submission.submissionData = {};
     }
@@ -335,6 +370,11 @@ router.post('/update-processed-quarters', async (req, res) => {
     
     if (!submission.submissionData.quarterZips) {
       submission.submissionData.quarterZips = {};
+    }
+    
+    // Initialize root-level processedQuarters if it doesn't exist (for backward compatibility)
+    if (!submission.processedQuarters) {
+      submission.processedQuarters = [];
     }
     
     // Log current state before update
@@ -348,6 +388,11 @@ router.post('/update-processed-quarters', async (req, res) => {
       wasQuarterAdded = true;
     } else {
       console.log(`Quarter ${quarter} already in processed quarters`);
+    }
+    
+    // FIXED: Also update the root-level processedQuarters for backward compatibility
+    if (!submission.processedQuarters.includes(quarter)) {
+      submission.processedQuarters.push(quarter);
     }
     
     // Always update ZIP path if provided
@@ -399,6 +444,8 @@ router.post('/update-processed-quarters', async (req, res) => {
             // Update status if needed
             if (submission.status === 'complete') {
               info.status = 'PDF done';
+            } else if (processedQuartersCount > 0) {
+              info.status = 'processing';
             }
             
             // Write back to file
