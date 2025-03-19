@@ -437,10 +437,6 @@ const QueueDisplay = () => {
       localStorage.setItem('prefillData', dataString);
       sessionStorage.setItem('prefillData', dataString);
       
-      // Update MongoDB to mark this quarter as processed immediately
-      console.log("Updating MongoDB to mark quarter as processing");
-      await updateProcessedQuarters(item.id, quarter);
-      
       // Use a delay to ensure storage is written before navigation
       await new Promise(resolve => setTimeout(resolve, 500));
       
