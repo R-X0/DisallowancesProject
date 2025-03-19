@@ -223,43 +223,6 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
     setSelectedTimePeriod(event.target.value);
   };
 
-  // Function to update MongoDB with file paths and mark quarter as processed
-  const updateMongoDBWithLetterData = async (trackingId, quarter, zipPath) => {
-    if (!trackingId || !quarter || !zipPath) {
-      console.log('Missing required data for MongoDB update:', { trackingId, quarter, zipPath });
-      return { success: false, message: 'Missing required data' };
-    }
-    
-    try {
-      console.log(`Updating MongoDB for tracking ID: ${trackingId}, quarter: ${quarter}`);
-      console.log(`ZIP path: ${zipPath}`);
-      
-      const response = await fetch('/api/mongodb-queue/update-processed-quarters', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          submissionId: trackingId,
-          quarter: quarter,
-          zipPath: zipPath
-        })
-      });
-      
-      if (!response.ok) {
-        console.error(`Error updating MongoDB: ${response.status} - ${response.statusText}`);
-        return { success: false, message: 'Server error' };
-      }
-      
-      const result = await response.json();
-      console.log('MongoDB update successful:', result);
-      return result;
-    } catch (error) {
-      console.error('Error updating MongoDB:', error);
-      return { success: false, error: error.message };
-    }
-  };
-
   // Function to generate protest letter using our LLM API
   const generateProtestLetter = async () => {
     setGenerating(true);
@@ -363,25 +326,38 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         console.log('Setting package data:', newPackageData);
         setPackageData(newPackageData);
         
-        // IMPORTANT: Update MongoDB with the generated zipPath
+        // CRITICAL FIX: Update MongoDB with the generated zipPath
         // This ensures the quarter is marked as processed and the zip is stored
         if (formData.trackingId && selectedTimePeriod && newPackageData.zipPath) {
-          console.log('Updating MongoDB with letter data...');
+          console.log('Updating MongoDB with letter data:', {
+            trackingId: formData.trackingId,
+            quarter: selectedTimePeriod,
+            zipPath: newPackageData.zipPath
+          });
+          
           try {
-            // For form886A, we need to handle that it might process multiple quarters
-            if (documentType === 'form886A' && formData.allTimePeriods && Array.isArray(formData.allTimePeriods)) {
-              // For each time period, mark it as processed
-              for (const timePeriod of formData.allTimePeriods) {
-                await updateMongoDBWithLetterData(formData.trackingId, timePeriod, newPackageData.zipPath);
-              }
+            const updateResponse = await fetch('/api/mongodb-queue/update-processed-quarters', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                submissionId: formData.trackingId,
+                quarter: selectedTimePeriod,
+                zipPath: newPackageData.zipPath
+              })
+            });
+            
+            const updateResult = await updateResponse.json();
+            console.log('MongoDB update result:', updateResult);
+            
+            if (updateResult.success) {
+              console.log('Successfully marked quarter as processed in MongoDB');
             } else {
-              // For regular protest letters, just mark the selected quarter
-              await updateMongoDBWithLetterData(formData.trackingId, selectedTimePeriod, newPackageData.zipPath);
+              console.error('Failed to update MongoDB:', updateResult.message);
             }
-            console.log('MongoDB update completed successfully');
           } catch (mongoError) {
             console.error('Error updating MongoDB:', mongoError);
-            // Continue with the flow even if MongoDB update fails
           }
         }
         
