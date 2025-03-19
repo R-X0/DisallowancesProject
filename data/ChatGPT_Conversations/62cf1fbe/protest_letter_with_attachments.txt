@@ -1,0 +1,54 @@
+03/19/2025
+Internal Revenue Service
+Ogden, UT 84201
+
+EIN: 00-0000000  
+Taxpayer Name: 45's Business
+
+RE: Formal Protest to Letter 105 – ERC Disallowance for Q3  
+Tax Period: 3rd Quarter 2021  
+Claim Amount: (See attached documentation)
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing 45's Business’s Employee Retention Credit (ERC) claim for third quarter 2021. The disallowance was based on an assertion that no government orders were in effect or that our revenue figures did not demonstrate a qualifying decline. We respectfully disagree. Multiple federal government orders were active during Quarter 3 2021, and as detailed below, they imposed mandates that partially suspended our operations. In addition, our precise revenue data clearly demonstrates that we meet the decline thresholds required for ERC qualification.
+
+Below please find a detailed timeline of relevant COVID‑19 government orders and their direct impact on our operations. Each order is set forth with all required details:
+
+• Order Name: Proclamation 9994 – “National Emergency Concerning COVID‑19”  
+  Order Number: 9994  
+  Date Enacted: 03/13/2020  
+  Date Rescinded: Still in effect  
+  Order Summary: This proclamation declared a nationwide emergency due to the COVID‑19 outbreak and activated federal emergency powers, paving the way for subsequent restrictions that impacted business operations.  
+  Impact on Quarter: During Quarter 3 2021, the ongoing national emergency underpinned several federal mandates that forced our law firm to adjust operational protocols, thereby contributing to a partial suspension of our normal business activities.
+
+• Order Name: CDC/FAA Mask Mandates for Travel  
+  Order Number: 13998  
+  Date Enacted: 01/21/2021  
+  Date Rescinded: Still in effect  
+  Order Summary: This order required that masks be worn on all forms of interstate travel and on federal property in order to protect public health amid COVID‑19. It was implemented to ensure safety in travel and to reduce virus transmission across transportation networks.  
+  Impact on Quarter: In Quarter 3 2021, this mandate necessitated modifications in employee travel protocols and limited certain business travel-related activities, thereby contributing to a partial suspension of our normal operations.
+
+REVENUE DECLINE DATA
+
+The purpose of this section is to provide, in exact figures as required for audit purposes, the revenue decline information that qualifies 45's Business for the Employee Retention Credit. The following details explain the significant revenue declines as compared to corresponding quarters in 2019:
+
+During Quarter 3 2021, our law firm generated EXACTLY $345 in revenue compared to EXACTLY $3245345 in Q3 2019. This represents an EXACT decline of $3245000, which amounts to an EXACT 99.99% decline in revenue. Based on the ERC qualification thresholds for 2021 (requiring a decline of at least 20%), this quarter clearly qualifies.
+
+• Q1 2021: EXACTLY $345 compared to Q1 2019: EXACTLY $54325234 = EXACTLY 100.00% decline (Qualifies for ERC)  
+• Q2 2021: EXACTLY $345 compared to Q2 2019: EXACTLY $3552452345 = EXACTLY 100.00% decline (Qualifies for ERC)
+
+In conclusion, 45's Business experienced a significant revenue decline in Q3 2021 and was subject to federal government orders which imposed operational restrictions resulting in a partial suspension of our business. Both of these factors clearly satisfy the conditions for ERC eligibility.
+
+We respectfully request that the IRS reconsider and reverse the disallowance of our Q3 2021 ERC claim. Enclosed are copies of the government orders referenced above, along with the detailed revenue calculations and supporting documentation.
+
+Attestation: “Under penalties of perjury, I declare that I submitted the protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated in the protest and accompanying documents is true, correct, and complete.”
+
+Sincerely,
+
+[Signature]
+
+__________________________  
+Authorized Representative  
+45's Business  
+Enclosures: Copies of Government Orders and Relevant Excerpts; Detailed ERC Revenue Calculations; Supporting Documentation

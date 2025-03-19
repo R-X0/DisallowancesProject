@@ -54,11 +54,57 @@ const QueueDisplay = () => {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
 
-  // NEW: Add a normalize quarter function for consistent comparison
-  const normalizeQuarter = (q) => {
-    if (!q) return '';
-    // Remove spaces, convert to lowercase, and remove any special characters
-    return q.toString().toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '').trim();
+  /**
+   * Normalize quarter format to a consistent standard for comparison
+   * @param {string} quarter - Any quarter format (Quarter 1, Q1, etc.)
+   * @returns {string} - Normalized format (q1, q2, etc.)
+   */
+  const normalizeQuarter = (quarter) => {
+    if (!quarter) return '';
+    
+    // Convert to string, lowercase, and remove all non-alphanumeric characters
+    const clean = quarter.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    // Extract just the quarter number using regex
+    const match = clean.match(/q?([1-4])/);
+    if (match && match[1]) {
+      // Return standardized format: q1, q2, q3, q4
+      return `q${match[1]}`;
+    }
+    
+    // If quarter includes year (e.g., "q2 2021"), extract quarter part
+    const quarterYearMatch = clean.match(/q?([1-4]).*20([0-9]{2})/);
+    if (quarterYearMatch && quarterYearMatch[1]) {
+      return `q${quarterYearMatch[1]}`;
+    }
+    
+    // Return original if we couldn't normalize it
+    return clean;
+  };
+
+  /**
+   * Check if a quarter has been processed already
+   * @param {string} quarter - The quarter to check
+   * @param {Array} processedQuarters - Array of processed quarters
+   * @returns {boolean} - Whether the quarter is processed
+   */
+  const isQuarterProcessed = (quarter, processedQuarters) => {
+    if (!quarter || !processedQuarters || !Array.isArray(processedQuarters)) {
+      return false;
+    }
+    
+    // Normalize the quarter we're checking
+    const normalizedQuarter = normalizeQuarter(quarter);
+    
+    // Debug logging
+    console.log(`Quarter check: "${quarter}" vs processed:`, processedQuarters);
+    console.log(`Normalized comparison: "${normalizedQuarter}" vs`, 
+      processedQuarters.map(pq => normalizeQuarter(pq)));
+    
+    // Check if any processed quarter matches when normalized
+    const result = processedQuarters.some(pq => normalizeQuarter(pq) === normalizedQuarter);
+    console.log(`Quarter processed check result: ${result}`);
+    return result;
   };
 
   // Connect to MongoDB queue API endpoint
@@ -219,7 +265,7 @@ const QueueDisplay = () => {
       // Also update local UI for immediate feedback
       updateLocalUI(itemId, quarter);
       
-      // ADDED: Force refresh the queue to get latest data from server
+      // Force refresh the queue to get latest data from server
       fetchQueue();
       
       return result;
@@ -239,7 +285,7 @@ const QueueDisplay = () => {
         if (queueItem.id === itemId) {
           const processedQuarters = queueItem.submissionData?.processedQuarters || [];
           
-          // FIXED: Use normalized comparison to check if quarter exists
+          // Use normalized comparison to check if quarter exists
           const normalizedQuarter = normalizeQuarter(quarter);
           const quarterExists = processedQuarters.some(pq => 
             normalizeQuarter(pq) === normalizedQuarter
@@ -260,7 +306,7 @@ const QueueDisplay = () => {
     );
   };
 
-  // ULTRA-IMPROVED: Helper function with number-based comparison
+  // Helper function with normalized quarter comparison
   const needsLetters = (item) => {
     // Get the quarter analysis and processed quarters
     const quarterAnalysis = item.submissionData?.report?.qualificationData?.quarterAnalysis || [];
@@ -273,57 +319,11 @@ const QueueDisplay = () => {
     // Check if there are quarters that need processing
     if (quarterAnalysis.length === 0) return false;
     
-    // EMERGENCY FIX: If ProcessedQuarters has "Quarter 1" and QuarterAnalysis has "Quarter 1",
-    // assume no letters are needed (temporary targeted fix for common case)
-    const hasQuarter1InProcessed = processedQuarters.some(pq => 
-      pq === "Quarter 1" || 
-      pq.includes("Quarter 1") || 
-      pq.includes("uarter 1") || 
-      pq === "Q1" || 
-      pq.includes("1")
-    );
-    
-    const hasQuarter1InAnalysis = quarterAnalysis.some(q => 
-      q.quarter === "Quarter 1" || 
-      q.quarter.includes("Quarter 1") || 
-      q.quarter.includes("uarter 1") || 
-      q.quarter === "Q1"
-    );
-    
-    if (hasQuarter1InProcessed && hasQuarter1InAnalysis) {
-      console.log("EMERGENCY OVERRIDE: Quarter 1 found in both processed and analysis - assuming all letters generated");
-      return false;
-    }
-    
-    // Get just the number from a quarter string for simple comparison
-    const getQuarterNumber = (str) => {
-      if (!str) return null;
-      const matches = str.toString().match(/\d+/);
-      return matches ? matches[0] : null;
-    };
-    
-    // For each quarter in the analysis, check if it's been processed
+    // For each quarter in the analysis, check if it's been processed using normalized comparison
     for (const quarterData of quarterAnalysis) {
       const quarter = quarterData.quarter;
-      const quarterNumber = getQuarterNumber(quarter);
-      
-      console.log(`Checking if ${quarter} (number: ${quarterNumber}) is processed`);
-      
-      // First check exact string match
-      const exactMatch = processedQuarters.includes(quarter);
-      
-      // Then check number match
-      const numberMatch = quarterNumber && processedQuarters.some(pq => {
-        const pqNumber = getQuarterNumber(pq);
-        return pqNumber === quarterNumber;
-      });
-      
-      const isProcessed = exactMatch || numberMatch;
-      console.log(`  - ${quarter}: exactMatch=${exactMatch}, numberMatch=${numberMatch}, final=${isProcessed}`);
-      
-      if (!isProcessed) {
-        // Found a quarter that hasn't been processed
-        console.log(`  - Quarter ${quarter} needs processing!`);
+      if (!isQuarterProcessed(quarter, processedQuarters)) {
+        console.log(`Quarter ${quarter} needs processing!`);
         return true;
       }
     }
@@ -461,7 +461,7 @@ const QueueDisplay = () => {
       // After marking as processed in MongoDB, also update local UI for immediate feedback
       updateLocalUI(item.id, quarter);
       
-      // ADDED: Force refresh the queue
+      // Force refresh the queue
       fetchQueue();
       
       // Use a longer delay to ensure storage is written before navigation
@@ -771,7 +771,7 @@ const QueueDisplay = () => {
                 </Box>
               )}
 
-              {/* Qualification Analysis Section - STREAMLINED */}
+              {/* Qualification Analysis Section */}
               {selectedItem.submissionData?.report?.qualificationData && (
                 <Box mt={3}>
                   <Typography variant="subtitle1" gutterBottom>
@@ -786,7 +786,7 @@ const QueueDisplay = () => {
                       }
                     </Typography>
                     
-                    {/* Table view with ALL quarters - This is the ONLY place with buttons now */}
+                    {/* Table view with ALL quarters */}
                     {selectedItem.submissionData.report.qualificationData.quarterAnalysis && (
                       <TableContainer component={Paper} variant="outlined" sx={{ mt: 2 }}>
                         <Table size="small">
@@ -802,73 +802,6 @@ const QueueDisplay = () => {
                           </TableHead>
                           <TableBody>
                             {selectedItem.submissionData.report.qualificationData.quarterAnalysis.map((quarter) => {
-                              // IMPROVED: Use ultra-strict comparison for checking if quarter is processed
-                              // Get the quarter number only (1, 2, 3, etc.) for robust comparison
-                              const getQuarterNumber = (str) => {
-                                if (!str) return null;
-                                // Extract just the digit from formats like "Quarter 1", "Q1", etc.
-                                const matches = str.toString().match(/\d+/);
-                                return matches ? matches[0] : null;
-                              };
-                              
-                              const quarterNumber = getQuarterNumber(quarter.quarter);
-                              const processedQuarters = selectedItem.submissionData?.processedQuarters || [];
-                              
-                              // Extra logging for each quarter being checked
-                              console.log(`CHECKING QUARTER: "${quarter.quarter}" (number: ${quarterNumber})`);
-                              console.log(`PROCESSED QUARTERS: ${JSON.stringify(processedQuarters)}`);
-                              
-                              // First try exact string match
-                              const exactMatch = processedQuarters.includes(quarter.quarter);
-                              
-                              // Then try number-only comparison as fallback
-                              const numberMatch = quarterNumber && processedQuarters.some(pq => {
-                                const pqNumber = getQuarterNumber(pq);
-                                return pqNumber === quarterNumber;
-                              });
-                              
-                              // Combined check - either exact match or number match
-                              const isProcessed = exactMatch || numberMatch;
-                              
-                              // Detailed debug logging
-                              console.log(`Quarter ${quarter.quarter}:`);
-                              console.log(`  - Exact string match: ${exactMatch}`);
-                              console.log(`  - Quarter number: ${quarterNumber}`);
-                              console.log(`  - Number match: ${numberMatch}`);
-                              console.log(`  - FINAL STATUS: ${isProcessed ? "PROCESSED" : "NOT PROCESSED"}`);
-                              
-                              // FORCE CHECK: Additional fallback - If this is Quarter 1, 2, or 3 and we know Quarter 1 is in processedQuarters
-                              if (!isProcessed && 
-                                  (quarter.quarter === "Quarter 1" || quarter.quarter === "Quarter 2" || quarter.quarter === "Quarter 3") && 
-                                  processedQuarters.some(pq => pq.includes("1") || pq.includes("2") || pq.includes("3"))) {
-                                console.log(`  - FORCE OVERRIDE for ${quarter.quarter} - found similar quarter in processed quarters`);
-                                // Override status for this specific case
-                                const forceProcessed = true;
-                                return (
-                                  <TableRow key={quarter.quarter}>
-                                    <TableCell>{quarter.quarter}</TableCell>
-                                    <TableCell>${quarter.revenues.revenue2019.toLocaleString()}</TableCell>
-                                    <TableCell>${quarter.revenues.revenue2021.toLocaleString()}</TableCell>
-                                    <TableCell>{quarter.percentDecrease}%</TableCell>
-                                    <TableCell>
-                                      <Chip 
-                                        label={quarter.qualifies ? "Yes" : "No"}
-                                        color={quarter.qualifies ? "success" : "error"}
-                                        size="small"
-                                      />
-                                    </TableCell>
-                                    <TableCell>
-                                      <Chip 
-                                        label="Letter Generated"
-                                        color="success"
-                                        size="small"
-                                        icon={<CheckCircle fontSize="small" />}
-                                      />
-                                    </TableCell>
-                                  </TableRow>
-                                );
-                              }
-                              
                               return (
                                 <TableRow key={quarter.quarter}>
                                   <TableCell>{quarter.quarter}</TableCell>
@@ -883,7 +816,7 @@ const QueueDisplay = () => {
                                     />
                                   </TableCell>
                                   <TableCell>
-                                    {isProcessed ? (
+                                    {isQuarterProcessed(quarter.quarter, selectedItem.submissionData?.processedQuarters) ? (
                                       <Chip 
                                         label="Letter Generated"
                                         color="success"
@@ -975,7 +908,7 @@ const QueueDisplay = () => {
                   </AccordionDetails>
                 </Accordion>
                 
-                {/* ADDED: Debug section for processed quarters */}
+                {/* Debug section for processed quarters */}
                 <Accordion>
                   <AccordionSummary expandIcon={<ExpandMore />}>
                     <Typography>Processed Quarters Debug</Typography>

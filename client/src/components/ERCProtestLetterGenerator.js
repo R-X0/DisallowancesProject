@@ -189,6 +189,34 @@ const determineUserApproach = (formData) => {
   }
 };
 
+/**
+ * Normalize quarter format to a consistent standard for comparison
+ * @param {string} quarter - Any quarter format (Quarter 1, Q1, etc.)
+ * @returns {string} - Normalized format (q1, q2, etc.)
+ */
+const normalizeQuarter = (quarter) => {
+  if (!quarter) return '';
+  
+  // Convert to string, lowercase, and remove all non-alphanumeric characters
+  const clean = quarter.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+  // Extract just the quarter number using regex
+  const match = clean.match(/q?([1-4])/);
+  if (match && match[1]) {
+    // Return standardized format: q1, q2, q3, q4
+    return `q${match[1]}`;
+  }
+  
+  // If quarter includes year (e.g., "q2 2021"), extract quarter part
+  const quarterYearMatch = clean.match(/q?([1-4]).*20([0-9]{2})/);
+  if (quarterYearMatch && quarterYearMatch[1]) {
+    return `q${quarterYearMatch[1]}`;
+  }
+  
+  // Return original if we couldn't normalize it
+  return clean;
+};
+
 const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [generating, setGenerating] = useState(false);
   const [protestLetter, setProtestLetter] = useState('');
@@ -432,6 +460,16 @@ const generateProtestLetter = async () => {
       onGenerated(packageData);
     }
     
+    // Force a refresh of the queue display
+    try {
+      console.log("Forcing queue refresh after letter generation");
+      fetch('/api/mongodb-queue?refresh=true')
+        .then(response => console.log("Queue refresh status:", response.ok ? "success" : "failed"))
+        .catch(err => console.error("Error during queue refresh:", err));
+    } catch (refreshError) {
+      console.error("Failed to refresh queue:", refreshError);
+    }
+    
     setDialogOpen(false);
   };
   
@@ -474,6 +512,16 @@ const generateProtestLetter = async () => {
       if (onGenerated) {
         console.log("Triggering onGenerated again during download", packageData);
         onGenerated(packageData);
+      }
+      
+      // Force a refresh of the queue display
+      try {
+        console.log("Forcing queue refresh after download");
+        fetch('/api/mongodb-queue?refresh=true')
+          .then(response => console.log("Queue refresh status:", response.ok ? "success" : "failed"))
+          .catch(err => console.error("Error during queue refresh:", err));
+      } catch (refreshError) {
+        console.error("Failed to refresh queue:", refreshError);
       }
     } else {
       console.warn("No package data or zipPath available for download");
