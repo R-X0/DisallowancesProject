@@ -1,0 +1,96 @@
+3/24/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 234  
+Taxpayer Name: 34234  
+
+RE: Formal Protest to Letter 105 – ERC Disallowance for Q2 2020  
+Tax Period: Q2 2020  
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing 34234’s Employee Retention Credit (ERC) claim for Q2 2020. The disallowance was based on the assertion that no government orders were in effect during the quarter to cause a partial suspension of our operations. We respectfully disagree. Multiple federal, state, county, and city COVID-19 related government orders were active during Q2 2020 and imposed restrictions and requirements that significantly limited our business operations. In the sections that follow, we provide a detailed summary of the relevant government orders and present quarterly revenue data that illustrates the dramatic revenue reductions experienced by our organization.
+
+Below is a chronological presentation of the key government orders that were in effect during Q2 2020:
+
+•  
+– Order Name: State of Emergency Proclamation – California COVID-19 State of Emergency  
+– Order Number: N/A (Governor’s Proclamation)  
+– Date Enacted: 03/04/2020  
+– Date Rescinded: Still in effect  
+– Order Summary: This proclamation enabled the rapid reallocation of state resources and expedited regulatory changes while establishing the legal framework for subsequent mandates, including stay-at-home measures and business restrictions across California.  
+– Impact on Quarter: In Q2 2020, this order resulted in significant operational curtailments by imposing capacity limits and requiring our business to modify its normal activities.
+
+•  
+– Order Name: Executive Order N-33-20 – Statewide “Stay-at-Home” Order  
+– Order Number: N-33-20  
+– Date Enacted: 03/19/2020  
+– Date Rescinded: 06/15/2021  
+– Order Summary: This sweeping order mandated that all Californians remain at home except for essential activities and required the closure of non-essential businesses statewide.  
+– Impact on Quarter: During Q2 2020, the stay-at-home order forced our business to either close or operate at severely reduced capacity, leading to a partial suspension of normal operations.
+
+•  
+– Order Name: State Public Health Officer Order (Stage 2 Reopening) – Modifying Stay-at-Home  
+– Order Number: Issued under EO N-60-20  
+– Date Enacted: 05/07/2020  
+– Date Rescinded: 06/15/2021  
+– Order Summary: This order initiated a phased reopening that allowed certain lower-risk businesses to resume operations under strict safety protocols while maintaining closures for higher-risk sectors.  
+– Impact on Quarter: As Q2 2020 progressed into May and June, our business was permitted only a limited resumption of operations under reduced capacity and stringent health measures, further restricting our ability to perform normal business functions.
+
+•  
+– Order Name: Ventura County Local Health Emergency – County Declaration of Local Health Emergency  
+– Order Number: N/A  
+– Date Enacted: 03/12/2020  
+– Date Rescinded: Still in effect  
+– Order Summary: This declaration mobilized Ventura County’s resources and provided the legal authority for subsequent health orders that imposed various business restrictions throughout the county.  
+– Impact on Quarter: In Q2 2020, the continued enforcement of this declaration compounded operational challenges by requiring adherence to rigorous health mandates, thereby further limiting our business activities.
+
+•  
+– Order Name: Local Emergency Proclamation (Camarillo) – City Declaration of Emergency  
+– Order Number: EOC Director Order No. 20-1  
+– Date Enacted: 03/13/2020  
+– Date Rescinded: Not rescinded during 2020–2021  
+– Order Summary: This proclamation activated the City of Camarillo’s Emergency Operations Center and led to the immediate closure of city facilities and cancellation of public events in response to the pandemic.  
+– Impact on Quarter: In Q2 2020, this order reduced access to municipal services and compounded restrictions on our business operations, contributing to the partial suspension of our normal functions.
+
+In addition to the government orders discussed above, we are submitting quarterly revenue data that demonstrates the revenue reductions for 34234. The following table presents the quarterly revenue amounts and percentage changes for comparison purposes.
+
++----------------+----------------------+---------------------+--------------------+------------+------------+
+| Quarter        | 2019 Revenue         | Comparison Revenue  | Dollar Decline     | % Decline  | Qualifies  |
++----------------+----------------------+---------------------+--------------------+------------+------------+
+| Q1 2019-2020   | $452,345.00          | $53,245.00          | $399,100.00        | 88.23%     | YES        |
+| Q2 2019-2020   | $23,452,345.00       | $3,453.00           | $23,448,892.00     | 99.99%     | YES        |
+| Q3 2019-2020   | $341,234.00          | $1,234,213.00       | $892,979.00        | -261.69%   | NO         |
+| Q4 2019-2020   | $2,342.00            | $2,342.00           | $0.00              | 0.00%      | NO         |
+| Q1 2019-2021   | $452,345.00          | $34.00              | $452,311.00        | 99.99%     | YES        |
+| Q2 2019-2021   | $23,452,345.00       | $2,425.00           | $23,449,920.00     | 99.99%     | YES        |
+| Q3 2019-2021   | $341,234.00          | $123.00             | $341,111.00        | 99.96%     | YES        |
++----------------+----------------------+---------------------+--------------------+------------+------------+
+
+Based on the revenue data above, these quarters QUALIFY for ERC based on revenue decline 
+(50%+ decline for 2020, 20%+ decline for 2021):
+
+• Q1 2019-2020  
+• Q2 2019-2020  
+• Q1 2019-2021  
+• Q2 2019-2021  
+• Q3 2019-2021  
+
+These quarterly revenue reductions, combined with the impact of the government orders described earlier, provide substantiation for our ERC claim.
+
+Conclusion and Request  
+In light of the factual evidence provided by both the government orders that imposed a partial suspension on our operations in Q2 2020 and the dramatic revenue declines documented in the table above, we respectfully request that the IRS reconsider and reverse the disallowance of our Q2 2020 ERC. The government orders in effect during the quarter played a critical role in curtailing our normal operations, and the quantitative revenue data further underscores the severe economic impact experienced by our business.
+
+Please do not hesitate to contact us should you require any further clarification or additional documentation regarding the orders or revenue data. We appreciate your prompt and fair reconsideration of our ERC claim.
+
+Attestation: “Under penalties of perjury, I declare that I submitted the protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated in the protest and accompanying documents is true, correct, and complete.”
+
+Sincerely,
+
+[Signature]
+
+Authorized Representative  
+34234  
+
+Enclosures: Copies of Government Orders (per the format above); ERC Revenue Calculations for Q2 2020; Additional Supporting Documentation

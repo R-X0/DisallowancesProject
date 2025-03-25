@@ -77,6 +77,182 @@ async function getTemplateContent(documentType) {
 }
 
 /**
+ * Create a formatted revenue table from business data
+ * @param {Object} businessInfo - Business information with revenue data
+ * @returns {string} - Formatted revenue table as text
+ */
+function createRevenueTable(businessInfo) {
+  // Track which quarters have data
+  const quarters = [
+    { year: '2020', q: '1', baseYear: '2019' },
+    { year: '2020', q: '2', baseYear: '2019' },
+    { year: '2020', q: '3', baseYear: '2019' },
+    { year: '2020', q: '4', baseYear: '2019' },
+    { year: '2021', q: '1', baseYear: '2019' },
+    { year: '2021', q: '2', baseYear: '2019' },
+    { year: '2021', q: '3', baseYear: '2019' }
+  ];
+  
+  // Build table rows
+  let tableRows = [];
+  
+  for (const quarter of quarters) {
+    // Create field keys
+    const currentKey = `q${quarter.q}_${quarter.year}`;
+    const baseKey = `q${quarter.q}_${quarter.baseYear}`;
+    
+    // Check if we have data for both quarters
+    if (businessInfo[currentKey] && businessInfo[baseKey] && 
+        parseFloat(businessInfo[currentKey]) >= 0 && 
+        parseFloat(businessInfo[baseKey]) > 0) {
+      
+      // Get values
+      const currentValue = parseFloat(businessInfo[currentKey]);
+      const baseValue = parseFloat(businessInfo[baseKey]);
+      
+      // Calculate decline
+      const change = baseValue - currentValue;
+      const percentChange = ((1 - currentValue / baseValue) * 100).toFixed(2);
+      
+      // Determine if quarter qualifies
+      const threshold = quarter.year === '2020' ? 50 : 20;
+      const qualifies = parseFloat(percentChange) >= threshold;
+      
+      // Format values with commas
+      const formattedBase = baseValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const formattedCurrent = currentValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const formattedChange = Math.abs(change).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      
+      // Create row
+      tableRows.push({
+        label: `Q${quarter.q} ${quarter.baseYear}-${quarter.year}`,
+        baseValue: formattedBase,
+        currentValue: formattedCurrent,
+        change: formattedChange,
+        percentChange: percentChange,
+        qualifies: qualifies ? 'YES' : 'NO'
+      });
+    }
+  }
+  
+  // Generate the table content
+  if (tableRows.length === 0) {
+    return "No complete quarterly revenue data available for comparison.";
+  }
+  
+  let tableContent = `
+QUARTERLY REVENUE COMPARISON TABLE:
+-----------------------------------------------------------------------------------------------------
+QUARTER     |  2019 REVENUE    |  COMPARISON REVENUE  |  DOLLAR DECLINE   |  % DECLINE |  QUALIFIES
+-----------------------------------------------------------------------------------------------------`;
+  
+  // Add rows
+  for (const row of tableRows) {
+    const paddedPercentage = (row.percentChange + '%').padEnd(10);
+    tableContent += `
+${row.label.padEnd(12)} |  $${row.baseValue.padEnd(16)} |  $${row.currentValue.padEnd(18)} |  $${row.change.padEnd(16)} |  ${paddedPercentage} |  ${row.qualifies}`;
+  }
+  
+  tableContent += `
+-----------------------------------------------------------------------------------------------------`;
+  
+  // List qualifying quarters
+  const qualifyingQuarters = tableRows
+    .filter(row => row.qualifies === 'YES')
+    .map(row => row.label);
+  
+  if (qualifyingQuarters.length > 0) {
+    tableContent += `
+
+Based on the revenue data above, these quarters QUALIFY for ERC based on revenue decline:
+${qualifyingQuarters.join(', ')}`;
+  } else {
+    tableContent += `
+
+Based on the revenue data above, NO quarters qualify for ERC based solely on revenue decline.
+The ERC claim is based on partial suspension of operations due to government orders.`;
+  }
+  
+  return tableContent;
+}
+
+/**
+ * Calculate revenue declines between quarters from business info
+ * @param {Object} businessInfo - Business information with quarterly revenue data
+ * @returns {Array} - Array of decline objects
+ */
+function calculateRevenueDeclines(businessInfo) {
+  const declines = [];
+  console.log('Calculating revenue declines from business info:', businessInfo);
+  
+  // Helper function to calculate decline
+  const calculateDecline = (currentQuarter, baseQuarter, thresholdPercent) => {
+    if (businessInfo[currentQuarter] && businessInfo[baseQuarter] && 
+        parseFloat(businessInfo[currentQuarter]) >= 0 && 
+        parseFloat(businessInfo[baseQuarter]) > 0) {
+      const current = parseFloat(businessInfo[currentQuarter]);
+      const base = parseFloat(businessInfo[baseQuarter]);
+      const decline = (1 - current / base) * 100;
+      
+      console.log(`Calculating decline for ${currentQuarter} vs ${baseQuarter}:`, {
+        currentValue: current,
+        baseValue: base,
+        declinePercent: decline,
+        qualifies: decline >= thresholdPercent
+      });
+      
+      if (decline > 0) {
+        return {
+          quarter: currentQuarter.toUpperCase().replace('_', ' '),
+          baseQuarter: baseQuarter.toUpperCase().replace('_', ' '),
+          decline: decline.toFixed(2),
+          percentDecline: `${decline.toFixed(2)}%`,
+          qualifies: decline >= thresholdPercent
+        };
+      }
+    }
+    return null;
+  };
+  
+  // 2020 quarters (50% threshold)
+  const q1_2020_decline = calculateDecline('q1_2020', 'q1_2019', 50);
+  if (q1_2020_decline) declines.push(q1_2020_decline);
+  
+  const q2_2020_decline = calculateDecline('q2_2020', 'q2_2019', 50);
+  if (q2_2020_decline) declines.push(q2_2020_decline);
+  
+  const q3_2020_decline = calculateDecline('q3_2020', 'q3_2019', 50);
+  if (q3_2020_decline) declines.push(q3_2020_decline);
+  
+  const q4_2020_decline = calculateDecline('q4_2020', 'q4_2019', 50);
+  if (q4_2020_decline) declines.push(q4_2020_decline);
+  
+  // 2021 quarters (20% threshold)
+  const q1_2021_decline = calculateDecline('q1_2021', 'q1_2019', 20);
+  if (q1_2021_decline) declines.push(q1_2021_decline);
+  
+  const q2_2021_decline = calculateDecline('q2_2021', 'q2_2019', 20);
+  if (q2_2021_decline) declines.push(q2_2021_decline);
+  
+  const q3_2021_decline = calculateDecline('q3_2021', 'q3_2019', 20);
+  if (q3_2021_decline) declines.push(q3_2021_decline);
+  
+  console.log('Final calculated declines:', declines);
+  return declines;
+}
+
+/**
+ * Determine qualifying quarters based on revenue declines
+ * @param {Array} declines - Array of decline objects
+ * @returns {Array} - Array of qualifying quarter strings
+ */
+function getQualifyingQuarters(declines) {
+  return declines
+    .filter(decline => decline.qualifies)
+    .map(decline => decline.quarter);
+}
+
+/**
  * Generate an ERC document (protest letter or Form 886-A)
  * @param {Object} businessInfo - Business information
  * @param {string} covidData - Sanitized ChatGPT conversation containing COVID research
@@ -172,76 +348,18 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
 
     // Include revenue data in the evidence content ONLY if we have actual valid data
     if (hasRevenueDeclines && hasValidRevenueData) {
-      // Create a detailed revenue section with exact figures
+      // Create a revenue section with the table format
       evidenceContent += `
-REVENUE REDUCTION INFORMATION - AUDIT-CRITICAL DATA (MUST REPRODUCE EXACTLY):
+REVENUE REDUCTION INFORMATION:
 
-${revenueDeclines.map(d => {
-  const quarterKey = d.quarter.toLowerCase().replace(' ', '_');
-  const baseQuarterKey = d.baseQuarter.toLowerCase().replace(' ', '_');
-  return `• ${d.quarter}: EXACTLY $${businessInfo[quarterKey]} compared to ${d.baseQuarter}: EXACTLY $${businessInfo[baseQuarterKey]} = EXACTLY ${d.percentDecline} decline ${d.qualifies ? '(Qualifies for ERC)' : '(Does not meet threshold)'}`;
-}).join('\n')}
-
-${hasQualifyingQuarters ? 
-  `Based on revenue decline thresholds (50%+ for 2020, 20%+ for 2021), the following quarters qualify for ERC: ${qualifyingQuarters.join(', ')}` : 
-  'None of the quarters meet the ERC revenue decline thresholds (50%+ for 2020, 20%+ for 2021).'}
 `;
-
-      // Only add this stronger phrasing if we have qualifying quarters
-      if (hasQualifyingQuarters) {
-        evidenceContent += `
-CRITICAL AUDIT REQUIREMENT: The above figures MUST appear VERBATIM in a dedicated "REVENUE DECLINE DATA" section in the document. These exact dollar amounts and percentages are required by the IRS for audit purposes. Do not paraphrase or summarize them.
-`;
-      }
+      
+      // Generate the formatted table with all quarterly data
+      evidenceContent += createRevenueTable(businessInfo);
       
       // Add any additional context provided by the user
       if (businessInfo.revenueReductionInfo) {
-        evidenceContent += `\nAdditional context about revenue reduction: ${businessInfo.revenueReductionInfo}\n`;
-      }
-      
-      // Only add the narrative format instructions if we have actual revenue data
-      if (revenueDeclines.length > 0) {
-        // Get the primary time period being protested (first in the list if multiple)
-        const primaryTimePeriod = Array.isArray(allTimePeriods) && allTimePeriods.length > 0
-          ? allTimePeriods[0]
-          : timePeriods;
-        
-        // Find the decline data for the primary time period, if available
-        const primaryDecline = revenueDeclines.find(d => d.quarter.includes(primaryTimePeriod.replace('Q', '')));
-        
-        if (primaryDecline) {
-          evidenceContent += `
-FORMAT REVENUE DECLINE DATA AS FOLLOWS:
-
-1. Create a header paragraph that introduces the revenue data:
-"In addition to these government orders, we are submitting detailed revenue data that unequivocally demonstrates the qualifying revenue reductions for [BUSINESS_NAME]. The following figures represent precise, dollar-for-dollar comparisons highlighting EXACT revenue amounts and percentage declines without rounding or generalization."
-
-2. Highlight the specific quarter being protested with a detailed paragraph:
-"For ${primaryDecline.quarter} specifically, [BUSINESS_NAME] recorded EXACTLY $${businessInfo[primaryDecline.baseQuarter.toLowerCase().replace(' ', '_')]} in revenue for the comparable quarter in ${primaryDecline.baseQuarter.split(' ')[1]}. In stark contrast, our ${primaryDecline.quarter} revenue was EXACTLY $${businessInfo[primaryDecline.quarter.toLowerCase().replace(' ', '_')]}, representing a decline of EXACTLY $${(parseFloat(businessInfo[primaryDecline.baseQuarter.toLowerCase().replace(' ', '_')]) - parseFloat(businessInfo[primaryDecline.quarter.toLowerCase().replace(' ', '_')])).toFixed(2)} or EXACTLY ${primaryDecline.percentDecline} decline. This substantial revenue reduction is a direct consequence of the COVID-19-related government orders detailed above and clearly qualifies our business for the ERC."
-
-3. List any additional quarters with bullet points:
-"Our other quarters show similar qualifying declines:
-${revenueDeclines.filter(d => d.quarter !== primaryDecline.quarter)
-  .map(d => {
-    const quarterKey = d.quarter.toLowerCase().replace(' ', '_');
-    const baseQuarterKey = d.baseQuarter.toLowerCase().replace(' ', '_');
-    const declineAmount = (parseFloat(businessInfo[baseQuarterKey]) - parseFloat(businessInfo[quarterKey])).toFixed(2);
-    return `• ${d.quarter}: Revenue fell from EXACTLY $${businessInfo[baseQuarterKey]} (${d.baseQuarter.split(' ')[1]}) to EXACTLY $${businessInfo[quarterKey]} (${d.quarter.split(' ')[1]}), a decline of EXACTLY $${declineAmount} or ${d.percentDecline}`;
-  }).join('\n')}"
-
-4. Add a concluding sentence:
-"All quarters listed above with declines exceeding the applicable thresholds (50%+ for 2020, 20%+ for 2021) qualify for ERC. These substantial revenue reductions, in conjunction with the governmental order-induced partial suspension of operations, provide strong substantiation for [BUSINESS_NAME]'s ERC claim."
-
-DO NOT USE A TABLE FORMAT FOR THIS DATA. The narrative format above is required for better letter flow while still maintaining all exact figures needed for audit purposes.
-`;
-        }
-
-        // If we have qualifying quarters, add a special instruction to emphasize this
-        if (hasQualifyingQuarters) {
-          evidenceContent += `
-IMPORTANT: Since this business has qualifying revenue reductions, this MUST be clearly stated in the document as a basis for ERC qualification. The exact figures MUST be included in the document using the narrative format described above.
-`;
-        }
+        evidenceContent += `\n\nAdditional context about revenue reduction: ${businessInfo.revenueReductionInfo}\n`;
       }
     } else {
       // If no revenue data was provided, explicitly state that we're not using revenue approach
@@ -311,7 +429,25 @@ IMPORTANT: Each order must be listed individually with ALL six fields above. Do 
         promptTemplate += `
 
 REVENUE DECLINE PRESENTATION FORMAT:
-When including revenue decline information, it MUST be presented using the narrative format specified above. Avoid tables and maintain a narrative flow while including all EXACT dollar figures and percentages.`;
+When including revenue decline information, use the following tabular format:
+
+1. Create a header paragraph that introduces the revenue data:
+"In addition to the government orders discussed above, we are submitting quarterly revenue data that demonstrates the revenue reductions for [BUSINESS_NAME]. The following table presents the quarterly revenue amounts and percentage changes for comparison purposes."
+
+2. Present the comprehensive revenue data in a clear, table-like format showing ALL quarters with available data. For each quarter, include:
+   - The quarter being compared (e.g., "Q1 2019-2020")
+   - 2019 baseline revenue
+   - Comparison period revenue (2020 or 2021)
+   - Dollar amount of decline
+   - Percentage decline
+   - Whether the quarter qualifies for ERC based on revenue decline
+
+3. After the table, add a summary paragraph:
+"As shown in the revenue table above, the quarters with 'YES' in the QUALIFIES column meet the ERC threshold for revenue decline (50%+ for 2020, 20%+ for 2021). These revenue reductions, combined with the impact of government orders described earlier, provide substantiation for our ERC claim."
+
+DO NOT USE PHRASES like "audited figures" or "exact amounts" or "EXACT" revenues, as these values have not been audited. Simply present the data as reported by the business.
+
+IMPORTANT: Include ALL quarters where data is available in the table, not just the qualifying quarters. This comprehensive presentation provides better context for the ERC claim.`;
       } else {
         promptTemplate += `
 
@@ -335,8 +471,7 @@ FINAL CRITICAL INSTRUCTION:
 3. Do not abbreviate or simplify the government order format, even for minor orders
 4. ${hasValidRevenueData ? 'If both revenue reduction and government orders information is available, include BOTH' : 'DO NOT fabricate or invent ANY revenue figures, as none were provided'}
 5. Format each government order with all six required fields (Name, Number, Dates, Summary, Impact)
-6. ${hasValidRevenueData ? 'You MUST reproduce the EXACT revenue figures and percentages in a dedicated section - this is a non-negotiable legal requirement' : 'Focus EXCLUSIVELY on how government orders caused a partial suspension of operations'}
-7. DO NOT create a table for revenue figures - use the narrative format as instructed above`;
+6. ${hasValidRevenueData ? 'Present the revenue data in a clear tabular format showing ALL available quarters - do not imply the figures were audited' : 'Focus EXCLUSIVELY on how government orders caused a partial suspension of operations'}`;
     
     } else {
       // Default to protest letter (original functionality)
@@ -383,20 +518,26 @@ IMPORTANT: Each order must be listed individually with ALL six fields above. Do 
       if (hasValidRevenueData && hasRevenueDeclines) {
         promptTemplate += `
 
-REVENUE DECLINE PRESENTATION FORMAT - LEGAL AUDIT REQUIREMENT:
-You MUST include a dedicated section titled "REVENUE DECLINE DATA" containing the EXACT revenue figures in a narrative format (NOT A TABLE):
+REVENUE DECLINE PRESENTATION FORMAT:
+When including revenue decline information, use the following tabular format:
 
-1. Start with an introductory paragraph explaining the purpose of this section
-2. For the main quarter being protested, include a detailed paragraph with:
-   • EXACT revenue amounts for the current quarter and comparison quarter
-   • EXACT dollar amount of decline
-   • EXACT percentage decline
-   • Clear statement of qualification based on threshold
+1. Create a header paragraph that introduces the revenue data:
+"In addition to the government orders discussed above, we are submitting quarterly revenue data that demonstrates the revenue reductions for [BUSINESS_NAME]. The following table presents the quarterly revenue amounts and percentage changes for comparison purposes."
 
-3. For any additional quarters, use bullet points with the same EXACT figures
-4. End with a brief conclusion connecting revenue decline to ERC qualification
+2. Present the comprehensive revenue data in a clear, table-like format showing ALL quarters with available data. For each quarter, include:
+   - The quarter being compared (e.g., "Q1 2019-2020")
+   - 2019 baseline revenue
+   - Comparison period revenue (2020 or 2021)
+   - Dollar amount of decline
+   - Percentage decline
+   - Whether the quarter qualifies for ERC based on revenue decline
 
-This is a LEGAL REQUIREMENT - the letter will be rejected without these specific figures presented clearly.`;
+3. After the table, add a summary paragraph:
+"As shown in the revenue table above, the quarters with 'YES' in the QUALIFIES column meet the ERC threshold for revenue decline (50%+ for 2020, 20%+ for 2021). These revenue reductions, combined with the impact of government orders described earlier, provide substantiation for our ERC claim."
+
+DO NOT USE PHRASES like "audited figures" or "exact amounts" or "EXACT" revenues, as these values have not been audited. Simply present the data as reported by the business.
+
+IMPORTANT: Include ALL quarters where data is available in the table, not just the qualifying quarters. This comprehensive presentation provides better context for the ERC claim.`;
       } else {
         promptTemplate += `
 
@@ -416,8 +557,8 @@ FINAL CRITICAL INSTRUCTION:
 3. Do not abbreviate or simplify the government order format, even for minor orders
 4. ${hasValidRevenueData ? 'If both revenue reduction and government orders information is available, include BOTH' : 'DO NOT fabricate or invent ANY revenue figures, as none were provided'}
 5. Format each government order with all six required fields (Name, Number, Dates, Summary, Impact)
-6. ${hasValidRevenueData ? 'You MUST include EXACT revenue figures and percentages exactly as provided above - this is a legal and audit requirement' : 'Focus EXCLUSIVELY on how government orders caused a partial suspension of operations'}
-7. For revenue figures, create a narrative format with paragraph and bullet points - DO NOT USE TABLES`;
+6. ${hasValidRevenueData ? 'Present the revenue data in a clear tabular format showing ALL available quarters - do not imply the figures were audited' : 'Focus EXCLUSIVELY on how government orders caused a partial suspension of operations'}
+7. For revenue figures, create a tabular format with ALL quarters where data is available - DO NOT selectively include only some quarters`;
     }
     
     const response = await openai.chat.completions.create({
@@ -442,82 +583,6 @@ FINAL CRITICAL INSTRUCTION:
     console.error('Error generating document:', error);
     throw new Error(`Failed to generate document: ${error.message}`);
   }
-}
-
-/**
- * Calculate revenue declines between quarters from business info
- * @param {Object} businessInfo - Business information with quarterly revenue data
- * @returns {Array} - Array of decline objects
- */
-function calculateRevenueDeclines(businessInfo) {
-  const declines = [];
-  console.log('Calculating revenue declines from business info:', businessInfo);
-  
-  // Helper function to calculate decline
-  const calculateDecline = (currentQuarter, baseQuarter, thresholdPercent) => {
-    if (businessInfo[currentQuarter] && businessInfo[baseQuarter] && 
-        parseFloat(businessInfo[currentQuarter]) >= 0 && 
-        parseFloat(businessInfo[baseQuarter]) > 0) {
-      const current = parseFloat(businessInfo[currentQuarter]);
-      const base = parseFloat(businessInfo[baseQuarter]);
-      const decline = (1 - current / base) * 100;
-      
-      console.log(`Calculating decline for ${currentQuarter} vs ${baseQuarter}:`, {
-        currentValue: current,
-        baseValue: base,
-        declinePercent: decline,
-        qualifies: decline >= thresholdPercent
-      });
-      
-      if (decline > 0) {
-        return {
-          quarter: currentQuarter.toUpperCase().replace('_', ' '),
-          baseQuarter: baseQuarter.toUpperCase().replace('_', ' '),
-          decline: decline.toFixed(2),
-          percentDecline: `${decline.toFixed(2)}%`,
-          qualifies: decline >= thresholdPercent
-        };
-      }
-    }
-    return null;
-  };
-  
-  // 2020 quarters (50% threshold)
-  const q1_2020_decline = calculateDecline('q1_2020', 'q1_2019', 50);
-  if (q1_2020_decline) declines.push(q1_2020_decline);
-  
-  const q2_2020_decline = calculateDecline('q2_2020', 'q2_2019', 50);
-  if (q2_2020_decline) declines.push(q2_2020_decline);
-  
-  const q3_2020_decline = calculateDecline('q3_2020', 'q3_2019', 50);
-  if (q3_2020_decline) declines.push(q3_2020_decline);
-  
-  const q4_2020_decline = calculateDecline('q4_2020', 'q4_2019', 50);
-  if (q4_2020_decline) declines.push(q4_2020_decline);
-  
-  // 2021 quarters (20% threshold)
-  const q1_2021_decline = calculateDecline('q1_2021', 'q1_2019', 20);
-  if (q1_2021_decline) declines.push(q1_2021_decline);
-  
-  const q2_2021_decline = calculateDecline('q2_2021', 'q2_2019', 20);
-  if (q2_2021_decline) declines.push(q2_2021_decline);
-  
-  const q3_2021_decline = calculateDecline('q3_2021', 'q3_2019', 20);
-  if (q3_2021_decline) declines.push(q3_2021_decline);
-  
-  console.log('Final calculated declines:', declines);
-  return declines;
-}
-
-/**
- * Determine qualifying quarters based on revenue declines
- * @param {Array} declines - Array of decline objects
- * @returns {Array} - Array of qualifying quarter strings
- */
-function getQualifyingQuarters(declines) {
-  return declines
-    .filter(decline => decline.qualifies)
-    .map(decline => decline.quarter);
 }
 
 module.exports = {

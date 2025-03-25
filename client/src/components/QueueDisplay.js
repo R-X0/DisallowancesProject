@@ -1,5 +1,3 @@
-// client/src/components/QueueDisplay.js
-
 import React, { useState, useEffect } from 'react';
 import { 
   Paper, 
@@ -15,6 +13,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  DialogContentText,
   Button,
   Table,
   TableBody,
@@ -23,7 +22,9 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Tooltip
+  Tooltip,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { 
   AccessTime, 
@@ -32,7 +33,8 @@ import {
   Info,
   Refresh,
   GavelOutlined,
-  TrendingDownOutlined
+  TrendingDownOutlined,
+  DeleteOutline
 } from '@mui/icons-material';
 
 const QueueDisplay = () => {
@@ -41,7 +43,19 @@ const QueueDisplay = () => {
   const [error, setError] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [refreshCount, setRefreshCount] = useState(0); // Added to track refreshes
+  const [refreshCount, setRefreshCount] = useState(0);
+  
+  // New state for delete confirmation dialog
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  
+  // New state for notifications
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
 
   // Connect to MongoDB queue API endpoint
   const fetchQueue = async () => {
@@ -136,7 +150,11 @@ const QueueDisplay = () => {
     const status = item.status;
     
     // FIXED: Get count of processed quarters from the right location
-    const processedQuarters = item.submissionData?.processedQuarters || [];
+    const processedQuarters = 
+      (item.submissionData?.processedQuarters && item.submissionData.processedQuarters.length > 0) 
+        ? item.submissionData.processedQuarters 
+        : (item.processedQuarters || []);
+    
     const processedCount = processedQuarters.length;
     
     // Use all quarters in the analysis, not just qualifying ones
@@ -475,6 +493,70 @@ const QueueDisplay = () => {
     return quarterAnalysis.length > processedQuarters.length;
   };
   
+  // NEW: Function to open delete confirmation dialog
+  const handleDeleteClick = (e, item) => {
+    e.stopPropagation(); // Prevent triggering the row click event
+    setItemToDelete(item);
+    setDeleteDialogOpen(true);
+  };
+  
+  // NEW: Function to close delete confirmation dialog
+  const handleCloseDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
+  };
+  
+  // NEW: Function to delete item from MongoDB
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+    
+    setDeleteLoading(true);
+    try {
+      const response = await fetch(`/api/mongodb-queue/delete/${itemToDelete.id}`, {
+        method: 'DELETE',
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        // Remove from local state
+        setQueueItems(prevItems => prevItems.filter(item => item.id !== itemToDelete.id));
+        
+        // Show success notification
+        setNotification({
+          open: true,
+          message: `Successfully deleted ${itemToDelete.businessName || 'submission'}`,
+          severity: 'success'
+        });
+        
+        // Close dialog
+        setDeleteDialogOpen(false);
+        setItemToDelete(null);
+        
+        // If details dialog for this item is open, close it
+        if (selectedItem && selectedItem.id === itemToDelete.id) {
+          setDialogOpen(false);
+        }
+      } else {
+        throw new Error(result.message || 'Failed to delete submission');
+      }
+    } catch (error) {
+      console.error('Error deleting submission:', error);
+      setNotification({
+        open: true,
+        message: `Error: ${error.message}`,
+        severity: 'error'
+      });
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+  
+  // Handle closing notification
+  const handleCloseNotification = () => {
+    setNotification(prev => ({ ...prev, open: false }));
+  };
+  
   return (
     <Paper elevation={3} sx={{ 
       p: 2, 
@@ -571,6 +653,17 @@ const QueueDisplay = () => {
                       <Info fontSize="small" />
                     </IconButton>
                   </Tooltip>
+                  
+                  {/* NEW: Delete button */}
+                  <Tooltip title="Delete Permanently">
+                    <IconButton 
+                      edge="end" 
+                      color="error"
+                      onClick={(e) => handleDeleteClick(e, item)}
+                    >
+                      <DeleteOutline fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 </Box>
               </ListItem>
             </React.Fragment>
@@ -611,6 +704,10 @@ const QueueDisplay = () => {
                         <TableCell>{selectedItem.businessName}</TableCell>
                       </TableRow>
                       <TableRow>
+                        <TableCell variant="head">Submission ID</TableCell>
+                        <TableCell>{selectedItem.id}</TableCell>
+                      </TableRow>
+                      <TableRow>
                         <TableCell variant="head">Timestamp</TableCell>
                         <TableCell>{new Date(selectedItem.timestamp).toLocaleString()}</TableCell>
                       </TableRow>
@@ -618,8 +715,6 @@ const QueueDisplay = () => {
                   </Table>
                 </TableContainer>
               </Box>
-
-              {/* Files Section removed as requested */}
 
               {/* Qualification Analysis Section */}
               {selectedItem.submissionData?.report?.qualificationData && (
@@ -701,10 +796,20 @@ const QueueDisplay = () => {
                   </Paper>
                 </Box>
               )}
-
-              {/* Excel Report Section removed as requested */}
             </DialogContent>
             <DialogActions>
+              {/* NEW: Added delete button in dialog */}
+              <Button 
+                color="error"
+                startIcon={<DeleteOutline />}
+                onClick={() => {
+                  setDialogOpen(false);
+                  setItemToDelete(selectedItem);
+                  setDeleteDialogOpen(true);
+                }}
+              >
+                Delete
+              </Button>
               <Button 
                 onClick={handleCloseDialog}
                 variant="outlined"
@@ -715,6 +820,53 @@ const QueueDisplay = () => {
           </>
         )}
       </Dialog>
+      
+      {/* NEW: Delete confirmation dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+      >
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to permanently delete the submission for <strong>{itemToDelete?.businessName || 'this business'}</strong>?
+            This action cannot be undone and will remove the record completely from MongoDB.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={handleCloseDeleteDialog} 
+            disabled={deleteLoading}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirmDelete} 
+            color="error" 
+            variant="contained"
+            startIcon={<DeleteOutline />}
+            disabled={deleteLoading}
+          >
+            {deleteLoading ? 'Deleting...' : 'Delete Permanently'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* NEW: Notification snackbar */}
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseNotification} 
+          severity={notification.severity} 
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Paper>
   );
 };

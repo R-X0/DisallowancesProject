@@ -513,4 +513,87 @@ router.post('/update-processed-quarters', async (req, res) => {
   }
 });
 
+// Add this new endpoint to server/routes/mongodb-queue.js
+
+// Delete a submission from MongoDB
+router.delete('/delete/:submissionId', async (req, res) => {
+  try {
+    const { submissionId } = req.params;
+    
+    if (!submissionId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Submission ID is required'
+      });
+    }
+    
+    // Ensure connected to database
+    const connected = await connectToDatabase();
+    if (!connected) {
+      console.error(`MongoDB connection failed for deletion: submissionId=${submissionId}`);
+      return res.status(500).json({
+        success: false,
+        message: 'Database connection failed'
+      });
+    }
+    
+    // IMPROVED ID HANDLING: Try multiple potential ID formats
+    let submission = null;
+    const potentialIds = [
+      submissionId,
+      `ERC-${submissionId.replace(/^ERC-/, '')}`,
+      submissionId.replace(/^ERC-/, ''),
+      // Also try with ObjectId format if it looks like one
+      ...(submissionId.match(/^[0-9a-f]{24}$/i) ? [submissionId] : [])
+    ];
+    
+    console.log(`Attempting to delete with these possible IDs: ${potentialIds.join(', ')}`);
+    
+    // Try to find and delete the document with any of the ID variations
+    let deleteResult = null;
+    for (const idToTry of potentialIds) {
+      try {
+        // Try by submissionId field
+        deleteResult = await Submission.findOneAndDelete({ submissionId: idToTry });
+        if (deleteResult) {
+          console.log(`Successfully deleted document with submissionId=${idToTry}`);
+          break;
+        }
+        
+        // Also try by _id if it's a valid ObjectId
+        if (idToTry.match(/^[0-9a-f]{24}$/i)) {
+          deleteResult = await Submission.findByIdAndDelete(idToTry);
+          if (deleteResult) {
+            console.log(`Successfully deleted document with _id=${idToTry}`);
+            break;
+          }
+        }
+      } catch (deleteError) {
+        console.log(`Error deleting with ID ${idToTry}:`, deleteError.message);
+      }
+    }
+    
+    if (!deleteResult) {
+      return res.status(404).json({
+        success: false,
+        message: `No document found with ID ${submissionId}`
+      });
+    }
+    
+    // Return success response
+    res.status(200).json({
+      success: true,
+      message: `Successfully deleted document with ID ${submissionId}`,
+      deletedDocument: deleteResult
+    });
+    
+  } catch (error) {
+    console.error(`Error deleting submission ${req.params.submissionId}:`, error);
+    res.status(500).json({
+      success: false,
+      message: `Error deleting submission: ${error.message}`
+    });
+  }
+});
+
 module.exports = router;
