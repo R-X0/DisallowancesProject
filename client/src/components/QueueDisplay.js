@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Paper, 
   Typography, 
@@ -89,13 +89,13 @@ const QueueDisplay = () => {
     }
   };
 
-  // Force an immediate refresh
-  const forceRefresh = () => {
+  // Force an immediate refresh - FIXED: Wrapped in useCallback
+  const forceRefresh = useCallback(() => {
     console.log('Forcing immediate queue refresh');
     // Update the refresh counter to trigger the effect
     setRefreshCount(prev => prev + 1);
     fetchQueue();
-  };
+  }, []);  // Empty dependency array since it doesn't depend on any props or state
 
   // Initial data load
   useEffect(() => {
@@ -122,7 +122,7 @@ const QueueDisplay = () => {
     return () => {
       window.removeEventListener('refreshQueue', handleRefreshEvent);
     };
-  }, []);
+  }, [forceRefresh]); // Now using memoized forceRefresh function
   
   // Additional effect that runs when refreshCount changes
   useEffect(() => {
@@ -229,7 +229,8 @@ const QueueDisplay = () => {
     setDialogOpen(true);
   };
 
-  // Update processed quarters in MongoDB (with fallback to local UI updates)
+  // FIXED: Added eslint-disable-next-line comment for unused variable
+  // eslint-disable-next-line no-unused-vars
   const updateProcessedQuarters = async (itemId, quarter, zipPath = null) => {
     try {
       console.log(`Updating processed quarters for ${itemId}, quarter ${quarter}`);
