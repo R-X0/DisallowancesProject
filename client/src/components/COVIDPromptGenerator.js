@@ -245,57 +245,125 @@ const COVIDPromptGenerator = ({ formData }) => {
       
       if (promptType === 'covidOrders') {
         // Improved template prompt for COVID orders research with better structure
-        basePrompt = `Please provide all federal, state, county, and city COVID-related government orders that would affect a "${businessType}" business located in ${city}, ${state} during ${timePeriod}.
+        basePrompt = `FIND AND DOCUMENT ONLY OFFICIAL GOVERNMENT ORDERS for COVID-19 that affected a "${businessType}" business located in ${city}, ${state} during ${timePeriod}.
 
-For each order, provide the following information using this EXACT format:
+CRITICAL LEGAL REQUIREMENTS:
+1. You MUST find and cite the ACTUAL TEXT of official government orders - the IRS will REJECT secondary sources or news articles
+2. Each order MUST be verified from government websites (.gov domains) or official archives
+3. You MUST provide a direct citation to the official source document with exact page/section numbers
+4. NO ORDER = NO CLAIM - The ERC protest will fail without direct evidence of the actual orders
 
-• Order Name: [Full name of the order/proclamation]
+VERIFICATION CHECKLIST FOR EACH ORDER:
+✓ Confirm the order was issued by a government entity with legal authority (not guidelines or recommendations)
+✓ Verify the order was active during ${timePeriod} (check exact dates and extensions)
+✓ Document exactly which section/paragraph contains the business restriction
+✓ Confirm the order directly affected "${businessType}" businesses (through specific mention or applicable category)
+
+For each government order, provide this information in EXACTLY this format:
+
+• Order Name: [Full official name of the order/proclamation]
 • Order Number: [Official number or identifier]
+• Issuing Authority: [Exact government entity that issued the order]
+• Legal Authority: [Statute or emergency power authorizing the order]
 • Date Enacted: [MM/DD/YYYY]
 • Date Rescinded: [MM/DD/YYYY or "Still in effect during ${timePeriod}" if applicable]
-• Order Summary: [2-3 sentence description of what the order mandated]
-• Impact on Quarter: [How this specifically affected a ${businessType} during ${timePeriod}]
+• Official Source URL: [Direct link to the official government document]
+• Relevant Section(s): [Specific section numbers or page references containing the restrictions]
+• Order Summary: [3-4 sentence description quoting the EXACT language of restrictions from the order]
+• Impact on ${businessType}: [Detailed explanation of how this specifically affected operations during ${timePeriod}, with quantifiable impacts where possible]
 
 For each level of government (federal, state, county, city), organize the orders chronologically. Only include orders that were in effect during ${timePeriod} or that had a continuing impact on business operations during that quarter.`;
 
         // Add specific instructions based on approach focus
-        if (approachFocus === 'governmentOrders') {
-          basePrompt += `\n\nSpecifically focus on orders that would have caused a partial or full suspension of business operations. A partial suspension means that "more than a nominal portion" (at least 10% of operations) were suspended due to government orders. Pay particular attention to: 
-- Capacity restrictions (indoor/outdoor)
-- Social distancing requirements
-- Group gathering limits
-- Business hours limitations
-- Service delivery restrictions
-- Any requirements that significantly altered how the business operated
+      if (approachFocus === 'governmentOrders') {
+        basePrompt += `\n\nFOCUS YOUR INVESTIGATION ON MANDATORY ORDERS THAT CAUSED OPERATIONAL SUSPENSIONS:
+The IRS requires concrete evidence that government orders caused either a full suspension or a partial suspension of business operations. A partial suspension occurs when "more than a nominal portion" (at least 10% of operations) were suspended due to government orders.
 
-${formData.governmentOrdersInfo ? `\nAdditional context about the business operations: ${formData.governmentOrdersInfo}` : ''}`;
-        } else if (approachFocus === 'revenueReduction') {
-          basePrompt += `\n\nIn addition to identifying government orders, please analyze how these orders might have contributed to the business's revenue decline during this period.
+YOU MUST DOCUMENT ORDERS THAT IMPOSED ANY OF THESE RESTRICTIONS:
+• CAPACITY LIMITATIONS: Mandatory percentage reductions (e.g., 25%, 50%, 75%) or fixed numerical limits
+• PHYSICAL DISTANCING: Required spacing between individuals (6ft+) that reduced operational capacity
+• GROUP SIZE RESTRICTIONS: Numerical limits on gatherings that affected business functions
+• OPERATING HOURS MANDATES: Required closures, curfews, or restricted hours of operation
+• SERVICE DELIVERY PROHIBITIONS: Bans on specific services or service methods essential to the business
+• MOVEMENT/TRAVEL RESTRICTIONS: Stay-at-home orders, travel limitations affecting employees/customers
+• FACILITY MODIFICATIONS: Required physical alterations that limited functional business space
 
-${formData.revenueReductionInfo ? `\nContext about the business's revenue situation: ${formData.revenueReductionInfo}` : ''}`;
+FOR EACH RESTRICTION, YOU MUST:
+1. Quote the exact language from the order imposing the restriction
+2. Explain why this specific restriction could not be worked around
+3. Calculate the percentage of operations affected (must exceed 10%)
+4. Document the duration the restriction was legally enforceable
 
-          // If we have revenue data, include it
-          if (revenueDeclines.length > 0) {
-            basePrompt += `\n\nFor context, the business experienced the following revenue declines:
-${revenueDeclines.map(d => `- ${d.quarter}: ${d.percentDecline} decline compared to ${d.baseQuarter}`).join('\n')}
+${formData.governmentOrdersInfo ? `\nBUSINESS CONTEXT TO CONSIDER: ${formData.governmentOrdersInfo}` : ''}`;
+      } else if (approachFocus === 'revenueReduction') {
+        basePrompt += `\n\nFOCUS ON BOTH REVENUE DECLINE AND SUPPORTING GOVERNMENT ORDERS:
+The IRS allows qualification through revenue reduction OR partial suspension. You must document both:
 
-${qualifyingQuarters.length > 0 ? `Based on revenue decline thresholds (50%+ for 2020, 20%+ for 2021), the following quarters would qualify for ERC: ${qualifyingQuarters.join(', ')}` : 'None of the quarters meet the ERC revenue decline thresholds (50%+ for 2020, 20%+ for 2021).'}`;
-          }
+1. GOVERNMENT ORDERS: Find all orders that affected this business, even if revenue qualified them
+2. CAUSE-EFFECT RELATIONSHIP: Analyze how specific government restrictions directly contributed to revenue decline
+
+${formData.revenueReductionInfo ? `\nREVENUE CONTEXT TO CONSIDER: ${formData.revenueReductionInfo}` : ''}`;
+
+        // If we have revenue data, include it
+        if (revenueDeclines.length > 0) {
+          basePrompt += `\n\nDOCUMENTED REVENUE DECLINE DATA:
+${revenueDeclines.map(d => `• ${d.quarter}: ${d.percentDecline} decline compared to ${d.baseQuarter}`).join('\n')}
+
+${qualifyingQuarters.length > 0 ? `QUALIFYING QUARTERS BY REVENUE THRESHOLD (50%+ for 2020, 20%+ for 2021):
+• ${qualifyingQuarters.join('\n• ')}` : 'NO QUARTERS QUALIFY BY REVENUE THRESHOLD ALONE (50%+ for 2020, 20%+ for 2021)'}
+
+IMPORTANT: Even with qualifying revenue declines, you must still document government orders to strengthen the claim.`;
         }
+      }
 
-        basePrompt += `\n\nFor each order, explain:
-1. Exactly what restrictions were imposed (capacity limits, mask requirements, social distancing, etc.)
-2. How these restrictions specifically impacted a ${businessType}
-3. Whether the business would have experienced a "more than nominal" effect (at least 10% impact on operations or revenue)
+        basePrompt += `
 
-Please be as specific and detailed as possible about the impact on normal business operations during ${timePeriod}.
+DETAILED IMPACT ANALYSIS FOR EACH ORDER:
+For each government order, you MUST provide:
 
-IMPORTANT: 
-1. PRIORITIZE providing the official government orders themselves as your primary sources - include direct links to the actual order text when available (e.g., official government websites hosting the orders).
-2. For each order, include a link to the full text of the original order if possible.
-3. Only use news articles or secondary sources if the original government order text cannot be found.
-4. The best attachments will always be a copy of the order itself rather than an article about the order.
-5. Include comprehensive information about each order's impact on the specific business type.`;
+1. EXACT RESTRICTIONS IMPOSED:
+   • Quote the precise language from the order that mandated restrictions
+   • Specify numerical limits (e.g., "25% capacity" not just "reduced capacity")
+   • Identify MANDATORY requirements vs. recommendations
+   • Document duration of each restriction to the exact dates
+
+2. SPECIFIC IMPACT ON ${businessType.toUpperCase()}:
+   • Explain how each restriction directly affected daily operations
+   • Quantify the impact (e.g., "reduced service capacity by 40%" or "eliminated 30% of revenue-generating activities")
+   • Document which specific business functions were suspended or modified
+   • Explain why the business could not adapt operations to avoid the impact
+
+3. "MORE THAN NOMINAL EFFECT" EVIDENCE:
+   • Demonstrate impact exceeded the 10% threshold required by IRS Notice 2021-20
+   • Show which specific metric was affected by >10% (revenue, operating hours, customer volume, etc.)
+   • Explain why this impact was unavoidable due to the order
+   • Provide comparative analysis to pre-COVID operations
+
+SOURCE REQUIREMENTS - CRITICALLY IMPORTANT FOR IRS ACCEPTANCE:
+1. ONLY PRIMARY SOURCES ACCEPTED - Official government documents directly from:
+   • Federal agency websites (.gov domains)
+   • State government official websites
+   • County/municipal government archives or official websites
+   • Official legislative repositories or law databases
+
+2. REQUIRED DOCUMENTATION FOR EACH ORDER:
+   • Direct URL to the official order text (not summaries or press releases)
+   • PDF/scanned version of the order when available (with instruction to download)
+   • Citation format must include issuing authority, order number, date, and section
+   • Screenshot instructions for capturing the relevant portions as proof
+
+3. UNACCEPTABLE SOURCES - DO NOT USE:
+   • News articles about orders
+   • Blog posts or opinion pieces
+   • Law firm summaries
+   • Chamber of Commerce or industry guides
+   • Wikipedia or similar reference sites
+
+4. VERIFICATION REQUIREMENT:
+   • Double-check that each cited order was actually in force during ${timePeriod}
+   • Verify extensions or modifications to original orders
+   • Document any enforcement mechanisms or penalties
+   • Note any legal challenges that affected implementation`;
       } else {
         // Improved template prompt for Form 886-A, now including all selected quarters
         basePrompt = `Please help me create a comprehensive Form 886-A response for ${formData.businessName}, a ${businessType} located in ${city}, ${state}, regarding their Employee Retention Credit (ERC) claim for the following quarters: ${allPeriods}.
@@ -342,15 +410,35 @@ Finally, create a Form 886-A document with the following structure:
 4. Argument - Present the case for why the business qualifies quarter by quarter
 5. Conclusion - Summarize the eligibility determination
 
-The document should prioritize official IRS and government sources and all applicable government orders that would have affected the business. Make a strong case that ${formData.businessName} qualified for ERC due to ${approachFocus === 'governmentOrders' ? 'full or partial shutdowns from government orders' : 'significant decline in gross receipts and/or full or partial shutdowns'} during each of the following quarters: ${allPeriods}.
+CRITICAL DOCUMENT STANDARDS FOR IRS ACCEPTANCE:
 
-IMPORTANT: 
-1. PRIORITIZE citing official government orders as your primary sources - include direct links to the actual order text when available (e.g., official government websites hosting the orders).
-2. For each order referenced, provide a link to the full text of the original order if possible.
-3. Only use news articles or secondary sources if the original government order text cannot be found.
-4. The best attachments will always be a copy of the order itself rather than an article about the order.
-5. Use consistent bullet point formatting (•) throughout the document.
-6. Include comprehensive information about each order's impact on the specific business type.`;
+1. SOURCE HIERARCHY - FOLLOW STRICTLY:
+   • PRIMARY REQUIREMENT: Direct links to official government websites with original order text
+   • SECONDARY ONLY IF PRIMARY UNAVAILABLE: Official government press releases about specific orders
+   • LAST RESORT IF NOTHING ELSE EXISTS: Contemporary legal analyses from bar associations or official legal journals
+   • ABSOLUTELY PROHIBITED: News articles, blog posts, social media, opinion pieces, or general summaries
+
+2. DOCUMENTATION FORMAT REQUIREMENTS:
+   • Each order must include direct URL to government website
+   • Each order must include official reference number and full title
+   • Each relevant restriction must be quoted verbatim from the order
+   • Page numbers and section references must be provided for each citation
+   • Use consistent bullet point formatting (•) throughout the document
+
+3. IMPACT ANALYSIS REQUIREMENTS:
+   • Demonstrate direct causal relationship between each order and business limitation
+   • Provide explicit calculations showing how restrictions affected >10% of operations
+   • Avoid generalized statements - be specific about exact operational impacts
+   • Document timeline showing duration of each restriction during the quarter
+
+4. VERIFICATION STANDARDS:
+   • Every order must be independently verifiable from government sources
+   • Document persistence of orders through the claimed period (with extension references)
+   • Note any modifications, amendments, or judicial actions affecting enforcement
+   • Document the legal authority under which each order was issued
+   
+REMEMBER: THE IRS WILL REJECT CLAIMS WITHOUT PROPER ORDER DOCUMENTATION.
+FOCUS ON QUALITY AND AUTHENTICITY OVER QUANTITY.`;
       }
       
       // Use OpenAI API to generate a customized prompt based on the business info
