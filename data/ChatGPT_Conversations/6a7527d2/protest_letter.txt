@@ -1,0 +1,75 @@
+03/27/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 412341234  
+Taxpayer Name: 34213  
+RE: Formal Protest to Disallowance Notice – ERC Disallowance for Q3 2020  
+Tax Period: 3rd Quarter 2020 (2020Q3)  
+Claim Amount: [Not Provided]  
+
+Dear Appeals Officer,
+
+We write in response to the IRS notice disallowing 34213’s Employee Retention Credit (ERC) claim for the third quarter of 2020. The disallowance was based on the assertion that “no government orders were in effect” during the period that caused a suspension of our operations. We respectfully disagree. Multiple government orders at the federal, state, county, and city levels were active during this period, and these orders imposed restrictions that fully or partially suspended our normal business operations. In addition, we are submitting quarterly revenue data that demonstrates significant revenue reductions. Together, these factors substantiate our ERC claim.
+
+Below is a detailed timeline of key COVID‑19 government orders that affected our operations in Q3 2020:
+
+• Order Name: Executive Order N‑33‑20 – “Statewide ‘Stay‑at‑Home’ Order”  
+  Order Number: N‑33‑20  
+  Date Enacted: 03/19/2020  
+  Date Rescinded: 06/15/2021  
+  Order Summary: This order mandated that all Californians remain at home except for essential activities, requiring the closure of non‑essential businesses and severely restricting in‑person operations. It established capacity limits and alternative service delivery methods such as curbside or outdoor operations.  
+  Impact on Quarter: In Q3 2020, despite gradual easing in some sectors, the lingering restrictions and operational limits forced 34213 to significantly curtail its normal business activities.
+
+• Order Name: State Public Health Officer Order (July 13, 2020) – “Statewide Rollback of Reopening”  
+  Order Number: N/A  
+  Date Enacted: 07/13/2020  
+  Date Rescinded: 08/31/2020  
+  Order Summary: This order re‑imposed restrictions on indoor operations in response to a surge in COVID‑19 cases during the summer of 2020. It mandated the closure of many indoor business activities that had been briefly reopened, requiring businesses to either suspend or operate at severely limited capacity.  
+  Impact on Quarter: The rollback in restrictions forced 34213 to limit its indoor operations during Q3 2020, directly disrupting normal business functions and contributing to operational suspensions.
+
+• Order Name: Blueprint for a Safer Economy Framework – “Color‑Tier Reopening System”  
+  Order Number: N/A  
+  Date Enacted: 08/28/2020  
+  Date Rescinded: 06/15/2021  
+  Order Summary: This order introduced a risk‑based, color‑coded tier system that imposed strict capacity limits and regulated business operations based on local COVID‑19 metrics. It dictated which sectors could operate and at what capacity, with businesses in the most restrictive tiers allowed only marginal operations.  
+  Impact on Quarter: For 34213, being subject to a restrictive tier in Q3 2020 meant operating at significantly reduced capacity, further limiting revenue-generating activity and operational efficiency.
+
+• Order Name: Local Emergency Proclamation (Camarillo) – “City Declaration of Emergency”  
+  Order Number: EOC Director Order No. 20‑1  
+  Date Enacted: 03/13/2020  
+  Date Rescinded: Still in effect  
+  Order Summary: The City of Camarillo declared a local emergency, which led to the closure of city facilities and cancellation of public events. This declaration provided the legal authority for additional restrictive measures and reinforced caution in public interactions.  
+  Impact on Quarter: The ongoing state of emergency created an environment of uncertainty and reduced public gatherings, indirectly constraining 34213’s ability to operate normally throughout Q3 2020.
+
+In addition to the government orders discussed above, we are submitting quarterly revenue data that demonstrates the revenue reductions for 34213. The following table presents the quarterly revenue amounts and percentage changes for comparison purposes.
+
+---------------------------------------------------------------
+Quarter           | 2019 Revenue              | Comparison Revenue       | Dollar Decline               | % Decline  | QUALIFIES
+---------------------------------------------------------------
+Q1 2019-2020     | $2,345,123,412.00         | $234,234.00              | $2,344,889,178.00            | 99.99%     | YES  
+Q2 2019-2020     | $2,134,123,412.00         | $234,234.00              | $2,133,889,178.00            | 99.99%     | YES  
+Q3 2019-2020     | $32,342.00                | $234,234.00              | $201,892.00                  | -624.24%   | NO  
+Q4 2019-2020     | $34,123,421.00            | $234,234.00              | $33,889,187.00               | 99.31%     | YES  
+Q1 2019-2021     | $2,345,123,412.00         | $234,234.00              | $2,344,889,178.00            | 99.99%     | YES  
+Q2 2019-2021     | $2,134,123,412.00         | $234,234.00              | $2,133,889,178.00            | 99.99%     | YES  
+Q3 2019-2021     | $32,342.00                | $234.00                  | $32,108.00                   | 99.28%     | YES  
+---------------------------------------------------------------
+
+As shown in the revenue table above, the quarters with “YES” in the QUALIFIES column meet the ERC threshold for revenue decline (50%+ in 2020 and 20%+ in 2021). Although the Q3 2019-2020 data does not qualify on its own, the overall pattern of steep revenue declines across multiple quarters, combined with the direct impact of the government orders, underscores the substantial operational disruptions 34213 experienced.
+
+Conclusion and Request
+
+In light of the detailed government orders and the comprehensive revenue data provided, we respectfully request that the IRS reconsider and reverse the disallowance of our Q3 2020 ERC claim. The orders in effect during this period – including the statewide stay‑at‑home order, the rollback of reopening, the Blueprint for a Safer Economy Framework, and the local emergency proclamation – collectively imposed severe restrictions on our business operations. These actions, together with the documented revenue declines, clearly satisfy the ERC criteria based on a full or partial suspension of operations due to government orders.
+
+Attestation: “Under penalties of perjury, I declare that I submitted the protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated in the protest and accompanying documents is true, correct, and complete.”
+
+Sincerely,
+
+[Authorized Representative Signature]  
+[Name of Authorized Representative]  
+Authorized Representative for 34213
+
+Enclosures:  
+• Copies of Government Orders and Relevant Excerpts  
+• Quarterly Revenue Data Table and Analysis
