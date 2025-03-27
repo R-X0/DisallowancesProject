@@ -6,7 +6,9 @@ import {
   Divider, Alert, Dialog, DialogTitle,
   DialogContent, DialogActions, LinearProgress,
   ButtonGroup, Tooltip,
-  Select, MenuItem, FormControl, InputLabel
+  Select, MenuItem, FormControl, InputLabel,
+  FormControlLabel, Checkbox, RadioGroup, Radio,
+  Grid
 } from '@mui/material';
 import { ContentCopy, CheckCircle, Description, Link, FileDownload, SwapHoriz } from '@mui/icons-material';
 import { generateERCProtestLetter } from '../services/api';
@@ -191,6 +193,17 @@ const determineUserApproach = (formData) => {
   }
 };
 
+// Common disallowance reasons
+const disallowanceReasons = [
+  { value: 'no_orders', label: 'No government orders in effect' },
+  { value: 'not_in_operation', label: 'Business not in operation' },
+  { value: 'excess_amount', label: 'Amount claimed exceeded allowable maximum' },
+  { value: 'no_w2', label: 'No W-2s were filed' },
+  { value: 'no_941', label: 'No Forms 941 were filed' },
+  { value: 'no_deposits', label: 'No employment tax deposits found' },
+  { value: 'other', label: 'Other reason' }
+];
+
 const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [generating, setGenerating] = useState(false);
   const [protestLetter, setProtestLetter] = useState('');
@@ -205,6 +218,12 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [documentType, setDocumentType] = useState('protestLetter'); // State for toggling document type
   const [selectedTimePeriod, setSelectedTimePeriod] = useState(''); // For selecting which period to focus on for protest letter
   const [approachFocus, setApproachFocus] = useState('governmentOrders'); // Default approach
+  
+  // New state variables for the requested features
+  const [includeRevenueSection, setIncludeRevenueSection] = useState(true);
+  const [disallowanceReason, setDisallowanceReason] = useState('no_orders');
+  const [outputFormat, setOutputFormat] = useState('pdf');
+  const [customDisallowanceReason, setCustomDisallowanceReason] = useState('');
 
   // Initialize selected time period when form data changes
   useEffect(() => {
@@ -284,7 +303,12 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         // Pass revenue decline metadata
         revenueDeclines: revenueDeclines,
         qualifyingQuarters: qualifyingQuarters,
-        approachFocus: currentApproach // Use the confirmed approach
+        approachFocus: currentApproach, // Use the confirmed approach
+        // Added new parameters for the requested features
+        includeRevenueSection: includeRevenueSection,
+        disallowanceReason: disallowanceReason,
+        customDisallowanceReason: customDisallowanceReason,
+        outputFormat: outputFormat
       };
       
       // Update processing steps
@@ -320,17 +344,17 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         // Create package data object
         const newPackageData = {
           pdfPath: response.pdfPath,
+          docxPath: response.docxPath, // New field for Word document
           zipPath: response.zipPath,
           attachments: response.attachments || [],
           packageFilename: response.packageFilename || 'complete_package.zip',
-          quarter: selectedTimePeriod
+          quarter: selectedTimePeriod,
+          outputFormat: outputFormat
         };
         
         console.log('Setting package data:', newPackageData);
         setPackageData(newPackageData);
         
-        // Note: No MongoDB update here - we've removed it and will handle it at form submission
-
         // Immediately call the onGenerated callback with the package data
         console.log('Calling onGenerated with package data:', newPackageData);
         if (onGenerated) {
@@ -390,7 +414,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         // Open it directly in a new tab
         window.open(packageData.zipPath, '_blank');
       } else {
-        // Use the public API endpoint for local file downloads (updated to use the new public endpoint)
+        // Use the public API endpoint for local file downloads
         window.open(`/api/erc-protest/download?path=${encodeURIComponent(packageData.zipPath)}`, '_blank');
       }
       
@@ -401,6 +425,26 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
       }
     } else {
       console.warn("No package data or zipPath available for download");
+    }
+  };
+
+  // New function to download just the document (PDF or DOCX)
+  const downloadDocument = () => {
+    if (packageData) {
+      const path = outputFormat === 'docx' ? packageData.docxPath : packageData.pdfPath;
+      
+      if (path) {
+        console.log(`Downloading ${outputFormat.toUpperCase()} document with path:`, path);
+        
+        // Check if it's a Google Drive URL
+        if (path.startsWith('http')) {
+          window.open(path, '_blank');
+        } else {
+          window.open(`/api/erc-protest/download?path=${encodeURIComponent(path)}`, '_blank');
+        }
+      } else {
+        console.warn(`No ${outputFormat.toUpperCase()} path available for download`);
+      }
     }
   };
   
@@ -462,49 +506,110 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
             </Typography>
           </Box>
         )}
-        
-        {/* Time Period Selector (only show for Protest Letter type) */}
-        {hasTimePeriods && documentType === 'protestLetter' && (
-          <Box mb={3}>
+
+        <Grid container spacing={2}>
+          {/* Time Period Selector (only show for Protest Letter type) */}
+          {hasTimePeriods && documentType === 'protestLetter' && (
+            <Grid item xs={12}>
+              <FormControl fullWidth size="small">
+                <InputLabel id="select-protest-period-label">Select Quarter for Protest Letter</InputLabel>
+                <Select
+                  labelId="select-protest-period-label"
+                  id="select-protest-period"
+                  value={selectedTimePeriod}
+                  onChange={handleTimePeriodChange}
+                  label="Select Quarter for Protest Letter"
+                >
+                  {formData.timePeriods.map((period) => (
+                    <MenuItem key={period} value={period}>{period}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+                {documentType === 'protestLetter' 
+                  ? 'Select a specific quarter for the protest letter. Each quarter typically requires a separate protest letter.' 
+                  : 'Form 886-A documents will include all selected quarters.'}
+              </Typography>
+            </Grid>
+          )}
+
+          {/* ChatGPT Link Input */}
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="ChatGPT Conversation Link"
+              variant="outlined"
+              value={chatGptLink}
+              onChange={(e) => setChatGptLink(e.target.value)}
+              placeholder="https://chat.openai.com/c/..."
+              error={chatGptLink !== '' && !validateChatGptLink(chatGptLink)}
+              helperText={chatGptLink !== '' && !validateChatGptLink(chatGptLink) ? 
+                "Please enter a valid ChatGPT conversation link" : ""}
+              InputProps={{
+                startAdornment: <Link color="action" sx={{ mr: 1 }} />,
+              }}
+            />
+          </Grid>
+
+          {/* NEW: Disallowance Reason Selection */}
+          <Grid item xs={12} md={6}>
             <FormControl fullWidth size="small">
-              <InputLabel id="select-protest-period-label">Select Quarter for Protest Letter</InputLabel>
+              <InputLabel id="disallowance-reason-label">Disallowance Reason</InputLabel>
               <Select
-                labelId="select-protest-period-label"
-                id="select-protest-period"
-                value={selectedTimePeriod}
-                onChange={handleTimePeriodChange}
-                label="Select Quarter for Protest Letter"
+                labelId="disallowance-reason-label"
+                id="disallowance-reason"
+                value={disallowanceReason}
+                onChange={(e) => setDisallowanceReason(e.target.value)}
+                label="Disallowance Reason"
               >
-                {formData.timePeriods.map((period) => (
-                  <MenuItem key={period} value={period}>{period}</MenuItem>
+                {disallowanceReasons.map((reason) => (
+                  <MenuItem key={reason.value} value={reason.value}>{reason.label}</MenuItem>
                 ))}
               </Select>
             </FormControl>
-            <Typography variant="caption" color="text.secondary" display="block" mt={1}>
-              {documentType === 'protestLetter' 
-                ? 'Select a specific quarter for the protest letter. Each quarter typically requires a separate protest letter.' 
-                : 'Form 886-A documents will include all selected quarters.'}
-            </Typography>
-          </Box>
-        )}
+            {disallowanceReason === 'other' && (
+              <TextField
+                fullWidth
+                size="small"
+                margin="normal"
+                label="Specify disallowance reason"
+                value={customDisallowanceReason}
+                onChange={(e) => setCustomDisallowanceReason(e.target.value)}
+                placeholder="Enter the specific disallowance reason"
+              />
+            )}
+          </Grid>
+
+          {/* NEW: Include Revenue Section Toggle */}
+          <Grid item xs={12} md={6}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={includeRevenueSection}
+                  onChange={(e) => setIncludeRevenueSection(e.target.checked)}
+                  name="includeRevenueSection"
+                />
+              }
+              label="Include revenue section in document (even if not qualifying)"
+            />
+          </Grid>
+
+          {/* NEW: Output Format Selection */}
+          <Grid item xs={12}>
+            <Typography variant="body2" gutterBottom>Output Format:</Typography>
+            <RadioGroup
+              row
+              name="outputFormat"
+              value={outputFormat}
+              onChange={(e) => setOutputFormat(e.target.value)}
+            >
+              <FormControlLabel value="pdf" control={<Radio />} label="PDF" />
+              <FormControlLabel value="docx" control={<Radio />} label="Word Document (.docx)" />
+            </RadioGroup>
+          </Grid>
+        </Grid>
         
-        <TextField
-          fullWidth
-          label="ChatGPT Conversation Link"
-          variant="outlined"
-          value={chatGptLink}
-          onChange={(e) => setChatGptLink(e.target.value)}
-          placeholder="https://chat.openai.com/c/..."
-          error={chatGptLink !== '' && !validateChatGptLink(chatGptLink)}
-          helperText={chatGptLink !== '' && !validateChatGptLink(chatGptLink) ? 
-            "Please enter a valid ChatGPT conversation link" : ""}
-          InputProps={{
-            startAdornment: <Link color="action" sx={{ mr: 1 }} />,
-          }}
-          sx={{ mb: 2 }}
-        />
-        
-        <Alert severity="info" sx={{ mb: 2 }}>
+        <Alert severity="info" sx={{ mb: 2, mt: 2 }}>
           {documentType === 'protestLetter' 
             ? `Make sure your ChatGPT conversation includes specific COVID-19 orders that affected your business during ${selectedTimePeriod || 'the selected time period'}.` 
             : `Make sure your ChatGPT conversation includes comprehensive information about government orders affecting your business across all ERC quarters: ${hasTimePeriods ? formData.timePeriods.join(', ') : 'the selected time periods'}.`}
@@ -592,15 +697,23 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
                   </Typography>
                 </Alert>
                 
-                <Box display="flex" justifyContent="center" mt={2} mb={3}>
+                <Box display="flex" justifyContent="center" gap={2} mt={2} mb={3}>
                   <Button
                     variant="contained"
                     color="primary"
                     startIcon={<FileDownload />}
                     onClick={downloadProtestPackage}
-                    sx={{ minWidth: 240 }}
                   >
                     Download Complete Package
+                  </Button>
+                  
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    startIcon={<FileDownload />}
+                    onClick={downloadDocument}
+                  >
+                    Download {outputFormat.toUpperCase()} Only
                   </Button>
                 </Box>
                 
@@ -650,6 +763,14 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
           <DialogActions>
             <Button onClick={copyToClipboard} startIcon={copied ? <CheckCircle /> : <ContentCopy />}>
               {copied ? 'Copied!' : 'Copy to Clipboard'}
+            </Button>
+            <Button 
+              onClick={downloadDocument}
+              variant="outlined" 
+              color="primary"
+              startIcon={<FileDownload />}
+            >
+              Download {outputFormat.toUpperCase()} Only
             </Button>
             <Button 
               onClick={downloadProtestPackage} 

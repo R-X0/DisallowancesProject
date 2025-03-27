@@ -4,6 +4,7 @@ const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
 const OpenAI = require('openai').default;
+const officegen = require('officegen');
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -253,6 +254,104 @@ function getQualifyingQuarters(declines) {
 }
 
 /**
+ * Generate a Word document from text content
+ * @param {string} text - The text content to convert to DOCX
+ * @param {string} outputPath - The path to save the DOCX file
+ * @returns {Promise<string>} - The path to the generated DOCX
+ */
+async function generateDocx(text, outputPath) {
+  return new Promise((resolve, reject) => {
+    try {
+      // Create a new docx object
+      const docx = officegen('docx');
+      
+      // Set document properties
+      docx.on('finalize', function(written) {
+        console.log('Word document created:', outputPath);
+        resolve(outputPath);
+      });
+      
+      docx.on('error', function(err) {
+        console.error('Error creating Word document:', err);
+        reject(err);
+      });
+      
+      // Split text into paragraphs
+      const paragraphs = text.split('\n');
+      
+      // Process each paragraph
+      paragraphs.forEach(paragraph => {
+        if (!paragraph.trim()) {
+          // Add empty paragraph for spacing
+          docx.createP();
+          return;
+        }
+        
+        const para = docx.createP();
+        
+        // Check if it's a header (all caps or ends with colon)
+        if (paragraph.toUpperCase() === paragraph && paragraph.length > 5) {
+          para.addText(paragraph, { bold: true });
+        } 
+        // Check if it's a bullet point
+        else if (paragraph.trim().startsWith('• ')) {
+          para.addText(paragraph.trim().substring(2), { bullet: true });
+        }
+        // Check if it's a detail line with a label
+        else if (paragraph.includes(': ')) {
+          const [label, ...rest] = paragraph.split(': ');
+          const value = rest.join(': '); // In case there are multiple colons
+          
+          para.addText(`${label}: `, { bold: true });
+          para.addText(value);
+        }
+        // Regular paragraph
+        else {
+          para.addText(paragraph);
+        }
+      });
+      
+      // Generate the docx file
+      const out = fsSync.createWriteStream(outputPath);
+      out.on('error', (err) => {
+        console.error('Error writing Word document:', err);
+        reject(err);
+      });
+      
+      // Async callback is called after document is created
+      docx.generate(out);
+      
+    } catch (err) {
+      console.error('Error generating Word document:', err);
+      reject(err);
+    }
+  });
+}
+
+/**
+ * Get disallowance reason description text
+ * @param {string} reasonCode - The disallowance reason code
+ * @param {string} customReason - Custom reason text if reason is 'other'
+ * @returns {string} - Formatted text describing the disallowance reason
+ */
+function getDisallowanceReasonText(reasonCode, customReason = '') {
+  const reasonMap = {
+    'no_orders': 'no government orders were in effect',
+    'not_in_operation': 'the business was not in operation',
+    'excess_amount': 'the amount claimed exceeded the allowable maximum',
+    'no_w2': 'no W-2s were filed',
+    'no_941': 'no Forms 941 were filed',
+    'no_deposits': 'no employment tax deposits were found'
+  };
+  
+  if (reasonCode === 'other' && customReason) {
+    return customReason;
+  }
+  
+  return reasonMap[reasonCode] || 'no government orders were in effect';
+}
+
+/**
  * Generate an ERC document (protest letter or Form 886-A)
  * @param {Object} businessInfo - Business information
  * @param {string} covidData - Sanitized ChatGPT conversation containing COVID research
@@ -280,7 +379,12 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
 
     console.log('Has valid revenue data:', hasValidRevenueData);
     
-    if (hasValidRevenueData) {
+    // Check if we should include revenue section (default to include if not specified)
+    const includeRevenueSection = 
+      businessInfo.includeRevenueSection === undefined ? true : businessInfo.includeRevenueSection;
+    console.log('Include revenue section:', includeRevenueSection);
+    
+    if (hasValidRevenueData && includeRevenueSection) {
       console.log('Valid revenue data found for calculation:', {
         q1_2019: businessInfo.q1_2019,
         q2_2019: businessInfo.q2_2019,
@@ -295,8 +399,14 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
         q3_2021: businessInfo.q3_2021
       });
     } else {
-      console.log('No valid revenue data found. Will use government orders approach only.');
+      console.log('Revenue data will not be included in the document.');
     }
+    
+    // Get disallowance reason
+    const disallowanceReason = businessInfo.disallowanceReason || 'no_orders';
+    const customDisallowanceReason = businessInfo.customDisallowanceReason || '';
+    const disallowanceReasonText = getDisallowanceReasonText(disallowanceReason, customDisallowanceReason);
+    console.log('Disallowance reason:', disallowanceReason, '- Text:', disallowanceReasonText);
     
     // Handle multiple time periods
     let timePeriods = businessInfo.timePeriod;
@@ -307,26 +417,26 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
       ? allTimePeriods.join(', ') 
       : timePeriods;
     
-    // Process revenue data only if we have actual values
+    // Process revenue data only if we have actual values and includeRevenueSection is true
     let revenueDeclines = [];
     let qualifyingQuarters = [];
     let approachFocus = businessInfo.approachFocus || 'governmentOrders';
     
     // If revenue data is sent directly from client and valid, use it
     if (businessInfo.revenueDeclines && Array.isArray(businessInfo.revenueDeclines) && 
-        businessInfo.revenueDeclines.length > 0 && hasValidRevenueData) {
+        businessInfo.revenueDeclines.length > 0 && hasValidRevenueData && includeRevenueSection) {
       console.log('Using pre-calculated revenue declines from client');
       revenueDeclines = businessInfo.revenueDeclines;
       if (businessInfo.qualifyingQuarters && Array.isArray(businessInfo.qualifyingQuarters)) {
         qualifyingQuarters = businessInfo.qualifyingQuarters;
       }
-    } else if (hasValidRevenueData) {
+    } else if (hasValidRevenueData && includeRevenueSection) {
       // Otherwise calculate from individual quarter data if we have some
       console.log('Calculating revenue declines from individual quarter data');
       revenueDeclines = calculateRevenueDeclines(businessInfo);
       qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
     } else {
-      console.log('No valid revenue data available, skipping revenue decline calculations');
+      console.log('No valid revenue data available or revenue section disabled, skipping revenue decline calculations');
       // Force approach to be government orders only when no revenue data exists
       approachFocus = 'governmentOrders';
     }
@@ -335,8 +445,8 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
     console.log('Qualifying quarters:', qualifyingQuarters);
     
     // Check what evidence we have available
-    const hasRevenueDeclines = revenueDeclines.length > 0 && hasValidRevenueData;
-    const hasQualifyingQuarters = qualifyingQuarters.length > 0 && hasValidRevenueData;
+    const hasRevenueDeclines = revenueDeclines.length > 0 && hasValidRevenueData && includeRevenueSection;
+    const hasQualifyingQuarters = qualifyingQuarters.length > 0 && hasValidRevenueData && includeRevenueSection;
 
     // Check for government orders info
     const hasGovernmentOrdersInfo = 
@@ -346,8 +456,8 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
     // Build content that includes ONLY available evidence
     let evidenceContent = '';
 
-    // Include revenue data in the evidence content ONLY if we have actual valid data
-    if (hasRevenueDeclines && hasValidRevenueData) {
+    // Include revenue data in the evidence content ONLY if we have actual valid data and includeRevenueSection is true
+    if (hasRevenueDeclines && includeRevenueSection) {
       // Create a revenue section with the table format
       evidenceContent += `
 REVENUE REDUCTION INFORMATION:
@@ -400,6 +510,9 @@ Location: ${businessInfo.location}
 Time Periods: ${timePeriodsFormatted}
 Business Type: ${businessInfo.businessType || 'business'}
 
+DISALLOWANCE REASON:
+The ERC claim was disallowed because ${disallowanceReasonText}. Address this specific reason in your response.
+
 ${evidenceContent}
 
 COVID-19 RESEARCH DATA:
@@ -409,23 +522,24 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 1. DO NOT include direct links or URLs in the document - they will be processed separately and added as attachments
 2. Instead of URLs, reference orders and sources by their names and dates
 3. Use CONSISTENT formatting throughout - use bullet points (•) for all lists, not dashes or mixed formats
-4. Include ONLY the evidence that has been provided - ${hasValidRevenueData ? 'revenue decline AND/OR' : 'ONLY'} government orders
-5. ${hasValidRevenueData ? 'If revenue decline data shows qualifying quarters, make this a PROMINENT part of the document' : 'DO NOT fabricate or invent revenue figures, as none were provided. Focus EXCLUSIVELY on the government orders approach.'}
+4. Include ONLY the evidence that has been provided - ${hasValidRevenueData && includeRevenueSection ? 'revenue decline AND/OR' : 'ONLY'} government orders
+5. ${hasValidRevenueData && includeRevenueSection ? 'If revenue decline data shows qualifying quarters, make this a PROMINENT part of the document' : 'DO NOT fabricate or invent revenue figures, as none were provided. Focus EXCLUSIVELY on the government orders approach.'}
+6. ${disallowanceReason === 'not_in_operation' ? 'Make sure to specifically address that the business was in operation during the claimed period, providing evidence from the research data.' : ''}
 
 SPECIFIC FORMAT REQUIREMENTS FOR GOVERNMENT ORDERS:
 For each government order mentioned, you MUST use this EXACT detailed format:
 
-- Order Name: [Full Name of Order]
-- Order Number: [Official Number/Identifier]
-- Date Enacted: [MM/DD/YYYY]
-- Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
-- Order Summary: [2-3 sentence detailed description of what the order mandated]
-- Impact on Quarter: [Specific explanation of how this affected the business operations]
+• Order Name: [Full Name of Order]
+• Order Number: [Official Number/Identifier]
+• Date Enacted: [MM/DD/YYYY]
+• Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
+• Order Summary: [2-3 sentence detailed description of what the order mandated]
+• Impact on Quarter: [Specific explanation of how this affected the business operations]
 
 IMPORTANT: Each order must be listed individually with ALL six fields above. Do not abbreviate or simplify this format, even for minor orders.`;
 
-      // Only include revenue instructions if we have revenue data
-      if (hasValidRevenueData && hasRevenueDeclines) {
+      // Only include revenue instructions if we have revenue data and includeRevenueSection is true
+      if (hasValidRevenueData && includeRevenueSection) {
         promptTemplate += `
 
 REVENUE DECLINE PRESENTATION FORMAT:
@@ -451,16 +565,16 @@ IMPORTANT: Include ALL quarters where data is available in the table, not just t
       } else {
         promptTemplate += `
 
-CRITICAL INSTRUCTION: NO REVENUE DATA WAS PROVIDED. DO NOT FABRICATE OR INVENT ANY REVENUE FIGURES. DO NOT INCLUDE ANY REVENUE DECLINE ANALYSIS. This protest should be based SOLELY on the partial suspension of operations caused by government orders.`;
+CRITICAL INSTRUCTION: ${includeRevenueSection ? 'NO REVENUE DATA WAS PROVIDED.' : 'DO NOT INCLUDE REVENUE ANALYSIS IN THIS DOCUMENT.'} DO NOT FABRICATE OR INVENT ANY REVENUE FIGURES. DO NOT INCLUDE ANY REVENUE DECLINE ANALYSIS. This protest should be based SOLELY on the partial suspension of operations caused by government orders.`;
       }
 
       promptTemplate += `
 
 FORMAT: Create a comprehensive Form 886-A document with the following structure:
-1. Issue - Define the question of whether the business qualifies for ERC based on ${hasValidRevenueData ? 'ALL available evidence' : 'partial suspension of operations due to government orders'}
-2. Facts - Detail the business operations and include ${hasValidRevenueData ? 'ALL relevant evidence (revenue decline data AND/OR government orders)' : 'information about how government orders affected operations'}
-3. Law - Explain the ERC provisions, IRS Notice 2021-20, and other relevant guidance for ${hasValidRevenueData ? 'ALL qualification methods' : 'the government orders approach'}
-4. Argument - Present the case for why the business qualifies based on ${hasValidRevenueData ? 'ALL available evidence' : 'government orders causing partial suspension'}
+1. Issue - Define the question of whether the business qualifies for ERC based on ${hasValidRevenueData && includeRevenueSection ? 'ALL available evidence' : 'partial suspension of operations due to government orders'}
+2. Facts - Detail the business operations and include ${hasValidRevenueData && includeRevenueSection ? 'ALL relevant evidence (revenue decline data AND/OR government orders)' : 'information about how government orders affected operations'}
+3. Law - Explain the ERC provisions, IRS Notice 2021-20, and other relevant guidance for ${hasValidRevenueData && includeRevenueSection ? 'ALL qualification methods' : 'the government orders approach'}
+4. Argument - Present the case for why the business qualifies based on ${hasValidRevenueData && includeRevenueSection ? 'ALL available evidence' : 'government orders causing partial suspension'}
 5. Conclusion - Summarize the eligibility determination 
 
 Use today's date: ${new Date().toLocaleDateString()}
@@ -469,9 +583,10 @@ FINAL CRITICAL INSTRUCTION:
 1. Include ONLY the evidence that has actually been provided
 2. MAINTAIN the exact format for government orders specified above - this format is REQUIRED
 3. Do not abbreviate or simplify the government order format, even for minor orders
-4. ${hasValidRevenueData ? 'If both revenue reduction and government orders information is available, include BOTH' : 'DO NOT fabricate or invent ANY revenue figures, as none were provided'}
+4. ${hasValidRevenueData && includeRevenueSection ? 'If both revenue reduction and government orders information is available, include BOTH' : 'DO NOT fabricate or invent ANY revenue figures, as none were provided'}
 5. Format each government order with all six required fields (Name, Number, Dates, Summary, Impact)
-6. ${hasValidRevenueData ? 'Present the revenue data in a clear tabular format showing ALL available quarters - do not imply the figures were audited' : 'Focus EXCLUSIVELY on how government orders caused a partial suspension of operations'}`;
+6. ${hasValidRevenueData && includeRevenueSection ? 'Present the revenue data in a clear tabular format showing ALL available quarters - do not imply the figures were audited' : 'Focus EXCLUSIVELY on how government orders caused a partial suspension of operations'}
+7. Directly address the disallowance reason: ${disallowanceReasonText}`;
     
     } else {
       // Default to protest letter (original functionality)
@@ -490,6 +605,9 @@ Location: ${businessInfo.location}
 Time Period: ${timePeriods}
 Business Type: ${businessInfo.businessType || 'business'}
 
+DISALLOWANCE REASON:
+The ERC claim was disallowed because ${disallowanceReasonText}. Address this specific reason in your response.
+
 ${evidenceContent}
 
 COVID-19 RESEARCH DATA FROM CHATGPT:
@@ -499,23 +617,24 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 1. DO NOT include direct links or URLs in the letter body - they will be processed separately and added as attachments
 2. Instead of URLs, reference orders and sources by their names and dates
 3. Use CONSISTENT formatting throughout - use bullet points (•) for all lists, not dashes or mixed formats
-4. Include ONLY the evidence that has been provided - ${hasValidRevenueData ? 'revenue decline AND/OR' : 'ONLY'} government orders
-5. ${hasValidRevenueData ? 'If revenue decline data shows qualifying quarters, make this a PROMINENT part of the document' : 'DO NOT fabricate or invent revenue figures, as none were provided. Focus EXCLUSIVELY on the government orders approach.'}
+4. Include ONLY the evidence that has been provided - ${hasValidRevenueData && includeRevenueSection ? 'revenue decline AND/OR' : 'ONLY'} government orders
+5. ${hasValidRevenueData && includeRevenueSection ? 'If revenue decline data shows qualifying quarters, make this a PROMINENT part of the document' : 'DO NOT fabricate or invent revenue figures, as none were provided. Focus EXCLUSIVELY on the government orders approach.'}
+6. ${disallowanceReason === 'not_in_operation' ? 'Make sure to specifically address that the business was in operation during the claimed period, providing evidence from the research data.' : ''}
 
 SPECIFIC FORMAT REQUIREMENTS FOR GOVERNMENT ORDERS:
 For each government order mentioned, you MUST use this EXACT detailed format:
 
-- Order Name: [Full Name of Order]
-- Order Number: [Official Number/Identifier]
-- Date Enacted: [MM/DD/YYYY]
-- Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
-- Order Summary: [2-3 sentence detailed description of what the order mandated]
-- Impact on Quarter: [Specific explanation of how this affected the business operations]
+• Order Name: [Full Name of Order]
+• Order Number: [Official Number/Identifier]
+• Date Enacted: [MM/DD/YYYY]
+• Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
+• Order Summary: [2-3 sentence detailed description of what the order mandated]
+• Impact on Quarter: [Specific explanation of how this affected the business operations]
 
 IMPORTANT: Each order must be listed individually with ALL six fields above. Do not abbreviate or simplify this format, even for minor orders.`;
 
-      // Only include revenue instructions if we have revenue data
-      if (hasValidRevenueData && hasRevenueDeclines) {
+      // Only include revenue instructions if we have revenue data and includeRevenueSection is true
+      if (hasValidRevenueData && includeRevenueSection) {
         promptTemplate += `
 
 REVENUE DECLINE PRESENTATION FORMAT:
@@ -541,7 +660,7 @@ IMPORTANT: Include ALL quarters where data is available in the table, not just t
       } else {
         promptTemplate += `
 
-CRITICAL INSTRUCTION: NO REVENUE DATA WAS PROVIDED. DO NOT FABRICATE OR INVENT ANY REVENUE FIGURES. DO NOT INCLUDE ANY REVENUE DECLINE ANALYSIS. This protest should be based SOLELY on the partial suspension of operations caused by government orders.`;
+CRITICAL INSTRUCTION: ${includeRevenueSection ? 'NO REVENUE DATA WAS PROVIDED.' : 'DO NOT INCLUDE REVENUE ANALYSIS IN THIS DOCUMENT.'} DO NOT FABRICATE OR INVENT ANY REVENUE FIGURES. DO NOT INCLUDE ANY REVENUE DECLINE ANALYSIS. This protest should be based SOLELY on the partial suspension of operations caused by government orders.`;
       }
 
       promptTemplate += `
@@ -555,10 +674,11 @@ FINAL CRITICAL INSTRUCTION:
 1. Include ONLY the evidence that has actually been provided
 2. MAINTAIN the exact format for government orders specified above - this format is REQUIRED
 3. Do not abbreviate or simplify the government order format, even for minor orders
-4. ${hasValidRevenueData ? 'If both revenue reduction and government orders information is available, include BOTH' : 'DO NOT fabricate or invent ANY revenue figures, as none were provided'}
+4. ${hasValidRevenueData && includeRevenueSection ? 'If both revenue reduction and government orders information is available, include BOTH' : 'DO NOT fabricate or invent ANY revenue figures, as none were provided'}
 5. Format each government order with all six required fields (Name, Number, Dates, Summary, Impact)
-6. ${hasValidRevenueData ? 'Present the revenue data in a clear tabular format showing ALL available quarters - do not imply the figures were audited' : 'Focus EXCLUSIVELY on how government orders caused a partial suspension of operations'}
-7. For revenue figures, create a tabular format with ALL quarters where data is available - DO NOT selectively include only some quarters`;
+6. ${hasValidRevenueData && includeRevenueSection ? 'Present the revenue data in a clear tabular format showing ALL available quarters - do not imply the figures were audited' : 'Focus EXCLUSIVELY on how government orders caused a partial suspension of operations'}
+7. For revenue figures, create a tabular format with ALL quarters where data is available - DO NOT selectively include only some quarters
+8. Directly address the disallowance reason: ${disallowanceReasonText}`;
     }
     
     const response = await openai.chat.completions.create({
@@ -588,5 +708,6 @@ FINAL CRITICAL INSTRUCTION:
 module.exports = {
   generateCustomPrompt,
   getTemplateContent,
-  generateERCDocument
+  generateERCDocument,
+  generateDocx
 };
