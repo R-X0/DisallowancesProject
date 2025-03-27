@@ -5,22 +5,28 @@ const path = require('path');
 
 /**
  * Create a complete package ZIP file with all document components
- * @param {string} pdfPath - Path to the main PDF document
+ * @param {string} documentPath - Path to the main document (PDF or DOCX)
  * @param {Array} attachments - Array of attachment objects
  * @param {string} zipPath - Path where to save the ZIP file
  * @param {string} documentType - Type of document (protestLetter or form886A)
+ * @param {string} outputFormat - Format of the main document (pdf or docx)
  * @returns {string} - Path to the created ZIP file
  */
-async function createPackage(pdfPath, attachments, zipPath, documentType) {
+async function createPackage(documentPath, attachments, zipPath, documentType, outputFormat = 'pdf') {
   try {
-    console.log(`Creating package at ${zipPath} with main PDF from ${pdfPath}`);
+    console.log(`Creating package at ${zipPath} with main document from ${documentPath}`);
+    console.log(`Document format: ${outputFormat}`);
     
     // Create ZIP archive
     const zip = new AdmZip();
     
-    // Add the main document PDF
-    zip.addLocalFile(pdfPath);
-    console.log(`Added main document to package: ${path.basename(pdfPath)}`);
+    // Add the main document (PDF or DOCX)
+    if (!documentPath) {
+      throw new Error(`No document path provided for ${outputFormat} document`);
+    }
+    
+    zip.addLocalFile(documentPath);
+    console.log(`Added main document to package: ${path.basename(documentPath)}`);
     
     // Add all attachment PDFs
     for (const attachment of attachments) {
@@ -28,13 +34,14 @@ async function createPackage(pdfPath, attachments, zipPath, documentType) {
       console.log(`Added attachment to package: ${attachment.filename}`);
     }
     
-    // Create README content based on document type
-    const pdfFileName = path.basename(pdfPath);
+    // Create README content based on document type and format
+    const docFileName = path.basename(documentPath);
+    const formatDisplay = outputFormat.toUpperCase();
     const readmeContent = documentType === 'form886A' 
       ? `ERC FORM 886-A PACKAGE
 
 Main Document:
-- ${pdfFileName} (The main Form 886-A document)
+- ${docFileName} (The main Form 886-A document in ${formatDisplay} format)
 
 Attachments:
 ${attachments.map((a, i) => `${i+1}. ${a.filename} (original URL: ${a.originalUrl})`).join('\n')}
@@ -43,7 +50,7 @@ Generated on: ${new Date().toISOString()}`
       : `ERC PROTEST PACKAGE
 
 Main Document:
-- ${pdfFileName} (The main protest letter)
+- ${docFileName} (The main protest letter in ${formatDisplay} format)
 
 Attachments:
 ${attachments.map((a, i) => `${i+1}. ${a.filename} (original URL: ${a.originalUrl})`).join('\n')}

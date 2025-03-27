@@ -244,76 +244,75 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
     setSelectedTimePeriod(event.target.value);
   };
 
-
-// Function to generate protest letter using our LLM API
+  // Function to generate protest letter using our LLM API
   const generateProtestLetter = async () => {
-  setGenerating(true);
-  setError(null);
-  setProcessing(true);
-  setProcessingStep(0);
-  setPackageData(null);
-  
-  try {
-    // Get business type based on NAICS code
-    const businessType = getNaicsDescription(formData.naicsCode);
+    setGenerating(true);
+    setError(null);
+    setProcessing(true);
+    setProcessingStep(0);
+    setPackageData(null);
     
-    // Get all selected time periods for context
-    const allTimePeriods = formData.timePeriods ? formData.timePeriods : [formData.timePeriod];
-    const timePeriodsText = allTimePeriods.join(', ');
-    
-    // For protest letters, use the selected time period
-    // For Form 886-A, use all time periods
-    const timePeriodToUse = documentType === 'protestLetter' ? 
-      selectedTimePeriod : 
-      timePeriodsText;
-    
-    // Calculate revenue declines and determine approach
-    const revenueDeclines = calculateRevenueDeclines(formData);
-    const qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
-    
-    // CONFIRM we're using the correct approach - re-check right before API call
-    const currentApproach = determineUserApproach(formData);
-    console.log("Final approach check before API call:", currentApproach);
-    console.log("Include revenue section:", includeRevenueSection);
-    console.log("Output format:", outputFormat);
-    
-    // Prepare data for API call
-    const letterData = {
-      businessName: formData.businessName,
-      ein: formData.ein,
-      location: formData.location,
-      timePeriod: timePeriodToUse,
-      allTimePeriods: allTimePeriods,
-      chatGptLink: chatGptLink,
-      businessType: businessType,
-      trackingId: formData.trackingId || '',
-      documentType: documentType,
-      // Add revenue data
-      q1_2019: formData.q1_2019 || '',
-      q2_2019: formData.q2_2019 || '',
-      q3_2019: formData.q3_2019 || '',
-      q4_2019: formData.q4_2019 || '',
-      q1_2020: formData.q1_2020 || '',
-      q2_2020: formData.q2_2020 || '',
-      q3_2020: formData.q3_2020 || '',
-      q4_2020: formData.q4_2020 || '',
-      q1_2021: formData.q1_2021 || '',
-      q2_2021: formData.q2_2021 || '',
-      q3_2021: formData.q3_2021 || '',
-      // Also pass additional context
-      revenueReductionInfo: formData.revenueReductionInfo || '',
-      governmentOrdersInfo: formData.governmentOrdersInfo || '',
-      // Pass revenue decline metadata
-      revenueDeclines: revenueDeclines,
-      qualifyingQuarters: qualifyingQuarters,
-      approachFocus: currentApproach, // Use the confirmed approach
-      // Added new parameters for the requested features - ensure explicit boolean/string types
-      includeRevenueSection: includeRevenueSection === true, // Force boolean
-      disallowanceReason: disallowanceReason,
-      customDisallowanceReason: customDisallowanceReason,
-      outputFormat: outputFormat
-    };
+    try {
+      // Get business type based on NAICS code
+      const businessType = getNaicsDescription(formData.naicsCode);
       
+      // Get all selected time periods for context
+      const allTimePeriods = formData.timePeriods ? formData.timePeriods : [formData.timePeriod];
+      const timePeriodsText = allTimePeriods.join(', ');
+      
+      // For protest letters, use the selected time period
+      // For Form 886-A, use all time periods
+      const timePeriodToUse = documentType === 'protestLetter' ? 
+        selectedTimePeriod : 
+        timePeriodsText;
+      
+      // Calculate revenue declines and determine approach
+      const revenueDeclines = calculateRevenueDeclines(formData);
+      const qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
+      
+      // CONFIRM we're using the correct approach - re-check right before API call
+      const currentApproach = determineUserApproach(formData);
+      console.log("Final approach check before API call:", currentApproach);
+      console.log("Include revenue section:", includeRevenueSection);
+      console.log("Output format:", outputFormat);
+      
+      // Prepare data for API call
+      const letterData = {
+        businessName: formData.businessName,
+        ein: formData.ein,
+        location: formData.location,
+        timePeriod: timePeriodToUse,
+        allTimePeriods: allTimePeriods,
+        chatGptLink: chatGptLink,
+        businessType: businessType,
+        trackingId: formData.trackingId || '',
+        documentType: documentType,
+        // Add revenue data
+        q1_2019: formData.q1_2019 || '',
+        q2_2019: formData.q2_2019 || '',
+        q3_2019: formData.q3_2019 || '',
+        q4_2019: formData.q4_2019 || '',
+        q1_2020: formData.q1_2020 || '',
+        q2_2020: formData.q2_2020 || '',
+        q3_2020: formData.q3_2020 || '',
+        q4_2020: formData.q4_2020 || '',
+        q1_2021: formData.q1_2021 || '',
+        q2_2021: formData.q2_2021 || '',
+        q3_2021: formData.q3_2021 || '',
+        // Also pass additional context
+        revenueReductionInfo: formData.revenueReductionInfo || '',
+        governmentOrdersInfo: formData.governmentOrdersInfo || '',
+        // Pass revenue decline metadata
+        revenueDeclines: revenueDeclines,
+        qualifyingQuarters: qualifyingQuarters,
+        approachFocus: currentApproach, // Use the confirmed approach
+        // Added new parameters for the requested features - ensure explicit boolean/string types
+        includeRevenueSection: includeRevenueSection === true, // Force boolean type
+        disallowanceReason: disallowanceReason,
+        customDisallowanceReason: customDisallowanceReason,
+        outputFormat: outputFormat
+      };
+        
       // Update processing steps
       setProcessingMessage('Connecting to ChatGPT conversation...');
       setProcessingStep(1);

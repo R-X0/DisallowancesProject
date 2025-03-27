@@ -13,13 +13,17 @@ const mongoose = require('mongoose');
  * @param {string} businessName - Business name
  * @param {string} pdfPath - Path to the PDF document
  * @param {string} zipPath - Path to the ZIP package
+ * @param {string} docxPath - Path to the DOCX document (optional)
  * @returns {Object} - Object with links to the uploaded files
  */
-async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath) {
+async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath, docxPath = null) {
   try {
     console.log(`Uploading protest files to Google Drive for ${trackingId}...`);
     console.log(`PDF path: ${pdfPath}`);
     console.log(`ZIP path: ${zipPath}`);
+    if (docxPath) {
+      console.log(`DOCX path: ${docxPath}`);
+    }
     
     // Verify files exist before upload
     if (!fsSync.existsSync(pdfPath)) {
@@ -30,11 +34,22 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath) {
       throw new Error(`ZIP file does not exist at ${zipPath}`);
     }
     
+    if (docxPath && !fsSync.existsSync(docxPath)) {
+      console.log(`DOCX file does not exist at ${docxPath}, will not upload DOCX`);
+      docxPath = null;
+    }
+    
     // Get file sizes for verification
     const pdfStats = fsSync.statSync(pdfPath);
     const zipStats = fsSync.statSync(zipPath);
     console.log(`PDF size: ${pdfStats.size} bytes`);
     console.log(`ZIP size: ${zipStats.size} bytes`);
+    
+    let docxStats = null;
+    if (docxPath) {
+      docxStats = fsSync.statSync(docxPath);
+      console.log(`DOCX size: ${docxStats.size} bytes`);
+    }
     
     if (pdfStats.size === 0) {
       throw new Error('PDF file is empty');
@@ -44,34 +59,85 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath) {
       throw new Error('ZIP file is empty');
     }
     
+    if (docxPath && docxStats && docxStats.size === 0) {
+      console.log('DOCX file is empty, will not upload DOCX');
+      docxPath = null;
+    }
+    
     // Initialize Google Drive service if needed
     if (!googleDriveService.initialized) {
       console.log('Initializing Google Drive service...');
       await googleDriveService.initialize();
     }
     
-    // Call the Google Drive service directly
-    console.log(`Calling uploadProtestFiles with trackingId=${trackingId}, businessName=${businessName}`);
-    const driveFiles = await googleDriveService.uploadProtestFiles(
-      trackingId,
-      businessName,
-      pdfPath,
-      zipPath
-    );
+    // Create folder for this submission
+    const folderResult = await googleDriveService.createSubmissionFolder(trackingId, businessName);
+    console.log(`Created folder for ${trackingId} with ID: ${folderResult.folderId}`);
     
-    console.log(`Files uploaded to Drive for ${trackingId}:`, driveFiles);
-    console.log(`- Protest Letter Link: ${driveFiles.protestLetterLink}`);
-    console.log(`- ZIP Package Link: ${driveFiles.zipPackageLink}`);
-    console.log(`- Folder Link: ${driveFiles.folderLink}`);
+    // Upload the PDF letter
+    console.log(`Uploading PDF letter from ${pdfPath}...`);
+    const pdfFile = await googleDriveService.uploadFile(
+      pdfPath,
+      `${trackingId}_Protest_Letter.pdf`,
+      folderResult.folderId,
+      'application/pdf'
+    );
+    console.log(`PDF letter uploaded with ID: ${pdfFile.id}`);
+    
+    // Upload the DOCX if provided
+    let docxFile = null;
+    if (docxPath) {
+      console.log(`Uploading DOCX letter from ${docxPath}...`);
+      docxFile = await googleDriveService.uploadFile(
+        docxPath,
+        `${trackingId}_Protest_Letter.docx`,
+        folderResult.folderId,
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      );
+      console.log(`DOCX letter uploaded with ID: ${docxFile.id}`);
+    }
+    
+    // Upload the ZIP package
+    console.log(`Uploading ZIP package from ${zipPath}...`);
+    const zipFile = await googleDriveService.uploadFile(
+      zipPath,
+      `${trackingId}_Complete_Package.zip`,
+      folderResult.folderId,
+      'application/zip'
+    );
+    console.log(`ZIP package uploaded with ID: ${zipFile.id}`);
+    
+    // Verify both files are visible in the folder
+    console.log(`Verifying files in folder ${folderResult.folderId}...`);
+    const filesInFolder = await googleDriveService.drive.files.list({
+      q: `'${folderResult.folderId}' in parents`,
+      fields: 'files(id, name, webViewLink)'
+    });
+    
+    console.log(`Found ${filesInFolder.data.files.length} files in folder:`);
+    filesInFolder.data.files.forEach(file => {
+      console.log(`- ${file.name} (${file.id}): ${file.webViewLink}`);
+    });
+    
+    // Return all relevant URLs
+    const result = {
+      folderLink: folderResult.folderLink,
+      protestLetterLink: pdfFile.webViewLink,
+      zipPackageLink: zipFile.webViewLink
+    };
+    
+    if (docxFile) {
+      result.docxLink = docxFile.webViewLink;
+    }
     
     // Update Google Sheet with file links - with better error handling
     try {
       console.log(`Updating Google Sheet for ${trackingId} with file links...`);
       await googleSheetsService.updateSubmission(trackingId, {
         status: 'PDF done',
-        protestLetterPath: driveFiles.protestLetterLink,
-        zipPath: driveFiles.zipPackageLink,
-        googleDriveLink: driveFiles.folderLink,
+        protestLetterPath: result.protestLetterLink,
+        zipPath: result.zipPackageLink,
+        googleDriveLink: result.folderLink,
         timestamp: new Date().toISOString(),
         businessName: businessName // Include business name for new entries
       });
@@ -166,8 +232,8 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath) {
           }
         });
         
-        if (currentTimePeriod && driveFiles.zipPackageLink) {
-          submission.submissionData.quarterZips[currentTimePeriod] = driveFiles.zipPackageLink;
+        if (currentTimePeriod && result.zipPackageLink) {
+          submission.submissionData.quarterZips[currentTimePeriod] = result.zipPackageLink;
         }
         
         await submission.save();
@@ -198,8 +264,16 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath) {
         }
         
         // Add the ZIP path for the current quarter
-        if (currentTimePeriod && driveFiles.zipPackageLink) {
-          submission.submissionData.quarterZips[currentTimePeriod] = driveFiles.zipPackageLink;
+        if (currentTimePeriod && result.zipPackageLink) {
+          submission.submissionData.quarterZips[currentTimePeriod] = result.zipPackageLink;
+        }
+        
+        // Store DOCX link if available
+        if (result.docxLink) {
+          if (!submission.submissionData.documentLinks) {
+            submission.submissionData.documentLinks = {};
+          }
+          submission.submissionData.documentLinks.docxLink = result.docxLink;
         }
         
         await submission.save();
@@ -229,10 +303,15 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath) {
             const submissionInfo = JSON.parse(submissionData);
             
             submissionInfo.status = 'PDF done';
-            submissionInfo.protestLetterPath = driveFiles.protestLetterLink;
-            submissionInfo.zipPath = driveFiles.zipPackageLink;
-            submissionInfo.googleDriveLink = driveFiles.folderLink;
+            submissionInfo.protestLetterPath = result.protestLetterLink;
+            submissionInfo.zipPath = result.zipPackageLink;
+            submissionInfo.googleDriveLink = result.folderLink;
             submissionInfo.timestamp = new Date().toISOString();
+            
+            // Add DOCX path if available
+            if (result.docxLink) {
+              submissionInfo.docxPath = result.docxLink;
+            }
             
             await fs.writeFile(
               filePath,
@@ -255,7 +334,7 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath) {
       console.log(`Error handling local files for ${trackingId}:`, fileErr.message);
     }
     
-    return driveFiles;
+    return result;
   } catch (error) {
     console.error(`Error uploading to Drive for ${trackingId}:`, error);
     throw error;

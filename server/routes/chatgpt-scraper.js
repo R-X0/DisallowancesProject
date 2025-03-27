@@ -63,7 +63,12 @@ router.post('/process-chatgpt', async (req, res) => {
       // Pre-calculated data if provided
       revenueDeclines,
       qualifyingQuarters,
-      approachFocus
+      approachFocus,
+      // New parameters
+      includeRevenueSection,
+      disallowanceReason,
+      customDisallowanceReason,
+      outputFormat = 'pdf' // Default to PDF if not specified
     } = req.body;
 
     // Validate required inputs
@@ -84,6 +89,8 @@ router.post('/process-chatgpt', async (req, res) => {
     console.log(`Processing ChatGPT link: ${chatGptLink}`);
     console.log(`Business: ${businessName}, Period: ${timePeriod}, Type: ${businessType || 'Not specified'}`);
     console.log(`Document Type: ${documentType}`);
+    console.log(`Include Revenue Section: ${includeRevenueSection !== false ? 'Yes' : 'No'}`);
+    console.log(`Output Format: ${outputFormat}`);
     
     // Log if multiple time periods are provided
     if (allTimePeriods && Array.isArray(allTimePeriods)) {
@@ -104,7 +111,7 @@ router.post('/process-chatgpt', async (req, res) => {
       // 2. Get the appropriate template based on document type
       let templateContent = await documentGenerator.getTemplateContent(documentType);
 
-      // 3. Create business info object - now with ALL revenue data
+      // 3. Create business info object - now with ALL revenue data and new parameters
       const businessInfo = {
         businessName,
         ein,
@@ -124,7 +131,12 @@ router.post('/process-chatgpt', async (req, res) => {
         revenueDeclines,
         qualifyingQuarters,
         // Include approach focus
-        approachFocus: approachFocus || 'governmentOrders'
+        approachFocus: approachFocus || 'governmentOrders',
+        // Include new parameters
+        includeRevenueSection: includeRevenueSection !== false,
+        disallowanceReason: disallowanceReason || 'no_orders',
+        customDisallowanceReason: customDisallowanceReason || '',
+        outputFormat: outputFormat || 'pdf'
       };
 
       // Log revenue data that's being passed
@@ -139,7 +151,8 @@ router.post('/process-chatgpt', async (req, res) => {
         q4_2020: businessInfo.q4_2020,
         q1_2021: businessInfo.q1_2021,
         q2_2021: businessInfo.q2_2021,
-        q3_2021: businessInfo.q3_2021
+        q3_2021: businessInfo.q3_2021,
+        includeRevenueSection: businessInfo.includeRevenueSection
       });
 
       // 4. Generate document using the conversation content and template
@@ -179,13 +192,30 @@ router.post('/process-chatgpt', async (req, res) => {
       const pdfPath = path.join(outputDir, pdfFileName);
       await pdfGenerator.generatePdf(updatedDocument, pdfPath);
       
-      // 7. Create a complete package as a ZIP file
+      // 7. Generate DOCX version if requested
+      let docxPath = null;
+      if (outputFormat === 'docx') {
+        console.log('Generating DOCX version of the document...');
+        const docxFileName = documentType === 'form886A' ? 'form_886a.docx' : 'protest_letter.docx';
+        docxPath = path.join(outputDir, docxFileName);
+        await documentGenerator.generateDocx(updatedDocument, docxPath);
+      }
+      
+      // 8. Create a complete package as a ZIP file
       console.log('Creating complete package ZIP file...');
       const packageName = documentType === 'form886A' ? 'form_886a_package.zip' : 'complete_protest_package.zip';
       const zipPath = path.join(outputDir, packageName);
-      await packageCreator.createPackage(pdfPath, attachments, zipPath, documentType);
       
-      // 8. Upload to Google Drive if tracking ID is provided
+      // Use the correct format when creating the package
+      await packageCreator.createPackage(
+        outputFormat === 'docx' ? docxPath : pdfPath, 
+        attachments, 
+        zipPath, 
+        documentType,
+        outputFormat
+      );
+      
+      // 9. Upload to Google Drive if tracking ID is provided
       let driveUrls = null;
       if (trackingId) {
         try {
@@ -194,7 +224,8 @@ router.post('/process-chatgpt', async (req, res) => {
             trackingId,
             businessName,
             pdfPath,
-            zipPath
+            zipPath,
+            docxPath
           );
           console.log(`Upload complete. Drive URLs:`, driveUrls);
         } catch (driveError) {
@@ -203,7 +234,7 @@ router.post('/process-chatgpt', async (req, res) => {
         }
       }
 
-      // 9. Send response with all generated content
+      // 10. Send response with all generated content
       if (driveUrls) {
         res.status(200).json({
           success: true,
@@ -211,12 +242,14 @@ router.post('/process-chatgpt', async (req, res) => {
           conversationContent,
           outputPath: outputDir,
           pdfPath,
+          docxPath, // Include docxPath in response
           attachments,
           zipPath,
           packageFilename: path.basename(zipPath),
           googleDriveLink: driveUrls.folderLink,
           protestLetterLink: driveUrls.protestLetterLink,
-          zipPackageLink: driveUrls.zipPackageLink
+          zipPackageLink: driveUrls.zipPackageLink,
+          outputFormat: outputFormat // Include the format in response
         });
       } else {
         res.status(200).json({
@@ -225,9 +258,11 @@ router.post('/process-chatgpt', async (req, res) => {
           conversationContent,
           outputPath: outputDir,
           pdfPath,
+          docxPath, // Include docxPath in response
           attachments,
           zipPath,
-          packageFilename: path.basename(zipPath)
+          packageFilename: path.basename(zipPath),
+          outputFormat: outputFormat // Include the format in response
         });
       }
     } catch (error) {

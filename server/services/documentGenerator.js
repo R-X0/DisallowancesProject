@@ -379,27 +379,20 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
 
     console.log('Has valid revenue data:', hasValidRevenueData);
     
-    // Check if we should include revenue section (default to include if not specified)
-    const includeRevenueSection = 
-      businessInfo.includeRevenueSection === undefined ? true : businessInfo.includeRevenueSection;
-    console.log('Include revenue section:', includeRevenueSection);
+    // Check if we should include revenue section - FIXED: strictly check for false
+    const includeRevenueSection = businessInfo.includeRevenueSection !== false;
+    console.log('Include revenue section:', includeRevenueSection, 'Value from input:', businessInfo.includeRevenueSection);
     
     if (hasValidRevenueData && includeRevenueSection) {
-      console.log('Valid revenue data found for calculation:', {
-        q1_2019: businessInfo.q1_2019,
-        q2_2019: businessInfo.q2_2019,
-        q3_2019: businessInfo.q3_2019,
-        q4_2019: businessInfo.q4_2019,
-        q1_2020: businessInfo.q1_2020,
-        q2_2020: businessInfo.q2_2020,
-        q3_2020: businessInfo.q3_2020,
-        q4_2020: businessInfo.q4_2020,
-        q1_2021: businessInfo.q1_2021,
-        q2_2021: businessInfo.q2_2021,
-        q3_2021: businessInfo.q3_2021
-      });
+      console.log('Valid revenue data found for calculation, and includeRevenueSection is true');
     } else {
       console.log('Revenue data will not be included in the document.');
+      if (!includeRevenueSection) {
+        console.log('Reason: includeRevenueSection is explicitly set to false');
+      }
+      if (!hasValidRevenueData) {
+        console.log('Reason: No valid revenue data found');
+      }
     }
     
     // Get disallowance reason
@@ -709,5 +702,9 @@ module.exports = {
   generateCustomPrompt,
   getTemplateContent,
   generateERCDocument,
-  generateDocx
+  generateDocx,
+  calculateRevenueDeclines,
+  getQualifyingQuarters,
+  getDisallowanceReasonText,
+  createRevenueTable
 };
