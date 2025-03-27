@@ -262,13 +262,30 @@ function getQualifyingQuarters(declines) {
 async function generateDocx(text, outputPath) {
   return new Promise((resolve, reject) => {
     try {
+      console.log(`Starting DOCX generation for: ${outputPath}`);
+      
+      // First, ensure the destination directory exists
+      const dir = path.dirname(outputPath);
+      fsSync.mkdirSync(dir, { recursive: true });
+      
       // Create a new docx object
       const docx = officegen('docx');
       
       // Set document properties
       docx.on('finalize', function(written) {
         console.log('Word document created:', outputPath);
-        resolve(outputPath);
+        
+        // Verify the file exists and has content
+        setTimeout(() => {
+          try {
+            const stats = fsSync.statSync(outputPath);
+            console.log(`DOCX file verified: ${outputPath} (${stats.size} bytes)`);
+            resolve(outputPath);
+          } catch (verifyErr) {
+            console.error('Error verifying DOCX file:', verifyErr);
+            reject(verifyErr);
+          }
+        }, 1000); // Give a small delay to allow file system to flush
       });
       
       docx.on('error', function(err) {
@@ -313,9 +330,15 @@ async function generateDocx(text, outputPath) {
       
       // Generate the docx file
       const out = fsSync.createWriteStream(outputPath);
+      
       out.on('error', (err) => {
         console.error('Error writing Word document:', err);
         reject(err);
+      });
+      
+      out.on('close', () => {
+        console.log(`DOCX file stream closed: ${outputPath}`);
+        // Note: We don't resolve here because officegen will call 'finalize' event
       });
       
       // Async callback is called after document is created

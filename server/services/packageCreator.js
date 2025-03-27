@@ -2,6 +2,7 @@
 
 const AdmZip = require('adm-zip');
 const path = require('path');
+const fs = require('fs');
 
 /**
  * Create a complete package ZIP file with all document components
@@ -20,18 +21,64 @@ async function createPackage(documentPath, attachments, zipPath, documentType, o
     // Create ZIP archive
     const zip = new AdmZip();
     
-    // Add the main document (PDF or DOCX)
+    // Add the main document (PDF or DOCX) with verification
     if (!documentPath) {
       throw new Error(`No document path provided for ${outputFormat} document`);
     }
     
+    // Check if the document exists
+    if (!fs.existsSync(documentPath)) {
+      console.log(`Document not found at ${documentPath}, waiting 2 seconds...`);
+      // Wait a bit and try again
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      if (!fs.existsSync(documentPath)) {
+        // If DOCX isn't available, try falling back to PDF
+        if (outputFormat === 'docx') {
+          const pdfPath = documentPath.replace(/\.docx$/i, '.pdf');
+          console.log(`DOCX not found, checking for PDF at: ${pdfPath}`);
+          
+          if (fs.existsSync(pdfPath)) {
+            console.log(`Found PDF instead, using: ${pdfPath}`);
+            documentPath = pdfPath;
+            outputFormat = 'pdf';
+          } else {
+            throw new Error(`Document file not found at ${documentPath} and no PDF fallback available`);
+          }
+        } else {
+          throw new Error(`Document file not found at ${documentPath}`);
+        }
+      }
+    }
+    
+    // Get file stats for logging
+    const stats = fs.statSync(documentPath);
+    console.log(`Adding document to package: ${documentPath} (${stats.size} bytes)`);
+    
+    // Now add the document to the ZIP
     zip.addLocalFile(documentPath);
     console.log(`Added main document to package: ${path.basename(documentPath)}`);
     
-    // Add all attachment PDFs
+    // Add all attachment PDFs with verification
+    let addedAttachments = 0;
     for (const attachment of attachments) {
-      zip.addLocalFile(attachment.path);
-      console.log(`Added attachment to package: ${attachment.filename}`);
+      if (!attachment || !attachment.path) {
+        console.log(`Skipping invalid attachment entry`);
+        continue;
+      }
+      
+      if (!fs.existsSync(attachment.path)) {
+        console.log(`Attachment not found: ${attachment.path}, skipping...`);
+        continue;
+      }
+      
+      try {
+        zip.addLocalFile(attachment.path);
+        console.log(`Added attachment to package: ${attachment.filename}`);
+        addedAttachments++;
+      } catch (attachError) {
+        console.log(`Error adding attachment ${attachment.filename}: ${attachError.message}`);
+      }
     }
     
     // Create README content based on document type and format
@@ -43,7 +90,7 @@ async function createPackage(documentPath, attachments, zipPath, documentType, o
 Main Document:
 - ${docFileName} (The main Form 886-A document in ${formatDisplay} format)
 
-Attachments:
+Attachments (${addedAttachments} total):
 ${attachments.map((a, i) => `${i+1}. ${a.filename} (original URL: ${a.originalUrl})`).join('\n')}
 
 Generated on: ${new Date().toISOString()}`
@@ -52,7 +99,7 @@ Generated on: ${new Date().toISOString()}`
 Main Document:
 - ${docFileName} (The main protest letter in ${formatDisplay} format)
 
-Attachments:
+Attachments (${addedAttachments} total):
 ${attachments.map((a, i) => `${i+1}. ${a.filename} (original URL: ${a.originalUrl})`).join('\n')}
 
 Generated on: ${new Date().toISOString()}`;
