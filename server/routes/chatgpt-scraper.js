@@ -11,6 +11,7 @@ const pdfGenerator = require('../services/pdfGenerator');
 const urlProcessor = require('../services/urlProcessor');
 const packageCreator = require('../services/packageCreator');
 const protestDriveUploader = require('../services/protestDriveUploader');
+const jobQueue = require('../services/jobQueue');
 
 // Generate customized COVID prompt through OpenAI
 router.post('/generate-prompt', async (req, res) => {
@@ -40,7 +41,7 @@ router.post('/generate-prompt', async (req, res) => {
   }
 });
 
-// Main process to handle ChatGPT conversation
+// Main process to handle ChatGPT conversation - now using job queue
 router.post('/process-chatgpt', async (req, res) => {
   try {
     const {
@@ -48,27 +49,7 @@ router.post('/process-chatgpt', async (req, res) => {
       businessName,
       ein,
       location,
-      timePeriod,
-      allTimePeriods,
-      businessType,
-      trackingId,
-      documentType = 'protestLetter', // Default to protest letter if not specified
-      // Extract all revenue fields
-      q1_2019, q2_2019, q3_2019, q4_2019,
-      q1_2020, q2_2020, q3_2020, q4_2020,
-      q1_2021, q2_2021, q3_2021,
-      // Additional context information
-      revenueReductionInfo,
-      governmentOrdersInfo,
-      // Pre-calculated data if provided
-      revenueDeclines,
-      qualifyingQuarters,
-      approachFocus,
-      // New parameters
-      includeRevenueSection,
-      disallowanceReason,
-      customDisallowanceReason,
-      outputFormat = 'pdf' // Default to PDF if not specified
+      timePeriod
     } = req.body;
 
     // Validate required inputs
@@ -87,16 +68,72 @@ router.post('/process-chatgpt', async (req, res) => {
     }
 
     console.log(`Processing ChatGPT link: ${chatGptLink}`);
-    console.log(`Business: ${businessName}, Period: ${timePeriod}, Type: ${businessType || 'Not specified'}`);
-    console.log(`Document Type: ${documentType}`);
-    console.log(`Include Revenue Section: ${includeRevenueSection !== false ? 'Yes' : 'No'}`);
-    console.log(`Output Format: ${outputFormat}`);
+    console.log(`Business: ${businessName}, Period: ${timePeriod}`);
     
-    // Log if multiple time periods are provided
-    if (allTimePeriods && Array.isArray(allTimePeriods)) {
-      console.log(`All Time Periods: ${allTimePeriods.join(', ')}`);
-    }
+    // Create a new job
+    const jobId = await jobQueue.createJob(req.body);
+    
+    // Return the job ID immediately
+    res.status(202).json({
+      success: true,
+      message: 'Document generation started',
+      jobId: jobId
+    });
+    
+    // Process the job asynchronously after sending response
+    setTimeout(() => {
+      processJobAsync(jobId, req.body);
+    }, 100);
+  } catch (error) {
+    console.error('Error initiating document generation:', error);
+    res.status(500).json({
+      success: false,
+      message: `Error initiating document generation: ${error.message}`
+    });
+  }
+});
 
+// Add a new endpoint to check job status
+router.get('/job-status/:jobId', async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const job = await jobQueue.getJob(jobId);
+    
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found'
+      });
+    }
+    
+    // Return job status
+    res.status(200).json({
+      success: true,
+      job: {
+        id: job.id,
+        status: job.status,
+        created: job.created,
+        updated: job.updated,
+        progress: job.progress || 0,
+        result: job.status === 'completed' ? job.result : null,
+        error: job.status === 'failed' ? job.error : null
+      }
+    });
+  } catch (error) {
+    console.error('Error checking job status:', error);
+    res.status(500).json({
+      success: false,
+      message: `Error checking job status: ${error.message}`
+    });
+  }
+});
+
+// Helper function to process the job asynchronously
+async function processJobAsync(jobId, requestData) {
+  try {
+    // Update job status to processing
+    await jobQueue.updateJob(jobId, { status: 'processing' });
+    
     // Create unique directory for request
     const requestId = uuidv4().substring(0, 8);
     const outputDir = path.join(__dirname, `../../data/ChatGPT_Conversations/${requestId}`);
@@ -104,59 +141,67 @@ router.post('/process-chatgpt', async (req, res) => {
 
     try {
       // 1. Scrape and process the ChatGPT conversation
-      console.log('Scraping ChatGPT conversation...');
-      const conversationContent = await chatgptScraper.scrapeConversation(chatGptLink, outputDir);
+      await jobQueue.updateJob(jobId, { 
+        status: 'scraping',
+        progress: 10,
+        message: 'Scraping ChatGPT conversation'
+      });
+      
+      const conversationContent = await chatgptScraper.scrapeConversation(requestData.chatGptLink, outputDir);
       console.log(`Conversation content retrieved (${conversationContent.length} chars)`);
 
       // 2. Get the appropriate template based on document type
-      let templateContent = await documentGenerator.getTemplateContent(documentType);
+      await jobQueue.updateJob(jobId, { 
+        status: 'preparing_document',
+        progress: 30,
+        message: 'Preparing document template'
+      });
+      
+      let templateContent = await documentGenerator.getTemplateContent(requestData.documentType || 'protestLetter');
 
-      // 3. Create business info object - now with ALL revenue data and new parameters
+      // 3. Create business info object
       const businessInfo = {
-        businessName,
-        ein,
-        location,
-        timePeriod,
-        allTimePeriods: allTimePeriods || [timePeriod],
-        businessType: businessType || 'business',
-        documentType,
+        businessName: requestData.businessName,
+        ein: requestData.ein,
+        location: requestData.location,
+        timePeriod: requestData.timePeriod,
+        allTimePeriods: requestData.allTimePeriods || [requestData.timePeriod],
+        businessType: requestData.businessType || 'business',
+        documentType: requestData.documentType || 'protestLetter',
         // Include all quarterly revenue data
-        q1_2019, q2_2019, q3_2019, q4_2019,
-        q1_2020, q2_2020, q3_2020, q4_2020,
-        q1_2021, q2_2021, q3_2021,
+        q1_2019: requestData.q1_2019, 
+        q2_2019: requestData.q2_2019, 
+        q3_2019: requestData.q3_2019, 
+        q4_2019: requestData.q4_2019,
+        q1_2020: requestData.q1_2020, 
+        q2_2020: requestData.q2_2020, 
+        q3_2020: requestData.q3_2020, 
+        q4_2020: requestData.q4_2020,
+        q1_2021: requestData.q1_2021, 
+        q2_2021: requestData.q2_2021, 
+        q3_2021: requestData.q3_2021,
         // Include additional context
-        revenueReductionInfo,
-        governmentOrdersInfo,
+        revenueReductionInfo: requestData.revenueReductionInfo,
+        governmentOrdersInfo: requestData.governmentOrdersInfo,
         // Include pre-calculated data if available
-        revenueDeclines,
-        qualifyingQuarters,
+        revenueDeclines: requestData.revenueDeclines,
+        qualifyingQuarters: requestData.qualifyingQuarters,
         // Include approach focus
-        approachFocus: approachFocus || 'governmentOrders',
+        approachFocus: requestData.approachFocus || 'governmentOrders',
         // Include new parameters
-        includeRevenueSection: includeRevenueSection !== false,
-        disallowanceReason: disallowanceReason || 'no_orders',
-        customDisallowanceReason: customDisallowanceReason || '',
-        outputFormat: outputFormat || 'pdf'
+        includeRevenueSection: requestData.includeRevenueSection !== false,
+        disallowanceReason: requestData.disallowanceReason || 'no_orders',
+        customDisallowanceReason: requestData.customDisallowanceReason || '',
+        outputFormat: requestData.outputFormat || 'pdf'
       };
 
-      // Log revenue data that's being passed
-      console.log('Business Info for Revenue Calculation:', {
-        q1_2019: businessInfo.q1_2019,
-        q2_2019: businessInfo.q2_2019,
-        q3_2019: businessInfo.q3_2019,
-        q4_2019: businessInfo.q4_2019,
-        q1_2020: businessInfo.q1_2020,
-        q2_2020: businessInfo.q2_2020,
-        q3_2020: businessInfo.q3_2020,
-        q4_2020: businessInfo.q4_2020,
-        q1_2021: businessInfo.q1_2021,
-        q2_2021: businessInfo.q2_2021,
-        q3_2021: businessInfo.q3_2021,
-        includeRevenueSection: businessInfo.includeRevenueSection
-      });
-
       // 4. Generate document using the conversation content and template
-      console.log('Generating document...');
+      await jobQueue.updateJob(jobId, { 
+        status: 'generating_document',
+        progress: 40,
+        message: 'Generating document'
+      });
+      
       const document = await documentGenerator.generateERCDocument(
         businessInfo,
         conversationContent,
@@ -164,7 +209,7 @@ router.post('/process-chatgpt', async (req, res) => {
       );
       
       // Save the generated document in text format
-      const documentFileName = documentType === 'form886A' ? 'form_886a.txt' : 'protest_letter.txt';
+      const documentFileName = requestData.documentType === 'form886A' ? 'form_886a.txt' : 'protest_letter.txt';
       await fs.writeFile(
         path.join(outputDir, documentFileName),
         document,
@@ -172,14 +217,19 @@ router.post('/process-chatgpt', async (req, res) => {
       );
       
       // 5. Process URLs in the document and download as PDFs
-      console.log('Extracting and downloading URLs from the document...');
+      await jobQueue.updateJob(jobId, { 
+        status: 'extracting_urls',
+        progress: 60,
+        message: 'Extracting and downloading URLs'
+      });
+      
       const { letter: updatedDocument, attachments } = await urlProcessor.extractAndDownloadUrls(
         document, 
         outputDir
       );
       
       // Save the updated document with attachment references
-      const updatedFileName = documentType === 'form886A' ? 'form_886a_with_attachments.txt' : 'protest_letter_with_attachments.txt';
+      const updatedFileName = requestData.documentType === 'form886A' ? 'form_886a_with_attachments.txt' : 'protest_letter_with_attachments.txt';
       await fs.writeFile(
         path.join(outputDir, updatedFileName),
         updatedDocument,
@@ -187,42 +237,63 @@ router.post('/process-chatgpt', async (req, res) => {
       );
       
       // 6. Generate PDF version of the document
-      console.log('Generating PDF version of the document...');
-      const pdfFileName = documentType === 'form886A' ? 'form_886a.pdf' : 'protest_letter.pdf';
+      await jobQueue.updateJob(jobId, { 
+        status: 'generating_pdf',
+        progress: 75,
+        message: 'Generating PDF'
+      });
+      
+      const pdfFileName = requestData.documentType === 'form886A' ? 'form_886a.pdf' : 'protest_letter.pdf';
       const pdfPath = path.join(outputDir, pdfFileName);
       await pdfGenerator.generatePdf(updatedDocument, pdfPath);
       
       // 7. Generate DOCX version if requested
       let docxPath = null;
-      if (outputFormat === 'docx') {
-        console.log('Generating DOCX version of the document...');
-        const docxFileName = documentType === 'form886A' ? 'form_886a.docx' : 'protest_letter.docx';
+      if (requestData.outputFormat === 'docx') {
+        await jobQueue.updateJob(jobId, { 
+          status: 'generating_docx',
+          progress: 80,
+          message: 'Generating DOCX'
+        });
+        
+        const docxFileName = requestData.documentType === 'form886A' ? 'form_886a.docx' : 'protest_letter.docx';
         docxPath = path.join(outputDir, docxFileName);
         await documentGenerator.generateDocx(updatedDocument, docxPath);
       }
       
       // 8. Create a complete package as a ZIP file
-      console.log('Creating complete package ZIP file...');
-      const packageName = documentType === 'form886A' ? 'form_886a_package.zip' : 'complete_protest_package.zip';
+      await jobQueue.updateJob(jobId, { 
+        status: 'creating_package',
+        progress: 85,
+        message: 'Creating package'
+      });
+      
+      const packageName = requestData.documentType === 'form886A' ? 'form_886a_package.zip' : 'complete_protest_package.zip';
       const zipPath = path.join(outputDir, packageName);
       
       // Use the correct format when creating the package
       await packageCreator.createPackage(
-        outputFormat === 'docx' ? docxPath : pdfPath, 
+        requestData.outputFormat === 'docx' ? docxPath : pdfPath, 
         attachments, 
         zipPath, 
-        documentType,
-        outputFormat
+        requestData.documentType,
+        requestData.outputFormat
       );
       
       // 9. Upload to Google Drive if tracking ID is provided
       let driveUrls = null;
-      if (trackingId) {
+      if (requestData.trackingId) {
+        await jobQueue.updateJob(jobId, { 
+          status: 'uploading',
+          progress: 90,
+          message: 'Uploading to Google Drive'
+        });
+        
         try {
-          console.log(`Tracking ID provided: ${trackingId}, uploading to Google Drive...`);
+          console.log(`Tracking ID provided: ${requestData.trackingId}, uploading to Google Drive...`);
           driveUrls = await protestDriveUploader.uploadToGoogleDrive(
-            trackingId,
-            businessName,
+            requestData.trackingId,
+            requestData.businessName,
             pdfPath,
             zipPath,
             docxPath
@@ -234,53 +305,49 @@ router.post('/process-chatgpt', async (req, res) => {
         }
       }
 
-      // 10. Send response with all generated content
-      if (driveUrls) {
-        res.status(200).json({
-          success: true,
-          letter: updatedDocument,
-          conversationContent,
-          outputPath: outputDir,
-          pdfPath,
-          docxPath, // Include docxPath in response
-          attachments,
-          zipPath,
-          packageFilename: path.basename(zipPath),
-          googleDriveLink: driveUrls.folderLink,
-          protestLetterLink: driveUrls.protestLetterLink,
-          zipPackageLink: driveUrls.zipPackageLink,
-          outputFormat: outputFormat // Include the format in response
-        });
-      } else {
-        res.status(200).json({
-          success: true,
-          letter: updatedDocument,
-          conversationContent,
-          outputPath: outputDir,
-          pdfPath,
-          docxPath, // Include docxPath in response
-          attachments,
-          zipPath,
-          packageFilename: path.basename(zipPath),
-          outputFormat: outputFormat // Include the format in response
-        });
-      }
-    } catch (error) {
-      console.error('Error during processing:', error);
+      // 10. Update job with successful result
+      const result = {
+        outputPath: outputDir,
+        letter: updatedDocument,
+        pdfPath: pdfPath,
+        docxPath,
+        attachments,
+        zipPath,
+        packageFilename: path.basename(zipPath)
+      };
       
-      // Send error response
-      res.status(500).json({
-        success: false,
-        message: `Error processing ChatGPT conversation: ${error.message}`
+      // Add Google Drive URLs if available
+      if (driveUrls) {
+        result.googleDriveLink = driveUrls.folderLink;
+        result.protestLetterLink = driveUrls.protestLetterLink;
+        result.zipPackageLink = driveUrls.zipPackageLink;
+      }
+      
+      await jobQueue.updateJob(jobId, { 
+        status: 'completed',
+        progress: 100,
+        message: 'Document generation complete',
+        result
+      });
+      
+      console.log(`Job ${jobId} completed successfully`);
+
+    } catch (processingError) {
+      console.error('Error during document generation:', processingError);
+      
+      // Update job with error
+      await jobQueue.updateJob(jobId, { 
+        status: 'failed',
+        error: `Error processing document: ${processingError.message}`
       });
     }
   } catch (outerError) {
-    console.error('Outer error in route handler:', outerError);
-    res.status(500).json({
-      success: false,
-      message: `Critical error in request processing: ${outerError.message}`
+    console.error('Critical error in job processing:', outerError);
+    await jobQueue.updateJob(jobId, { 
+      status: 'failed',
+      error: `Critical error: ${outerError.message}`
     });
   }
-});
+}
 
 module.exports = router;

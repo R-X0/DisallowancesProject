@@ -16,6 +16,7 @@ const { authenticateUser, adminOnly } = require('./middleware/auth');
 const googleSheetsService = require('./services/googleSheetsService');
 const googleDriveService = require('./services/googleDriveService');
 const { connectToDatabase } = require('./db-connection'); // Import database connection
+const jobQueue = require('./services/jobQueue');
 
 // Load environment variables
 dotenv.config();
@@ -86,6 +87,7 @@ async function createDirectories() {
       path.join(__dirname, 'uploads/temp'),
       path.join(__dirname, 'data/ERC_Disallowances'),
       path.join(__dirname, 'data/ChatGPT_Conversations'),
+      path.join(__dirname, 'data/jobs'), // Add jobs directory
       path.join(__dirname, 'config')
     ];
     
@@ -101,6 +103,16 @@ async function createDirectories() {
 // Initialize services
 async function initializeServices() {
   try {
+    // Initialize job queue
+    await jobQueue.initializeJobsDirectory();
+    console.log('Job queue initialized');
+    
+    // Run a cleanup of old jobs (older than 24 hours)
+    const cleanedJobs = await jobQueue.cleanupOldJobs(24);
+    if (cleanedJobs > 0) {
+      console.log(`Cleaned up ${cleanedJobs} old jobs`);
+    }
+
     // Initialize MongoDB connection
     console.log('Connecting to MongoDB...');
     const mongoConnected = await connectToDatabase();

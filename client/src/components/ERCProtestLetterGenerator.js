@@ -1,6 +1,6 @@
 // client/src/components/ERCProtestLetterGenerator.js
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Box, Button, Paper, Typography, TextField, 
   Divider, Alert, Dialog, DialogTitle,
@@ -11,7 +11,7 @@ import {
   Grid
 } from '@mui/material';
 import { ContentCopy, CheckCircle, Description, Link, FileDownload, SwapHoriz } from '@mui/icons-material';
-import { generateERCProtestLetter } from '../services/api';
+import axios from 'axios';
 
 // Utility function to map NAICS code to business type
 const getNaicsDescription = (naicsCode) => {
@@ -244,7 +244,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
     setSelectedTimePeriod(event.target.value);
   };
 
-  // Function to generate protest letter using our LLM API
+  // Function to generate protest letter using our LLM API - UPDATED FOR ASYNC JOB APPROACH
   const generateProtestLetter = async () => {
     setGenerating(true);
     setError(null);
@@ -312,62 +312,125 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         customDisallowanceReason: customDisallowanceReason,
         outputFormat: outputFormat
       };
-        
+      
       // Update processing steps
+      setProcessingMessage('Starting document generation job...');
+      setProcessingStep(1);
+      
+      // Start the job
+      const response = await axios.post('/api/erc-protest/chatgpt/process-chatgpt', letterData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.data.success || !response.data.jobId) {
+        throw new Error(response.data.message || 'Failed to start document generation');
+      }
+      
+      const jobId = response.data.jobId;
+      console.log(`Started job with ID: ${jobId}`);
+      
       setProcessingMessage('Connecting to ChatGPT conversation...');
       setProcessingStep(1);
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setProcessingMessage('Extracting COVID-19 orders and research data...');
-      setProcessingStep(2);
+      // Set up polling for job status
+      let checkCount = 0;
+      const maxChecks = 120; // 10 minutes max (with 5-second intervals)
       
-      // Call the API to generate the letter
-      const response = await generateERCProtestLetter(letterData);
-      
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setProcessingMessage(documentType === 'protestLetter' ? 
-        'Generating protest letter...' : 
-        'Generating Form 886-A document...');
-      setProcessingStep(3);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setProcessingMessage('Converting referenced links to PDF attachments...');
-      setProcessingStep(4);
-      
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setProcessingMessage('Creating complete package...');
-      setProcessingStep(5);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (response.success) {
-        setProtestLetter(response.letter);
-        
-        // Create package data object
-        const newPackageData = {
-          pdfPath: response.pdfPath,
-          docxPath: response.docxPath, // New field for Word document
-          zipPath: response.zipPath,
-          attachments: response.attachments || [],
-          packageFilename: response.packageFilename || 'complete_package.zip',
-          quarter: selectedTimePeriod,
-          outputFormat: outputFormat
-        };
-        
-        console.log('Setting package data:', newPackageData);
-        setPackageData(newPackageData);
-        
-        // Immediately call the onGenerated callback with the package data
-        console.log('Calling onGenerated with package data:', newPackageData);
-        if (onGenerated) {
-          onGenerated(newPackageData);
+      const pollJobStatus = async () => {
+        try {
+          checkCount++;
+          if (checkCount > maxChecks) {
+            setProcessing(false);
+            setError('Document generation is taking too long. Please check the status page later.');
+            return;
+          }
+          
+          const statusResponse = await axios.get(`/api/erc-protest/chatgpt/job-status/${jobId}`);
+          
+          if (!statusResponse.data.success) {
+            throw new Error(statusResponse.data.message || 'Failed to check job status');
+          }
+          
+          const job = statusResponse.data.job;
+          console.log(`Job status: ${job.status}, Progress: ${job.progress || 0}%`);
+          
+          // Update UI based on job status
+          if (job.status === 'scraping') {
+            setProcessingMessage('Extracting COVID-19 orders and research data...');
+            setProcessingStep(2);
+          } else if (job.status === 'preparing_document' || job.status === 'generating_document') {
+            setProcessingMessage(documentType === 'protestLetter' ? 
+              'Generating protest letter...' : 
+              'Generating Form 886-A document...');
+            setProcessingStep(3);
+          } else if (job.status === 'extracting_urls') {
+            setProcessingMessage('Converting referenced links to PDF attachments...');
+            setProcessingStep(4);
+          } else if (job.status === 'generating_pdf' || job.status === 'generating_docx' || 
+                    job.status === 'creating_package' || job.status === 'uploading') {
+            setProcessingMessage('Creating complete package...');
+            setProcessingStep(5);
+          } else if (job.status === 'completed') {
+            // Job completed successfully
+            console.log('Job completed successfully:', job.result);
+            
+            setProtestLetter(job.result.letter);
+            
+            // Create package data object
+            const newPackageData = {
+              pdfPath: job.result.pdfPath,
+              docxPath: job.result.docxPath,
+              zipPath: job.result.zipPath,
+              attachments: job.result.attachments,
+              packageFilename: job.result.packageFilename || 'complete_package.zip',
+              quarter: selectedTimePeriod,
+              outputFormat: outputFormat,
+              // Add Google Drive links if available
+              googleDriveLink: job.result.googleDriveLink,
+              protestLetterLink: job.result.protestLetterLink,
+              zipPackageLink: job.result.zipPackageLink
+            };
+            
+            console.log('Setting package data:', newPackageData);
+            setPackageData(newPackageData);
+            
+            // Immediately call the onGenerated callback with the package data
+            console.log('Calling onGenerated with package data:', newPackageData);
+            if (onGenerated) {
+              onGenerated(newPackageData);
+            }
+            
+            setDialogOpen(true);
+            setProcessing(false);
+            return; // Stop polling
+          } else if (job.status === 'failed') {
+            // Job failed
+            setProcessing(false);
+            setError(`Failed to generate document: ${job.error}`);
+            return; // Stop polling
+          }
+          
+          // Continue polling if job is still in progress
+          setTimeout(pollJobStatus, 5000); // Check every 5 seconds
+        } catch (error) {
+          console.error('Error checking job status:', error);
+          
+          // Decide whether to continue polling or show error
+          if (checkCount < maxChecks) {
+            console.log(`Poll attempt ${checkCount} failed, retrying in 10 seconds...`);
+            setTimeout(pollJobStatus, 10000); // Longer wait on error
+          } else {
+            setProcessing(false);
+            setError(`Error checking job status: ${error.message}`);
+          }
         }
-        
-        setDialogOpen(true);
-        setProcessing(false);
-      } else {
-        throw new Error(response.message || 'Failed to generate document');
-      }
+      };
+      
+      // Start polling
+      setTimeout(pollJobStatus, 3000);
+      
     } catch (error) {
       console.error('Error generating document:', error);
       setProcessing(false);
