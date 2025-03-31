@@ -219,8 +219,9 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [selectedTimePeriod, setSelectedTimePeriod] = useState(''); // For selecting which period to focus on for protest letter
   const [approachFocus, setApproachFocus] = useState('governmentOrders'); // Default approach
   const [pollInterval, setPollInterval] = useState(null); // For tracking the job status polling interval
-  const [jobId, setJobId] = useState(null); // Store the job ID for status checks
-  const [maxPollingTime, setMaxPollingTime] = useState(300000); // 5 minutes in milliseconds
+  // Fix: Remove unused variables from state (still keeping the variables themselves for reference)
+  // const [jobId, setJobId] = useState(null); // Store the job ID for status checks
+  // const [maxPollingTime, setMaxPollingTime] = useState(300000); // 5 minutes in milliseconds
   const [pollingStartTime, setPollingStartTime] = useState(null);
   
   // New state variables for the requested features
@@ -263,6 +264,9 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
     if (!jobId) return;
     
     const currentTime = new Date().getTime();
+    
+    // Define the max polling time constant here instead of using state
+    const maxPollingTime = 300000; // 5 minutes in milliseconds
     
     // Check if we've exceeded the max polling time
     if (pollingStartTime && (currentTime - pollingStartTime > maxPollingTime)) {
@@ -372,7 +376,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
       // Don't stop polling on network errors - just skip this attempt
       console.log("Will retry polling on next interval");
     }
-  }, [documentType, onGenerated, outputFormat, pollInterval, pollingStartTime, maxPollingTime, selectedTimePeriod]);
+  }, [documentType, onGenerated, outputFormat, pollInterval, pollingStartTime, selectedTimePeriod]);
 
   // Function to generate protest letter using our LLM API - UPDATED FOR ASYNC JOB APPROACH
   const generateProtestLetter = async () => {
@@ -466,7 +470,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
       
       const newJobId = response.data.jobId;
       console.log(`Started job with ID: ${newJobId}`);
-      setJobId(newJobId);
+      // setJobId(newJobId); // We'll just use the local variable instead of state
       
       setProcessingMessage('Connecting to ChatGPT conversation...');
       setProcessingStep(1);
