@@ -62,9 +62,8 @@ export const generateERCProtestLetter = async (letterData) => {
         headers: {
           'Content-Type': 'application/json'
         },
-        // Increase timeout for the scraping process which may take time
-        // This is extra important now that we're generating PDFs for each link
-        timeout: 300000 // 5 minutes
+        // INCREASED TIMEOUT - Giving much more time for PDF generation
+        timeout: 1200000 // 20 minutes instead of 5 minutes
       }
     );
     

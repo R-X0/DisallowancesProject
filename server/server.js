@@ -141,9 +141,15 @@ if (isProduction) {
   });
 }
 
-// Start the server
-app.listen(PORT, async () => {
+// UPDATED: Start the server with increased timeout
+const server = app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT} in ${isProduction ? 'production' : 'development'} mode`);
+  
+  // Set timeout to 30 minutes (30 * 60 * 1000 ms)
+  server.timeout = 1800000;
+  
+  console.log(`Server timeout set to ${server.timeout}ms (${server.timeout/60000} minutes)`);
+  
   await createDirectories();
   await initializeServices();
 });
