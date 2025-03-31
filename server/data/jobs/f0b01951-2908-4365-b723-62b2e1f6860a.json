@@ -1,0 +1,225 @@
+{
+  "id": "f0b01951-2908-4365-b723-62b2e1f6860a",
+  "status": "completed",
+  "created": "2025-03-31T23:05:06.586Z",
+  "data": {
+    "businessName": "Business #17434571",
+    "ein": "00-0000000",
+    "location": "Unknown Location, NY",
+    "timePeriod": "Quarter 2",
+    "allTimePeriods": [
+      "Quarter 2"
+    ],
+    "chatGptLink": "https://chatgpt.com/share/67c47ecf-ee6c-8003-87e8-b2110158e442",
+    "businessType": "law firm",
+    "trackingId": "1743457107406",
+    "documentType": "protestLetter",
+    "q1_2019": "542300",
+    "q2_2019": "432600",
+    "q3_2019": "345160",
+    "q4_2019": "",
+    "q1_2020": "",
+    "q2_2020": "",
+    "q3_2020": "",
+    "q4_2020": "",
+    "q1_2021": "430000",
+    "q2_2021": "300000",
+    "q3_2021": "295000",
+    "revenueReductionInfo": "",
+    "governmentOrdersInfo": "This business was affected by government orders during Quarter 2. Please provide details about specific orders that caused a full or partial suspension of operations.",
+    "revenueDeclines": [
+      {
+        "quarter": "Q1 2021",
+        "baseQuarter": "Q1 2019",
+        "decline": "20.71",
+        "percentDecline": "20.71%",
+        "qualifies": true
+      },
+      {
+        "quarter": "Q2 2021",
+        "baseQuarter": "Q2 2019",
+        "decline": "30.65",
+        "percentDecline": "30.65%",
+        "qualifies": true
+      },
+      {
+        "quarter": "Q3 2021",
+        "baseQuarter": "Q3 2019",
+        "decline": "14.53",
+        "percentDecline": "14.53%",
+        "qualifies": false
+      }
+    ],
+    "qualifyingQuarters": [
+      "Q1 2021",
+      "Q2 2021"
+    ],
+    "approachFocus": "revenueReduction",
+    "includeRevenueSection": true,
+    "disallowanceReason": "no_orders",
+    "customDisallowanceReason": "",
+    "outputFormat": "pdf"
+  },
+  "result": {
+    "outputPath": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a",
+    "letter": "3/31/2025\nInternal Revenue Service\nOgden, UT 84201\n\nEIN: 00-0000000  \nTaxpayer Name: Business #17434571  \nRE: Formal Protest to Letter 105 – ERC Disallowance for Quarter 2  \nTax Period: Quarter 2  \nClaim Amount: [As Reported]\n\nDear Appeals Officer,\n\nWe write in response to the IRS notice disallowing Business #17434571’s Employee Retention Credit (ERC) claim for Quarter 2. The disallowance was based on the assertion that “no government orders were in effect” during the applicable period that caused a full or partial suspension of our operations. We respectfully disagree with this determination. As detailed below, multiple government orders were active during Quarter 2 that imposed significant restrictions on our business operations, thereby causing a partial suspension of normal activities for our law firm.\n\nIn support of our position, we submit below a detailed timeline of the relevant government orders that were in effect during Quarter 2, followed by comprehensive quarterly revenue data demonstrating the revenue decline that also qualifies for ERC.\n\nTimeline of COVID-19 Government Orders Active in Quarter 2\n\n• Order Name: Executive Order N‑33‑20 – Statewide “Stay‑at‑Home” Order  \n• Order Number: N‑33‑20  \n• Date Enacted: 03/19/2020  \n• Date Rescinded: 06/15/2021  \n• Order Summary: This order mandated that all Californians remain at home except for activities deemed essential, resulting in the mandatory closure of non‐essential businesses and a significant reduction in in‐person operations.  \n• Impact on Quarter: This order directly impacted our operations in Quarter 2 by forcing our law firm to limit in‐person consultations and routine activities, thereby causing a partial suspension of our normal business operations.\n\n• Order Name: State of Emergency Proclamation – California COVID‑19 State of Emergency  \n• Order Number: N/A (Governor’s Proclamation)  \n• Date Enacted: 03/04/2020  \n• Date Rescinded: Still in effect  \n• Order Summary: This proclamation declared a state of emergency to address the spread of COVID‑19 and empowered state authorities to issue orders that limited or suspended normal business operations.  \n• Impact on Quarter: The proclamation provided the legal basis for subsequent restrictive measures that affected our law firm during Quarter 2, contributing to the partial suspension of our typical operational processes, including face-to-face client interactions and in-office legal work.\n\nIn addition to the government orders discussed above, we are submitting quarterly revenue data that demonstrates the revenue reductions for Business #17434571. The following table presents the quarterly revenue amounts and percentage changes for comparison purposes.\n\n---------------------------------------------------------------------------\nQuarter         | 2019 Revenue      | Comparison Revenue | Dollar Decline     | % Decline  | Qualifies\n---------------------------------------------------------------------------\nQ1 2019-2021   | $542,300.00       | $430,000.00        | $112,300.00        | 20.71%     | YES  \nQ2 2019-2021   | $432,600.00       | $300,000.00        | $132,600.00        | 30.65%     | YES  \nQ3 2019-2021   | $345,160.00       | $295,000.00        |  $50,160.00        | 14.53%     | NO  \n---------------------------------------------------------------------------\n\nAs shown in the revenue table above, the quarters marked “YES” in the QUALIFIES column meet the ERC threshold for revenue decline. These revenue reductions, combined with the impact of the government orders described earlier, provide strong substantiation for our ERC claim.\n\nIn conclusion, Business #17434571 was directly affected by government orders during Quarter 2 that resulted in the partial suspension of our normal operations. Additionally, the significant revenue declines recorded in Q2 support our ERC eligibility. We respectfully request that the IRS reconsider and reverse the disallowance of our ERC claim for Quarter 2.\n\nThank you for your prompt and fair reconsideration of our claim. Please do not hesitate to contact us should you require any further information or clarification regarding the documentation provided.\n\nAttestation: “Under penalties of perjury, I declare that I submitted the protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated in the protest and accompanying documents is true, correct, and complete.”\n\nSincerely,\n\n[Authorized Representative Signature]  \n[Name of Authorized Representative]  \nAuthorized Representative for Business #17434571\n\nEnclosures:  \n• Copies of Government Orders (as formatted above)  \n• Detailed Revenue Data Table  \n• Supporting Documentation of ERC Calculations  \n• Relevant IRS Guidance Documents",
+    "pdfPath": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\protest_letter.pdf",
+    "docxPath": null,
+    "attachments": [
+      {
+        "originalUrl": "https://bidenwhitehouse.archives.gov/briefing-room/presidential-actions/2021/02/24/notice-on-the-continuation-of-the-national-emergency-concerning-the-coronavirus-disease-2019-covid-19-pandemic/#:~:text=On%20March%2013%2C%202020%2C%20by",
+        "filename": "attachment_1_https___bidenwhitehouse_archiv.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_1_https___bidenwhitehouse_archiv.pdf"
+      },
+      {
+        "originalUrl": "https://www.gov.ca.gov/2020/03/04/governor-newsom-declares-state-of-emergency-to-help-state-prepare-for-broader-spread-of-covid-19/#:~:text=SACRAMENTO%20%E2%80%93%20As%20part%20of",
+        "filename": "attachment_2_https___www_gov_ca_gov_2020_03.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_2_https___www_gov_ca_gov_2020_03.pdf"
+      },
+      {
+        "originalUrl": "https://www.gov.ca.gov/wp-content/uploads/2020/03/3.19.20-attested-EO-N-33-20-COVID-19-HEALTH-ORDER.pdf#:~:text=March%2019%2C%202020%20To%20protect",
+        "filename": "attachment_3_https___www_gov_ca_gov_wp_cont.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_3_https___www_gov_ca_gov_wp_cont.pdf"
+      },
+      {
+        "originalUrl": "https://www.cdph.ca.gov/Programs/CID/DCDC/CDPH%20Document%20Library/COVID-19/8-28-20_Order-Plan-Reducing-COVID19-Adjusting-Permitted-Sectors-Signed.pdf#:~:text=with%20Executive%20Order%20N",
+        "filename": "attachment_4_https___www_cdph_ca_gov_Progra.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_4_https___www_cdph_ca_gov_Progra.pdf"
+      },
+      {
+        "originalUrl": "https://www.cdph.ca.gov/Programs/CID/DCDC/CDPH%20Document%20Library/COVID-19/8-28-20_Order-Plan-Reducing-COVID19-Adjusting-Permitted-Sectors-Signed.pdf#:~:text=to%20the%20end%20of%20the",
+        "filename": "attachment_5_https___www_cdph_ca_gov_Progra.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_5_https___www_cdph_ca_gov_Progra.pdf"
+      },
+      {
+        "originalUrl": "https://www.gov.ca.gov/2020/08/28/governor-newsom-unveils-blueprint-for-a-safer-economy-a-statewide-stringent-and-slow-plan-for-living-with-covid-19/#:~:text=SACRAMENTO%20%E2%80%93%20Governor%20Gavin%20Newsom",
+        "filename": "attachment_6_https___www_gov_ca_gov_2020_08.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_6_https___www_gov_ca_gov_2020_08.pdf"
+      },
+      {
+        "originalUrl": "https://www.cityofmontclair.org/december-5-2020-regional-stay-at-home-order/#:~:text=Late%20Friday%2C%20December%204%2C%202020%2C",
+        "filename": "attachment_7_https___www_cityofmontclair_or.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_7_https___www_cityofmontclair_or.pdf"
+      },
+      {
+        "originalUrl": "https://www.gov.ca.gov/2021/06/11/as-california-fully-reopens-governor-newsom-announces-plans-to-lift-pandemic-executive-orders/#:~:text=SACRAMENTO%20%E2%80%93%20Governor%20Gavin%20Newsom",
+        "filename": "attachment_8_https___www_gov_ca_gov_2021_06.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_8_https___www_gov_ca_gov_2021_06.pdf"
+      },
+      {
+        "originalUrl": "https://cms7files.revize.com/camarilloca/Departments/Community%20Development/Applications/Reso%202020-63.pdf#:~:text=spread%20of%20COVID",
+        "filename": "attachment_9_https___cms7files_revize_com_c.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_9_https___cms7files_revize_com_c.pdf"
+      },
+      {
+        "originalUrl": "https://aagla.org/wp-content/uploads/2020/06/extension-or-the-ordinance.pdf#:~:text=7",
+        "filename": "attachment_10_https___aagla_org_wp_content_u.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_10_https___aagla_org_wp_content_u.pdf"
+      },
+      {
+        "originalUrl": "https://aagla.org/wp-content/uploads/2020/06/extension-or-the-ordinance.pdf)",
+        "filename": "attachment_11_https___aagla_org_wp_content_u.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_11_https___aagla_org_wp_content_u.pdf"
+      },
+      {
+        "originalUrl": "https://vcportal.ventura.org/covid19/docs/VC_Roadmap_to_Reopening_rev052120f.pdf#:~:text=%E2%80%A2%20March%2031%2C%202020%20%E2%80%93",
+        "filename": "attachment_12_https___vcportal_ventura_org_c.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_12_https___vcportal_ventura_org_c.pdf"
+      },
+      {
+        "originalUrl": "https://cms7files.revize.com/camarilloca/Departments/Community%20Development/Applications/Reso%202020-63.pdf#:~:text=to%20help%20licensees%20with%20economic",
+        "filename": "attachment_13_https___cms7files_revize_com_c.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_13_https___cms7files_revize_com_c.pdf"
+      },
+      {
+        "originalUrl": "https://aagla.org/wp-content/uploads/2020/06/extension-or-the-ordinance.pdf",
+        "filename": "attachment_14_https___aagla_org_wp_content_u.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_14_https___aagla_org_wp_content_u.pdf"
+      },
+      {
+        "originalUrl": "https://www.portofhueneme.org/coronavirus-update/#:~:text=May%2021%2C%202020%20%E2%80%93%20On",
+        "filename": "attachment_15_https___www_portofhueneme_org_.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_15_https___www_portofhueneme_org_.pdf"
+      },
+      {
+        "originalUrl": "https://abc7.com/ventura-county-beaches-july-4-2020-4th-of-weekend-open-for/6286107/#:~:text=Ventura%20County%20beaches%20to%20close",
+        "filename": "attachment_16_https___abc7_com_ventura_count.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_16_https___abc7_com_ventura_count.pdf"
+      },
+      {
+        "originalUrl": "https://vcportal.ventura.org/CEO/VCNC/VC_Public_Health_Officer_Order_10-06-2020.pdf#:~:text=OFFICER%20",
+        "filename": "attachment_17_https___vcportal_ventura_org_C.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_17_https___vcportal_ventura_org_C.pdf"
+      },
+      {
+        "originalUrl": "https://vcportal.ventura.org/CEO/VCNC/VC_Public_Health_Officer_Order_10-06-2020.pdf#:~:text=one%20based%20on%20a%20monitoring",
+        "filename": "attachment_18_https___vcportal_ventura_org_C.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_18_https___vcportal_ventura_org_C.pdf"
+      },
+      {
+        "originalUrl": "https://vcportal.ventura.org/covid19/docs/VC_Roadmap_to_Reopening_rev052120f.pdf#:~:text=%E2%80%A2%20May%2012%2C%202020%20%E2%80%93",
+        "filename": "attachment_19_https___vcportal_ventura_org_c.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_19_https___vcportal_ventura_org_c.pdf"
+      },
+      {
+        "originalUrl": "https://members.aagla.org/news/temporary-eviction-moratoriums--novel-coronavirus-covid-19#:~:text=",
+        "filename": "attachment_20_https___members_aagla_org_news.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_20_https___members_aagla_org_news.pdf"
+      },
+      {
+        "originalUrl": "https://cms7files.revize.com/camarilloca/Departments/Community%20Development/Applications/Reso%202020-63.pdf#:~:text=capacity%20as%20the%20City%20of",
+        "filename": "attachment_21_https___cms7files_revize_com_c.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_21_https___cms7files_revize_com_c.pdf"
+      },
+      {
+        "originalUrl": "https://members.aagla.org/news/temporary-eviction-moratoriums--novel-coronavirus-covid-19#:~:text=Camarillo)",
+        "filename": "attachment_22_https___members_aagla_org_news.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_22_https___members_aagla_org_news.pdf"
+      },
+      {
+        "originalUrl": "https://gov.ca.gov",
+        "filename": "attachment_23_https___gov_ca_gov.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_23_https___gov_ca_gov.pdf"
+      },
+      {
+        "originalUrl": "https://cdph.ca.gov",
+        "filename": "attachment_24_https___cdph_ca_gov.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_24_https___cdph_ca_gov.pdf"
+      },
+      {
+        "originalUrl": "https://www.gov.ca.gov/wp-content/uploads/2021/06/6.11.21-EO-N-07-21-signed.pdf",
+        "filename": "attachment_25_https___www_gov_ca_gov_wp_cont.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_25_https___www_gov_ca_gov_wp_cont.pdf"
+      },
+      {
+        "originalUrl": "https://www.cdph.ca.gov/Programs/CID/DCDC/Pages/COVID-19/Order-of-the-State-Public-Health-Officer-Beyond-Blueprint-6-11-2021.aspx)",
+        "filename": "attachment_26_https___www_cdph_ca_gov_Progra.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_26_https___www_cdph_ca_gov_Progra.pdf"
+      },
+      {
+        "originalUrl": "https://vcportal.ventura.org/covid19/docs/VC_Roadmap_to_Reopening_rev052120f.pdf",
+        "filename": "attachment_27_https___vcportal_ventura_org_c.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_27_https___vcportal_ventura_org_c.pdf"
+      },
+      {
+        "originalUrl": "https://cms7files.revize.com/camarilloca/Departments/Community%20Development/Applications/Reso%202020-63.pdf",
+        "filename": "attachment_28_https___cms7files_revize_com_c.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_28_https___cms7files_revize_com_c.pdf"
+      },
+      {
+        "originalUrl": "https://members.aagla.org/news/temporary-eviction-moratoriums--novel-coronavirus-covid-19#:~:text=Camarillo",
+        "filename": "attachment_29_https___members_aagla_org_news.pdf",
+        "path": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\attachment_29_https___members_aagla_org_news.pdf"
+      }
+    ],
+    "zipPath": "C:\\Users\\Bona\\Desktop\\Current Mike Projects\\NewestDisallowance\\data\\ChatGPT_Conversations\\c152f62a\\complete_protest_package.zip",
+    "packageFilename": "complete_protest_package.zip",
+    "googleDriveLink": "https://drive.google.com/drive/folders/1hT1q8AR2u9lbaKvHdAek1tRDyvse6Luf",
+    "protestLetterLink": "https://drive.google.com/file/d/1TO9L8eih6XPFDc84hG7UIk11vr5cAMJd/view?usp=drivesdk",
+    "zipPackageLink": "https://drive.google.com/file/d/1G556YS1nKJLotiHY5iNLmW9jUrxZ8sJH/view?usp=drivesdk"
+  },
+  "error": null,
+  "updated": "2025-03-31T23:10:38.616Z",
+  "progress": 100,
+  "message": "Document generation complete"
+}
