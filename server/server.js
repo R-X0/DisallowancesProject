@@ -1,4 +1,4 @@
-// server/server.js (updated with reduced logging)
+// server/server.js (updated with job handling improvements)
 
 const express = require('express');
 const path = require('path');
@@ -48,9 +48,9 @@ app.use(helmet({
 }));
 app.use(cors());
 
-// Body parser middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parser middleware with increased limit for large requests
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // MODIFIED: Completely silent logging for MongoDB queue and frequent endpoints
 app.use((req, res, next) => {
@@ -112,6 +112,12 @@ async function initializeServices() {
     if (cleanedJobs > 0) {
       console.log(`Cleaned up ${cleanedJobs} old jobs`);
     }
+    
+    // Recover any stalled jobs
+    const recoveredJobs = await jobQueue.recoverStalledJobs(30); // 30 minutes stalled threshold
+    if (recoveredJobs > 0) {
+      console.log(`Recovered ${recoveredJobs} stalled jobs`);
+    }
 
     // Initialize MongoDB connection
     console.log('Connecting to MongoDB...');
@@ -124,6 +130,17 @@ async function initializeServices() {
     await googleDriveService.initialize();
     
     console.log('All services initialized successfully');
+    
+    // Set up periodic job queue maintenance
+    setInterval(async () => {
+      try {
+        await jobQueue.cleanupOldJobs(24);
+        await jobQueue.recoverStalledJobs(30);
+      } catch (error) {
+        console.error('Error during scheduled job queue maintenance:', error);
+      }
+    }, 30 * 60 * 1000); // Run every 30 minutes
+    
   } catch (error) {
     console.error('Failed to initialize services:', error);
     console.log('The app will continue, but some services may not work');
@@ -157,8 +174,12 @@ if (isProduction) {
 const server = app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT} in ${isProduction ? 'production' : 'development'} mode`);
   
-  // Set timeout to 30 minutes (30 * 60 * 1000 ms)
+  // Set timeout to 30 minutes (30 * 60 * 1000 ms) for long-running connections
   server.timeout = 1800000;
+  
+  // Also increase header and body parser timeouts
+  server.headersTimeout = 1805000; // 30 min + 5 sec
+  server.keepAliveTimeout = 1810000; // 30 min + 10 sec
   
   console.log(`Server timeout set to ${server.timeout}ms (${server.timeout/60000} minutes)`);
   

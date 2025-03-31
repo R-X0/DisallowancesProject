@@ -41,7 +41,7 @@ router.post('/generate-prompt', async (req, res) => {
   }
 });
 
-// Main process to handle ChatGPT conversation - now using job queue
+// Main process to handle ChatGPT conversation - with improved job queue handling
 router.post('/process-chatgpt', async (req, res) => {
   try {
     const {
@@ -93,16 +93,34 @@ router.post('/process-chatgpt', async (req, res) => {
   }
 });
 
-// Add a new endpoint to check job status
+// Add a new endpoint to check job status with improved error handling
 router.get('/job-status/:jobId', async (req, res) => {
   try {
     const { jobId } = req.params;
-    const job = await jobQueue.getJob(jobId);
+    
+    // Add request timeout handling
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timed out')), 30000);
+    });
+    
+    // Wrap the job fetch in a promise to race with timeout
+    const fetchJobPromise = new Promise(async (resolve) => {
+      try {
+        const job = await jobQueue.getJob(jobId);
+        resolve(job);
+      } catch (err) {
+        console.error(`Error fetching job ${jobId}:`, err);
+        resolve(null); // Return null instead of rejecting to handle in next block
+      }
+    });
+    
+    // Race the job fetch with timeout
+    const job = await Promise.race([fetchJobPromise, timeoutPromise]);
     
     if (!job) {
       return res.status(404).json({
         success: false,
-        message: 'Job not found'
+        message: 'Job not found or access error'
       });
     }
     
@@ -121,9 +139,15 @@ router.get('/job-status/:jobId', async (req, res) => {
     });
   } catch (error) {
     console.error('Error checking job status:', error);
-    res.status(500).json({
+    
+    // Determine if it's a timeout error
+    const isTimeout = error.message === 'Request timed out';
+    
+    res.status(isTimeout ? 504 : 500).json({
       success: false,
-      message: `Error checking job status: ${error.message}`
+      message: isTimeout ? 
+        'Timeout while checking job status. The job is still processing in the background.' :
+        `Error checking job status: ${error.message}`
     });
   }
 });
@@ -132,7 +156,11 @@ router.get('/job-status/:jobId', async (req, res) => {
 async function processJobAsync(jobId, requestData) {
   try {
     // Update job status to processing
-    await jobQueue.updateJob(jobId, { status: 'processing' });
+    await jobQueue.updateJob(jobId, { 
+      status: 'processing',
+      progress: 5,
+      message: 'Starting job processing'
+    });
     
     // Create unique directory for request
     const requestId = uuidv4().substring(0, 8);

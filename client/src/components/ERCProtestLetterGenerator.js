@@ -1,6 +1,6 @@
 // client/src/components/ERCProtestLetterGenerator.js
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Box, Button, Paper, Typography, TextField, 
   Divider, Alert, Dialog, DialogTitle,
@@ -8,7 +8,7 @@ import {
   ButtonGroup, Tooltip,
   Select, MenuItem, FormControl, InputLabel,
   FormControlLabel, Checkbox, RadioGroup, Radio,
-  Grid
+  Grid, CircularProgress, Snackbar, GlobalStyles
 } from '@mui/material';
 import { ContentCopy, CheckCircle, Description, Link, FileDownload, SwapHoriz } from '@mui/icons-material';
 import axios from 'axios';
@@ -218,12 +218,17 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [documentType, setDocumentType] = useState('protestLetter'); // State for toggling document type
   const [selectedTimePeriod, setSelectedTimePeriod] = useState(''); // For selecting which period to focus on for protest letter
   const [approachFocus, setApproachFocus] = useState('governmentOrders'); // Default approach
+  const [pollInterval, setPollInterval] = useState(null); // For tracking the job status polling interval
+  const [jobId, setJobId] = useState(null); // Store the job ID for status checks
+  const [maxPollingTime, setMaxPollingTime] = useState(300000); // 5 minutes in milliseconds
+  const [pollingStartTime, setPollingStartTime] = useState(null);
   
   // New state variables for the requested features
   const [includeRevenueSection, setIncludeRevenueSection] = useState(true);
   const [disallowanceReason, setDisallowanceReason] = useState('no_orders');
   const [outputFormat, setOutputFormat] = useState('pdf');
   const [customDisallowanceReason, setCustomDisallowanceReason] = useState('');
+  const [timeoutWarning, setTimeoutWarning] = useState(false);
 
   // Initialize selected time period when form data changes
   useEffect(() => {
@@ -244,13 +249,143 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
     setSelectedTimePeriod(event.target.value);
   };
 
+  // Clean up interval on unmount
+  useEffect(() => {
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
+  }, [pollInterval]);
+
+  // Function to poll for job status
+  const pollJobStatus = useCallback(async (jobId) => {
+    if (!jobId) return;
+    
+    const currentTime = new Date().getTime();
+    
+    // Check if we've exceeded the max polling time
+    if (pollingStartTime && (currentTime - pollingStartTime > maxPollingTime)) {
+      clearInterval(pollInterval);
+      
+      // Don't reset generating/processing here - this state will show a warning
+      // but continue polling in case the job eventually completes
+      setTimeoutWarning(true);
+      
+      // Continue with reduced frequency polling (every 30 seconds)
+      const newPollInterval = setInterval(() => {
+        console.log("Continuing with background polling after timeout warning...");
+        pollJobStatus(jobId);
+      }, 30000);
+      
+      setPollInterval(newPollInterval);
+      setPollingStartTime(currentTime); // Reset the polling start time
+      return;
+    }
+    
+    try {
+      const response = await axios.get(`/api/erc-protest/chatgpt/job-status/${jobId}`);
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to check job status');
+      }
+      
+      const job = response.data.job;
+      console.log(`Job status: ${job.status}, Progress: ${job.progress || 0}%`);
+      
+      // Update UI based on job status
+      if (job.status === 'scraping') {
+        setProcessingMessage('Extracting COVID-19 orders and research data...');
+        setProcessingStep(2);
+      } else if (job.status === 'preparing_document' || job.status === 'generating_document') {
+        setProcessingMessage(documentType === 'protestLetter' ? 
+          'Generating protest letter...' : 
+          'Generating Form 886-A document...');
+        setProcessingStep(3);
+      } else if (job.status === 'extracting_urls') {
+        setProcessingMessage('Converting referenced links to PDF attachments...');
+        setProcessingStep(4);
+      } else if (job.status === 'generating_pdf' || job.status === 'generating_docx' || 
+                job.status === 'creating_package' || job.status === 'uploading') {
+        setProcessingMessage('Creating complete package...');
+        setProcessingStep(5);
+      } else if (job.status === 'completed') {
+        // Job completed successfully
+        console.log('Job completed successfully:', job.result);
+        
+        // Clear warning if it was shown
+        setTimeoutWarning(false);
+        
+        // Clear polling interval
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          setPollInterval(null);
+        }
+        
+        setProtestLetter(job.result.letter);
+        
+        // Create package data object
+        const newPackageData = {
+          pdfPath: job.result.pdfPath,
+          docxPath: job.result.docxPath,
+          zipPath: job.result.zipPath,
+          attachments: job.result.attachments,
+          packageFilename: job.result.packageFilename || 'complete_package.zip',
+          quarter: selectedTimePeriod,
+          outputFormat: outputFormat,
+          // Add Google Drive links if available
+          googleDriveLink: job.result.googleDriveLink,
+          protestLetterLink: job.result.protestLetterLink,
+          zipPackageLink: job.result.zipPackageLink
+        };
+        
+        console.log('Setting package data:', newPackageData);
+        setPackageData(newPackageData);
+        
+        // Finally, clear loading states since we've completed
+        setGenerating(false);
+        setProcessing(false);
+        
+        // Immediately call the onGenerated callback with the package data
+        console.log('Calling onGenerated with package data:', newPackageData);
+        if (onGenerated) {
+          onGenerated(newPackageData);
+        }
+        
+        // Open the dialog with the result
+        setDialogOpen(true);
+      } else if (job.status === 'failed') {
+        // Job failed
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          setPollInterval(null);
+        }
+        
+        console.error(`Job failed: ${job.error}`);
+        setProcessing(false);
+        setGenerating(false);
+        setError(`Failed to generate document: ${job.error}`);
+      }
+    } catch (error) {
+      console.error('Error checking job status:', error);
+      
+      // Don't stop polling on network errors - just skip this attempt
+      console.log("Will retry polling on next interval");
+    }
+  }, [documentType, onGenerated, outputFormat, pollInterval, pollingStartTime, maxPollingTime, selectedTimePeriod]);
+
   // Function to generate protest letter using our LLM API - UPDATED FOR ASYNC JOB APPROACH
   const generateProtestLetter = async () => {
-    setGenerating(true);
+    // Clear any previous error
     setError(null);
+    setTimeoutWarning(false);
+    
+    // Disable button and show loading state immediately
+    setGenerating(true);
     setProcessing(true);
     setProcessingStep(0);
     setPackageData(null);
+    setProcessingMessage("Initializing document generation...");
     
     try {
       // Get business type based on NAICS code
@@ -321,122 +456,46 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
       const response = await axios.post('/api/erc-protest/chatgpt/process-chatgpt', letterData, {
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        timeout: 60000 // 60 second timeout for the initial request
       });
       
       if (!response.data.success || !response.data.jobId) {
         throw new Error(response.data.message || 'Failed to start document generation');
       }
       
-      const jobId = response.data.jobId;
-      console.log(`Started job with ID: ${jobId}`);
+      const newJobId = response.data.jobId;
+      console.log(`Started job with ID: ${newJobId}`);
+      setJobId(newJobId);
       
       setProcessingMessage('Connecting to ChatGPT conversation...');
       setProcessingStep(1);
       
+      // Start the polling with timestamp for timeout tracking
+      setPollingStartTime(new Date().getTime());
+      
       // Set up polling for job status
-      let checkCount = 0;
-      const maxChecks = 120; // 10 minutes max (with 5-second intervals)
+      const newPollInterval = setInterval(() => {
+        pollJobStatus(newJobId);
+      }, 5000); // Check every 5 seconds
       
-      const pollJobStatus = async () => {
-        try {
-          checkCount++;
-          if (checkCount > maxChecks) {
-            setProcessing(false);
-            setError('Document generation is taking too long. Please check the status page later.');
-            return;
-          }
-          
-          const statusResponse = await axios.get(`/api/erc-protest/chatgpt/job-status/${jobId}`);
-          
-          if (!statusResponse.data.success) {
-            throw new Error(statusResponse.data.message || 'Failed to check job status');
-          }
-          
-          const job = statusResponse.data.job;
-          console.log(`Job status: ${job.status}, Progress: ${job.progress || 0}%`);
-          
-          // Update UI based on job status
-          if (job.status === 'scraping') {
-            setProcessingMessage('Extracting COVID-19 orders and research data...');
-            setProcessingStep(2);
-          } else if (job.status === 'preparing_document' || job.status === 'generating_document') {
-            setProcessingMessage(documentType === 'protestLetter' ? 
-              'Generating protest letter...' : 
-              'Generating Form 886-A document...');
-            setProcessingStep(3);
-          } else if (job.status === 'extracting_urls') {
-            setProcessingMessage('Converting referenced links to PDF attachments...');
-            setProcessingStep(4);
-          } else if (job.status === 'generating_pdf' || job.status === 'generating_docx' || 
-                    job.status === 'creating_package' || job.status === 'uploading') {
-            setProcessingMessage('Creating complete package...');
-            setProcessingStep(5);
-          } else if (job.status === 'completed') {
-            // Job completed successfully
-            console.log('Job completed successfully:', job.result);
-            
-            setProtestLetter(job.result.letter);
-            
-            // Create package data object
-            const newPackageData = {
-              pdfPath: job.result.pdfPath,
-              docxPath: job.result.docxPath,
-              zipPath: job.result.zipPath,
-              attachments: job.result.attachments,
-              packageFilename: job.result.packageFilename || 'complete_package.zip',
-              quarter: selectedTimePeriod,
-              outputFormat: outputFormat,
-              // Add Google Drive links if available
-              googleDriveLink: job.result.googleDriveLink,
-              protestLetterLink: job.result.protestLetterLink,
-              zipPackageLink: job.result.zipPackageLink
-            };
-            
-            console.log('Setting package data:', newPackageData);
-            setPackageData(newPackageData);
-            
-            // Immediately call the onGenerated callback with the package data
-            console.log('Calling onGenerated with package data:', newPackageData);
-            if (onGenerated) {
-              onGenerated(newPackageData);
-            }
-            
-            setDialogOpen(true);
-            setProcessing(false);
-            return; // Stop polling
-          } else if (job.status === 'failed') {
-            // Job failed
-            setProcessing(false);
-            setError(`Failed to generate document: ${job.error}`);
-            return; // Stop polling
-          }
-          
-          // Continue polling if job is still in progress
-          setTimeout(pollJobStatus, 5000); // Check every 5 seconds
-        } catch (error) {
-          console.error('Error checking job status:', error);
-          
-          // Decide whether to continue polling or show error
-          if (checkCount < maxChecks) {
-            console.log(`Poll attempt ${checkCount} failed, retrying in 10 seconds...`);
-            setTimeout(pollJobStatus, 10000); // Longer wait on error
-          } else {
-            setProcessing(false);
-            setError(`Error checking job status: ${error.message}`);
-          }
-        }
-      };
+      setPollInterval(newPollInterval);
       
-      // Start polling
-      setTimeout(pollJobStatus, 3000);
+      // Initial poll to jump-start the process
+      setTimeout(() => {
+        pollJobStatus(newJobId);
+      }, 3000);
       
     } catch (error) {
       console.error('Error generating document:', error);
       setProcessing(false);
-      setError(`Failed to generate document: ${error.message}`);
-    } finally {
       setGenerating(false);
+      setError(`Failed to generate document: ${error.message}`);
+      
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        setPollInterval(null);
+      }
     }
   };
   
@@ -522,334 +581,405 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const hasQualifyingQuarters = qualifyingQuarters.length > 0;
   
   return (
-    <Box mt={3}>
-      <Paper elevation={3} sx={{ p: 3 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-          <Typography variant="h6" gutterBottom>
-            Generate ERC Documentation
-          </Typography>
-          <ButtonGroup variant="contained" aria-label="document type toggle">
-            <Tooltip title="Generate a formal protest letter to the IRS">
-              <Button 
-                color={documentType === 'protestLetter' ? 'primary' : 'inherit'}
-                onClick={() => setDocumentType('protestLetter')}
-              >
-                Protest Letter
-              </Button>
-            </Tooltip>
-            <Tooltip title="Generate a Form 886-A substantiation document">
-              <Button 
-                color={documentType === 'form886A' ? 'primary' : 'inherit'}
-                onClick={() => setDocumentType('form886A')}
-                startIcon={<SwapHoriz />}
-              >
-                Form 886-A
-              </Button>
-            </Tooltip>
-          </ButtonGroup>
-        </Box>
-        
-        <Divider sx={{ mb: 2 }} />
-        
-        <Typography variant="body2" color="text.secondary" mb={2}>
-          {documentType === 'protestLetter' 
-            ? 'Generate a customized protest letter for your ERC claim using your ChatGPT research.'
-            : 'Generate a Form 886-A document with Issue, Facts, Law, Argument, and Conclusion sections for enhanced substantiation.'}
-        </Typography>
-        
-        {/* Display revenue approach info if relevant */}
-        {hasQualifyingQuarters && (
-          <Box mb={3} p={2} bgcolor="info.lighter" borderRadius={1}>
-            <Typography variant="subtitle2" gutterBottom>
-              <strong>{approachFocus === 'revenueReduction' ? 'Revenue Reduction' : 'Government Orders'} Approach Detected</strong>
+    <>
+      {/* Add CSS keyframes for the button animation */}
+      <GlobalStyles styles={`
+        @keyframes pulse {
+          0% {
+            box-shadow: 0 0 0 0 rgba(25, 118, 210, 0.4);
+          }
+          70% {
+            box-shadow: 0 0 0 10px rgba(25, 118, 210, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(25, 118, 210, 0);
+          }
+        }
+        button:disabled {
+          cursor: not-allowed !important;
+        }
+      `} />
+      
+      <Box mt={3}>
+        <Paper elevation={3} sx={{ p: 3 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Typography variant="h6" gutterBottom>
+              Generate ERC Documentation
             </Typography>
-            <Typography variant="body2">
-              Your data shows qualifying revenue reductions in the following quarters: {qualifyingQuarters.join(', ')}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" mt={1}>
-              This revenue reduction information will be prominently featured in your generated document as the primary basis for ERC qualification.
-            </Typography>
-          </Box>
-        )}
-
-        <Grid container spacing={2}>
-          {/* Time Period Selector (only show for Protest Letter type) */}
-          {hasTimePeriods && documentType === 'protestLetter' && (
-            <Grid item xs={12}>
-              <FormControl fullWidth size="small">
-                <InputLabel id="select-protest-period-label">Select Quarter for Protest Letter</InputLabel>
-                <Select
-                  labelId="select-protest-period-label"
-                  id="select-protest-period"
-                  value={selectedTimePeriod}
-                  onChange={handleTimePeriodChange}
-                  label="Select Quarter for Protest Letter"
+            <ButtonGroup variant="contained" aria-label="document type toggle">
+              <Tooltip title="Generate a formal protest letter to the IRS">
+                <Button 
+                  color={documentType === 'protestLetter' ? 'primary' : 'inherit'}
+                  onClick={() => setDocumentType('protestLetter')}
                 >
-                  {formData.timePeriods.map((period) => (
-                    <MenuItem key={period} value={period}>{period}</MenuItem>
+                  Protest Letter
+                </Button>
+              </Tooltip>
+              <Tooltip title="Generate a Form 886-A substantiation document">
+                <Button 
+                  color={documentType === 'form886A' ? 'primary' : 'inherit'}
+                  onClick={() => setDocumentType('form886A')}
+                  startIcon={<SwapHoriz />}
+                >
+                  Form 886-A
+                </Button>
+              </Tooltip>
+            </ButtonGroup>
+          </Box>
+          
+          <Divider sx={{ mb: 2 }} />
+          
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            {documentType === 'protestLetter' 
+              ? 'Generate a customized protest letter for your ERC claim using your ChatGPT research.'
+              : 'Generate a Form 886-A document with Issue, Facts, Law, Argument, and Conclusion sections for enhanced substantiation.'}
+          </Typography>
+          
+          {/* Display revenue approach info if relevant */}
+          {hasQualifyingQuarters && (
+            <Box mb={3} p={2} bgcolor="info.lighter" borderRadius={1}>
+              <Typography variant="subtitle2" gutterBottom>
+                <strong>{approachFocus === 'revenueReduction' ? 'Revenue Reduction' : 'Government Orders'} Approach Detected</strong>
+              </Typography>
+              <Typography variant="body2">
+                Your data shows qualifying revenue reductions in the following quarters: {qualifyingQuarters.join(', ')}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" mt={1}>
+                This revenue reduction information will be prominently featured in your generated document as the primary basis for ERC qualification.
+              </Typography>
+            </Box>
+          )}
+
+          <Grid container spacing={2}>
+            {/* Time Period Selector (only show for Protest Letter type) */}
+            {hasTimePeriods && documentType === 'protestLetter' && (
+              <Grid item xs={12}>
+                <FormControl fullWidth size="small">
+                  <InputLabel id="select-protest-period-label">Select Quarter for Protest Letter</InputLabel>
+                  <Select
+                    labelId="select-protest-period-label"
+                    id="select-protest-period"
+                    value={selectedTimePeriod}
+                    onChange={handleTimePeriodChange}
+                    label="Select Quarter for Protest Letter"
+                    disabled={generating}
+                  >
+                    {formData.timePeriods.map((period) => (
+                      <MenuItem key={period} value={period}>{period}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+                  {documentType === 'protestLetter' 
+                    ? 'Select a specific quarter for the protest letter. Each quarter typically requires a separate protest letter.' 
+                    : 'Form 886-A documents will include all selected quarters.'}
+                </Typography>
+              </Grid>
+            )}
+
+            {/* ChatGPT Link Input */}
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="ChatGPT Conversation Link"
+                variant="outlined"
+                value={chatGptLink}
+                onChange={(e) => setChatGptLink(e.target.value)}
+                placeholder="https://chat.openai.com/c/..."
+                error={chatGptLink !== '' && !validateChatGptLink(chatGptLink)}
+                helperText={chatGptLink !== '' && !validateChatGptLink(chatGptLink) ? 
+                  "Please enter a valid ChatGPT conversation link" : ""}
+                InputProps={{
+                  startAdornment: <Link color="action" sx={{ mr: 1 }} />,
+                }}
+                disabled={generating}
+              />
+            </Grid>
+
+            {/* Disallowance Reason Selection */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth size="small" disabled={generating}>
+                <InputLabel id="disallowance-reason-label">Disallowance Reason</InputLabel>
+                <Select
+                  labelId="disallowance-reason-label"
+                  id="disallowance-reason"
+                  value={disallowanceReason}
+                  onChange={(e) => setDisallowanceReason(e.target.value)}
+                  label="Disallowance Reason"
+                >
+                  {disallowanceReasons.map((reason) => (
+                    <MenuItem key={reason.value} value={reason.value}>{reason.label}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              <Typography variant="caption" color="text.secondary" display="block" mt={1}>
-                {documentType === 'protestLetter' 
-                  ? 'Select a specific quarter for the protest letter. Each quarter typically requires a separate protest letter.' 
-                  : 'Form 886-A documents will include all selected quarters.'}
-              </Typography>
+              {disallowanceReason === 'other' && (
+                <TextField
+                  fullWidth
+                  size="small"
+                  margin="normal"
+                  label="Specify disallowance reason"
+                  value={customDisallowanceReason}
+                  onChange={(e) => setCustomDisallowanceReason(e.target.value)}
+                  placeholder="Enter the specific disallowance reason"
+                  disabled={generating}
+                />
+              )}
             </Grid>
-          )}
 
-          {/* ChatGPT Link Input */}
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="ChatGPT Conversation Link"
-              variant="outlined"
-              value={chatGptLink}
-              onChange={(e) => setChatGptLink(e.target.value)}
-              placeholder="https://chat.openai.com/c/..."
-              error={chatGptLink !== '' && !validateChatGptLink(chatGptLink)}
-              helperText={chatGptLink !== '' && !validateChatGptLink(chatGptLink) ? 
-                "Please enter a valid ChatGPT conversation link" : ""}
-              InputProps={{
-                startAdornment: <Link color="action" sx={{ mr: 1 }} />,
-              }}
-            />
-          </Grid>
+            {/* Include Revenue Section Toggle */}
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={includeRevenueSection}
+                    onChange={(e) => setIncludeRevenueSection(e.target.checked)}
+                    name="includeRevenueSection"
+                    disabled={generating}
+                  />
+                }
+                label="Include revenue section in document (even if not qualifying)"
+              />
+            </Grid>
 
-          {/* NEW: Disallowance Reason Selection */}
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth size="small">
-              <InputLabel id="disallowance-reason-label">Disallowance Reason</InputLabel>
-              <Select
-                labelId="disallowance-reason-label"
-                id="disallowance-reason"
-                value={disallowanceReason}
-                onChange={(e) => setDisallowanceReason(e.target.value)}
-                label="Disallowance Reason"
+            {/* Output Format Selection */}
+            <Grid item xs={12}>
+              <Typography variant="body2" gutterBottom>Output Format:</Typography>
+              <RadioGroup
+                row
+                name="outputFormat"
+                value={outputFormat}
+                onChange={(e) => setOutputFormat(e.target.value)}
               >
-                {disallowanceReasons.map((reason) => (
-                  <MenuItem key={reason.value} value={reason.value}>{reason.label}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            {disallowanceReason === 'other' && (
+                <FormControlLabel 
+                  value="pdf" 
+                  control={<Radio disabled={generating} />} 
+                  label="PDF" 
+                  disabled={generating}
+                />
+                <FormControlLabel 
+                  value="docx" 
+                  control={<Radio disabled={generating} />} 
+                  label="Word Document (.docx)" 
+                  disabled={generating}
+                />
+              </RadioGroup>
+            </Grid>
+          </Grid>
+          
+          <Alert severity="info" sx={{ mb: 2, mt: 2 }}>
+            {documentType === 'protestLetter' 
+              ? `Make sure your ChatGPT conversation includes specific COVID-19 orders that affected your business during ${selectedTimePeriod || 'the selected time period'}.` 
+              : `Make sure your ChatGPT conversation includes comprehensive information about government orders affecting your business across all ERC quarters: ${hasTimePeriods ? formData.timePeriods.join(', ') : 'the selected time periods'}.`}
+          </Alert>
+          
+          {timeoutWarning && (
+            <Alert severity="warning" sx={{ mb: 2 }}>
+              <Typography variant="subtitle2">Package generation is taking longer than expected</Typography>
+              <Typography variant="body2">
+                The document generation is still in progress but is taking longer than the usual 5-minute timeframe. This can happen with complex documents or when processing many sources. 
+                You can continue waiting, and we'll notify you when it's complete. The generation will continue in the background even if you navigate away from this page.
+              </Typography>
+            </Alert>
+          )}
+          
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          
+          <Box display="flex" justifyContent="center" mt={2}>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={generating ? <CircularProgress size={20} color="inherit" /> : <Description />}
+              onClick={generateProtestLetter}
+              disabled={
+                generating || 
+                !chatGptLink || 
+                !validateChatGptLink(chatGptLink) || 
+                (documentType === 'protestLetter' && !selectedTimePeriod && hasTimePeriods)
+              }
+              sx={{ 
+                minWidth: 240,
+                position: 'relative',
+                // Add pulsing effect when generating
+                animation: generating ? 'pulse 1.5s infinite' : 'none'
+              }}
+            >
+              {generating ? 'Generating Package...' : documentType === 'protestLetter' 
+                ? 'Generate Protest Package' 
+                : 'Generate Form 886-A Document'}
+            </Button>
+          </Box>
+          
+          {/* Enhanced processing indicator */}
+          {generating && processing && (
+            <Box mt={3} p={2} sx={{ 
+              bgcolor: 'info.lighter', 
+              borderRadius: 1,
+              textAlign: 'center',
+              border: '1px solid',
+              borderColor: 'info.light'
+            }}>
+              <Typography variant="subtitle1" gutterBottom>
+                <CircularProgress size={16} sx={{ mr: 1, verticalAlign: 'middle' }} />
+                Package Generation In Progress
+              </Typography>
+              <Typography variant="body2" align="center" gutterBottom>
+                {processingMessage || "Connecting to ChatGPT and generating your documents..."}
+              </Typography>
+              <LinearProgress 
+                variant={processingStep > 0 ? "determinate" : "indeterminate"} 
+                value={(processingStep * 100) / 5} 
+                sx={{ mt: 1, mb: 2 }}
+              />
+              <Typography variant="caption" align="center" display="block" color="text.secondary">
+                This process takes 2-3 minutes to extract data from ChatGPT, generate documents, and create PDFs of all referenced sources.
+                <strong> Please do not refresh or navigate away from this page.</strong>
+              </Typography>
+            </Box>
+          )}
+          
+          {/* Document Dialog */}
+          <Dialog
+            open={dialogOpen}
+            onClose={handleCloseDialog}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{
+              sx: { 
+                height: '80vh',
+                display: 'flex',
+                flexDirection: 'column'
+              }
+            }}
+          >
+            <DialogTitle>
+              {documentType === 'protestLetter' ? 'ERC Protest Package' : 'Form 886-A Document'}
+              <Button
+                aria-label="copy"
+                onClick={copyToClipboard}
+                sx={{ position: 'absolute', right: 16, top: 8 }}
+                startIcon={copied ? <CheckCircle color="success" /> : <ContentCopy />}
+              >
+                {copied ? 'Copied' : 'Copy'}
+              </Button>
+            </DialogTitle>
+            <DialogContent dividers sx={{ flexGrow: 1, overflow: 'auto' }}>
+              {packageData && (
+                <Box mb={3}>
+                  <Alert severity="success" sx={{ mb: 2 }}>
+                    <Typography variant="subtitle1">
+                      {documentType === 'protestLetter' 
+                        ? `Complete protest package for ${selectedTimePeriod} generated successfully!` 
+                        : `Form 886-A document for ${formData.timePeriods?.join(', ') || 'selected quarters'} generated successfully!`}
+                    </Typography>
+                    <Typography variant="body2">
+                      Your package includes the {documentType === 'protestLetter' ? 'protest letter' : 'Form 886-A document'} and {packageData.attachments.length} PDF attachments 
+                      of the referenced sources. You can download the complete package below.
+                    </Typography>
+                  </Alert>
+                  
+                  <Box display="flex" justifyContent="center" gap={2} mt={2} mb={3}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      startIcon={<FileDownload />}
+                      onClick={downloadProtestPackage}
+                    >
+                      Download Complete Package
+                    </Button>
+                    
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      startIcon={<FileDownload />}
+                      onClick={downloadDocument}
+                    >
+                      Download {outputFormat.toUpperCase()} Only
+                    </Button>
+                  </Box>
+                  
+                  {packageData.attachments.length > 0 && (
+                    <Box mt={3} mb={2}>
+                      <Typography variant="subtitle1" gutterBottom>
+                        Attachments Created:
+                      </Typography>
+                      <Paper variant="outlined" sx={{ p: 2 }}>
+                        <ol>
+                          {packageData.attachments.map((attachment, index) => (
+                            <li key={index}>
+                              <Typography variant="body2">
+                                {attachment.filename} 
+                                <Typography variant="caption" component="span" color="text.secondary" sx={{ ml: 1 }}>
+                                  (from {attachment.originalUrl})
+                                </Typography>
+                              </Typography>
+                            </li>
+                          ))}
+                        </ol>
+                      </Paper>
+                    </Box>
+                  )}
+                </Box>
+              )}
+              
+              <Typography variant="subtitle1" gutterBottom>
+                {documentType === 'protestLetter' ? 'Protest Letter Preview:' : 'Form 886-A Document Preview:'}
+              </Typography>
               <TextField
                 fullWidth
-                size="small"
-                margin="normal"
-                label="Specify disallowance reason"
-                value={customDisallowanceReason}
-                onChange={(e) => setCustomDisallowanceReason(e.target.value)}
-                placeholder="Enter the specific disallowance reason"
+                multiline
+                variant="outlined"
+                value={protestLetter}
+                InputProps={{
+                  readOnly: true,
+                  sx: { 
+                    fontFamily: 'monospace', 
+                    fontSize: '0.9rem'
+                  }
+                }}
+                minRows={15}
+                maxRows={30}
               />
-            )}
-          </Grid>
-
-          {/* NEW: Include Revenue Section Toggle */}
-          <Grid item xs={12} md={6}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={includeRevenueSection}
-                  onChange={(e) => setIncludeRevenueSection(e.target.checked)}
-                  name="includeRevenueSection"
-                />
-              }
-              label="Include revenue section in document (even if not qualifying)"
-            />
-          </Grid>
-
-          {/* NEW: Output Format Selection */}
-          <Grid item xs={12}>
-            <Typography variant="body2" gutterBottom>Output Format:</Typography>
-            <RadioGroup
-              row
-              name="outputFormat"
-              value={outputFormat}
-              onChange={(e) => setOutputFormat(e.target.value)}
-            >
-              <FormControlLabel value="pdf" control={<Radio />} label="PDF" />
-              <FormControlLabel value="docx" control={<Radio />} label="Word Document (.docx)" />
-            </RadioGroup>
-          </Grid>
-        </Grid>
-        
-        <Alert severity="info" sx={{ mb: 2, mt: 2 }}>
-          {documentType === 'protestLetter' 
-            ? `Make sure your ChatGPT conversation includes specific COVID-19 orders that affected your business during ${selectedTimePeriod || 'the selected time period'}.` 
-            : `Make sure your ChatGPT conversation includes comprehensive information about government orders affecting your business across all ERC quarters: ${hasTimePeriods ? formData.timePeriods.join(', ') : 'the selected time periods'}.`}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={copyToClipboard} startIcon={copied ? <CheckCircle /> : <ContentCopy />}>
+                {copied ? 'Copied!' : 'Copy to Clipboard'}
+              </Button>
+              <Button 
+                onClick={downloadDocument}
+                variant="outlined" 
+                color="primary"
+                startIcon={<FileDownload />}
+              >
+                Download {outputFormat.toUpperCase()} Only
+              </Button>
+              <Button 
+                onClick={downloadProtestPackage} 
+                variant="contained" 
+                color="primary"
+                startIcon={<FileDownload />}
+              >
+                Download Package
+              </Button>
+              <Button onClick={handleCloseDialog}>Close</Button>
+            </DialogActions>
+          </Dialog>
+        </Paper>
+      </Box>
+      
+      {/* Notification for background processing */}
+      <Snackbar
+        open={timeoutWarning}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="info" sx={{ width: '100%' }}>
+          Processing continues in the background. Please wait...
         </Alert>
-        
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        
-        <Box display="flex" justifyContent="center" mt={2}>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<Description />}
-            onClick={generateProtestLetter}
-            disabled={
-              generating || 
-              !chatGptLink || 
-              !validateChatGptLink(chatGptLink) || 
-              (documentType === 'protestLetter' && !selectedTimePeriod && hasTimePeriods)
-            }
-            sx={{ minWidth: 240 }}
-          >
-            {generating ? 'Generating...' : documentType === 'protestLetter' 
-              ? 'Generate Protest Package' 
-              : 'Generate Form 886-A Document'}
-          </Button>
-        </Box>
-        
-        {generating && processing && (
-          <Box mt={3}>
-            <Typography variant="body2" align="center" gutterBottom>
-              {processingMessage}
-            </Typography>
-            <LinearProgress 
-              variant="determinate" 
-              value={(processingStep * 100) / 5} 
-              sx={{ mt: 1, mb: 2 }}
-            />
-            <Typography variant="caption" align="center" display="block" color="text.secondary">
-              This process may take 2-3 minutes to extract data from ChatGPT, generate the document, and create PDFs of all referenced sources.
-            </Typography>
-          </Box>
-        )}
-        
-        {/* Document Dialog */}
-        <Dialog
-          open={dialogOpen}
-          onClose={handleCloseDialog}
-          maxWidth="md"
-          fullWidth
-          PaperProps={{
-            sx: { 
-              height: '80vh',
-              display: 'flex',
-              flexDirection: 'column'
-            }
-          }}
-        >
-          <DialogTitle>
-            {documentType === 'protestLetter' ? 'ERC Protest Package' : 'Form 886-A Document'}
-            <Button
-              aria-label="copy"
-              onClick={copyToClipboard}
-              sx={{ position: 'absolute', right: 16, top: 8 }}
-              startIcon={copied ? <CheckCircle color="success" /> : <ContentCopy />}
-            >
-              {copied ? 'Copied' : 'Copy'}
-            </Button>
-          </DialogTitle>
-          <DialogContent dividers sx={{ flexGrow: 1, overflow: 'auto' }}>
-            {packageData && (
-              <Box mb={3}>
-                <Alert severity="success" sx={{ mb: 2 }}>
-                  <Typography variant="subtitle1">
-                    {documentType === 'protestLetter' 
-                      ? `Complete protest package for ${selectedTimePeriod} generated successfully!` 
-                      : `Form 886-A document for ${formData.timePeriods?.join(', ') || 'selected quarters'} generated successfully!`}
-                  </Typography>
-                  <Typography variant="body2">
-                    Your package includes the {documentType === 'protestLetter' ? 'protest letter' : 'Form 886-A document'} and {packageData.attachments.length} PDF attachments 
-                    of the referenced sources. You can download the complete package below.
-                  </Typography>
-                </Alert>
-                
-                <Box display="flex" justifyContent="center" gap={2} mt={2} mb={3}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<FileDownload />}
-                    onClick={downloadProtestPackage}
-                  >
-                    Download Complete Package
-                  </Button>
-                  
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    startIcon={<FileDownload />}
-                    onClick={downloadDocument}
-                  >
-                    Download {outputFormat.toUpperCase()} Only
-                  </Button>
-                </Box>
-                
-                {packageData.attachments.length > 0 && (
-                  <Box mt={3} mb={2}>
-                    <Typography variant="subtitle1" gutterBottom>
-                      Attachments Created:
-                    </Typography>
-                    <Paper variant="outlined" sx={{ p: 2 }}>
-                      <ol>
-                        {packageData.attachments.map((attachment, index) => (
-                          <li key={index}>
-                            <Typography variant="body2">
-                              {attachment.filename} 
-                              <Typography variant="caption" component="span" color="text.secondary" sx={{ ml: 1 }}>
-                                (from {attachment.originalUrl})
-                              </Typography>
-                            </Typography>
-                          </li>
-                        ))}
-                      </ol>
-                    </Paper>
-                  </Box>
-                )}
-              </Box>
-            )}
-            
-            <Typography variant="subtitle1" gutterBottom>
-              {documentType === 'protestLetter' ? 'Protest Letter Preview:' : 'Form 886-A Document Preview:'}
-            </Typography>
-            <TextField
-              fullWidth
-              multiline
-              variant="outlined"
-              value={protestLetter}
-              InputProps={{
-                readOnly: true,
-                sx: { 
-                  fontFamily: 'monospace', 
-                  fontSize: '0.9rem'
-                }
-              }}
-              minRows={15}
-              maxRows={30}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={copyToClipboard} startIcon={copied ? <CheckCircle /> : <ContentCopy />}>
-              {copied ? 'Copied!' : 'Copy to Clipboard'}
-            </Button>
-            <Button 
-              onClick={downloadDocument}
-              variant="outlined" 
-              color="primary"
-              startIcon={<FileDownload />}
-            >
-              Download {outputFormat.toUpperCase()} Only
-            </Button>
-            <Button 
-              onClick={downloadProtestPackage} 
-              variant="contained" 
-              color="primary"
-              startIcon={<FileDownload />}
-            >
-              Download Package
-            </Button>
-            <Button onClick={handleCloseDialog}>Close</Button>
-          </DialogActions>
-        </Dialog>
-      </Paper>
-    </Box>
+      </Snackbar>
+    </>
   );
 };
 

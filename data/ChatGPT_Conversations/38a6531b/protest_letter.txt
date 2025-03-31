@@ -1,0 +1,62 @@
+03/31/2025
+Internal Revenue Service
+Ogden, UT 84201
+
+EIN: 00-0000000  
+Taxpayer Name: Business #17434571  
+RE: Formal Protest of ERC Disallowance for Quarter 2  
+Tax Period: Quarter 2  
+Claim Amount: [Enter Claim Amount]
+
+Dear Appeals Officer,
+
+We submit this protest in response to the IRS notice disallowing Business #17434571’s Employee Retention Credit (ERC) claim for Quarter 2. The disallowance is based on the assertion that “no government orders were in effect” during the applicable period that caused a full or partial suspension of operations. We respectfully disagree. Multiple government orders were in effect during Quarter 2 that imposed restrictions and necessitated a modification of our normal operations as a law firm. In the following sections, we provide a detailed timeline of the relevant government orders and present quarterly revenue data that demonstrate the substantial decline in revenues.
+
+Below is a chronological timeline of key government orders that affected our operations during Quarter 2:
+
+• Order Name: Proclamation 9994 – National Emergency Concerning COVID-19  
+• Order Number: Not Applicable  
+• Date Enacted: 03/13/2020  
+• Date Rescinded: Still in effect  
+• Order Summary: This proclamation declared a nationwide emergency due to the COVID-19 outbreak, activating federal emergency powers and establishing a legal framework for subsequent government restrictions. It mandated adjustments to customary business operations, including social distancing protocols and limitations on in-person activities.  
+• Impact on Quarter: During Quarter 2, the proclamation required our law firm to significantly limit in-office client meetings and shift to remote practices, resulting in a partial suspension of normal operations.
+
+• Order Name: Executive Order N-33-20 – Statewide “Stay-at-Home” Order  
+• Order Number: N-33-20  
+• Date Enacted: 03/19/2020  
+• Date Rescinded: 06/15/2021  
+• Order Summary: This mandatory order required all residents to remain in their homes except for essential activities. It resulted in the closure of non-essential businesses and enforced social distancing measures that disrupted standard business operations.  
+• Impact on Quarter: In Quarter 2, this order continued to affect our operations by limiting in-person consultations and court-related meetings, leading to a partial suspension of our usual law firm activities.
+
+In addition to the government orders discussed above, we are submitting quarterly revenue data that demonstrates the revenue reductions for Business #17434571. The following table presents the quarterly revenue amounts and percentage changes for comparison purposes:
+
+---------------------------------------------------------------------------
+Quarter          | 2019 Revenue       | Comparison Revenue  | Dollar Decline     | % Decline   | QUALIFIES
+---------------------------------------------------------------------------
+Q1 2019-2021     | $542,300.00        | $430,000.00         | $112,300.00        | 20.71%      | YES
+Q2 2019-2021     | $432,600.00        | $300,000.00         | $132,600.00        | 30.65%      | YES
+Q3 2019-2021     | $345,160.00        | $295,000.00         | $50,160.00         | 14.53%      | NO
+---------------------------------------------------------------------------
+
+As shown in the revenue table above, the quarters with “YES” in the QUALIFIES column (Q1 and Q2) meet the ERC threshold for revenue decline. These revenue reductions, combined with the impact of the government orders described earlier, provide strong substantiation for our ERC claim.
+
+In summary, contrary to the contention that no government orders were in effect during Quarter 2, our operations were indeed impacted by orders that led to a partial suspension of normal activities. The federal declaration of a national emergency and the statewide “Stay-at-Home” order imposed significant operational limitations on our law firm. In addition, the documented revenue declines further support our claim for the ERC.
+
+We respectfully request that the IRS reconsider and reverse the disallowance of our Quarter 2 ERC. Attached, please find copies of the relevant government orders and the revenue data analysis for your review.
+
+Attestation: “Under penalties of perjury, I declare that I submitted the protest and accompanying documents, and to the best of my personal knowledge and belief, the information stated in the protest and accompanying documents is true, correct, and complete.”
+
+Thank you for your prompt attention to this matter. Please do not hesitate to contact us should you require any additional information or clarification regarding our submission.
+
+Sincerely,
+
+[Authorized Representative Signature]
+
+______________________________  
+[Authorized Representative Name]  
+Authorized Representative for Business #17434571
+
+Enclosures:  
+• Copies of Government Orders (Proclamation 9994 – National Emergency Concerning COVID-19; Executive Order N-33-20 – Statewide “Stay-at-Home” Order)  
+• Quarterly Revenue Data  
+• Additional ERC Documentation as Applicable
