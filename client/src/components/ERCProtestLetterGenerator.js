@@ -1,6 +1,6 @@
 // client/src/components/ERCProtestLetterGenerator.js
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, Button, Paper, Typography, TextField, 
   Divider, Alert, Dialog, DialogTitle,
