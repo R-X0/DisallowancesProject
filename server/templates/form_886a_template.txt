@@ -5,7 +5,7 @@ Location: [LOCATION]
 Date: [CURRENT_DATE]
 
 1. Issue  
-Determine whether [BUSINESS_NAME] qualifies for the Employee Retention Credit based solely on the full or partial suspension of its operations due to COVID‑19 government orders over the periods [TIME_PERIODS]. This analysis specifically addresses the disallowance reason that [DISALLOWANCE_REASON] by documenting that, in fact, multiple orders were enacted that directly limited business operations, including the effect of supply chain disruptions caused by these orders (if applicable).
+Determine whether [BUSINESS_NAME] qualifies for the Employee Retention Credit based on the full or partial suspension of its operations due to COVID‑19 government orders over the periods [TIME_PERIODS]. This analysis specifically addresses the disallowance reason that [DISALLOWANCE_REASON] by documenting that, in fact, multiple orders were enacted that directly limited business operations[SUPPLY_CHAIN_TEXT].
 
 2. Facts  
 [BUSINESS_NAME] is a [BUSINESS_TYPE] engaged in [DETAILED_BUSINESS_DESCRIPTION] located in [LOCATION]. The company provides [SPECIFIC_SERVICES_OR_PRODUCTS] to [CLIENT_BASE] in the [INDUSTRY_SECTOR] industry. The company's primary operations include [PRIMARY_BUSINESS_OPERATIONS], utilizing [EQUIPMENT/FACILITIES] and employing staff who perform [KEY_JOB_FUNCTIONS].

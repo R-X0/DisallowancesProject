@@ -432,6 +432,48 @@ function ensureConsistentFormatting(document, documentType) {
 }
 
 /**
+ * Process qualification approaches based on user selections
+ * @param {Object} businessInfo - Business information
+ * @returns {Object} - Processed qualification approaches
+ */
+function processQualificationApproaches(businessInfo) {
+  const approaches = {
+    governmentOrders: false,
+    supplyChainDisruption: false,
+    revenueReduction: false,
+    mainApproach: 'governmentOrders' // Default
+  };
+  
+  // Check if supply chain disruption is explicitly selected
+  if (businessInfo.includeSupplyChainDisruption === true) {
+    approaches.supplyChainDisruption = true;
+  }
+  
+  // Check for revenue reduction
+  const hasQualifyingQuarters = businessInfo.qualifyingQuarters && 
+                               Array.isArray(businessInfo.qualifyingQuarters) && 
+                               businessInfo.qualifyingQuarters.length > 0;
+  
+  if (hasQualifyingQuarters && businessInfo.includeRevenueSection !== false) {
+    approaches.revenueReduction = true;
+  }
+  
+  // Government orders approach is always available
+  approaches.governmentOrders = true;
+  
+  // Determine main approach
+  if (approaches.revenueReduction) {
+    approaches.mainApproach = 'revenueReduction';
+  } else if (approaches.supplyChainDisruption) {
+    approaches.mainApproach = 'supplyChainDisruption';
+  } else {
+    approaches.mainApproach = 'governmentOrders';
+  }
+  
+  return approaches;
+}
+
+/**
  * Generate an ERC document (protest letter or Form 886-A)
  * @param {Object} businessInfo - Business information
  * @param {string} covidData - Sanitized ChatGPT conversation containing COVID research
@@ -517,6 +559,9 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
     console.log('Calculated revenue declines:', revenueDeclines);
     console.log('Qualifying quarters:', qualifyingQuarters);
     
+    // Process qualification approaches
+    const qualificationApproaches = processQualificationApproaches(businessInfo);
+    
     // Check what evidence we have available
     const hasRevenueDeclines = revenueDeclines.length > 0 && hasValidRevenueData && includeRevenueSection;
     const hasQualifyingQuarters = qualifyingQuarters.length > 0 && hasValidRevenueData && includeRevenueSection;
@@ -581,6 +626,16 @@ IMPORTANT: Include information about how government orders caused full or partia
       
       If revenue data is provided, include it accurately. If not, focus exclusively on the government orders approach.`;
 
+      // Adjust prompt based on qualification approaches
+      let approachFocusText = '';
+      if (qualificationApproaches.mainApproach === 'revenueReduction') {
+        approachFocusText = 'primarily the significant decline in gross receipts, with government orders as supporting evidence';
+      } else if (qualificationApproaches.mainApproach === 'supplyChainDisruption') {
+        approachFocusText = 'both government orders and their substantial supply chain disruption effects, as specified in IRS Notice 2021-20, Q/A #12';
+      } else {
+        approachFocusText = 'the full or partial suspension caused by government orders';
+      }
+
       // Build the enhanced Form 886-A prompt template
       promptTemplate = `Please create a Form 886-A document for ERC substantiation using the following information:
 
@@ -592,6 +647,8 @@ Time Periods: ${timePeriodsFormatted}
 Business Type: ${businessInfo.businessType || 'business'}
 ${businessInfo.businessWebsite ? `Business Website: ${businessInfo.businessWebsite}` : ''}
 NAICS Code: ${businessInfo.naicsCode || 'Not provided'}
+
+QUALIFICATION APPROACH: This ERC claim is based on ${approachFocusText}.
 
 DISALLOWANCE REASON:
 The ERC claim was disallowed because ${disallowanceReasonText}. Address this specific reason in your response.
@@ -654,6 +711,21 @@ IMPORTANT FORMATTING RULES:
 4. Format legal citations properly (e.g., "Section 2301(c)(2)(A)" not just "Section 2301")
 5. Include the attestation: "Under penalties of perjury, I declare that I submitted this Form 886-A and accompanying documents, and to the best of my personal knowledge and belief, the information stated herein and in accompanying documents is true, correct, and complete."`;
 
+      // Add supply chain disruption instructions if selected
+      if (businessInfo.includeSupplyChainDisruption === true) {
+        promptTemplate += `\n\nIMPORTANT: This business was significantly affected by SUPPLY CHAIN DISRUPTIONS caused by government orders.
+        
+1. Your document MUST include a detailed supply chain disruption analysis in the Issue section and the Argument section.
+2. Explicitly cite IRS Notice 2021-20, Q/A #12 which states that supply chain disruptions caused by government orders can qualify for ERC.
+3. In the Issue section, explicitly mention that this analysis addresses supply chain disruptions.
+4. In the Argument section, create a separate "Supply Chain Disruption Analysis" subsection that includes:
+   * Which critical materials or components were unavailable due to suppliers being affected by government orders
+   * Documentation of specific supplier shutdowns caused by government mandates
+   * Why alternative suppliers were not available during the claimed period
+   * Quantification of the impact as "more than nominal" (exceeding 10% of operations)
+   * Analysis of how these supply chain issues directly caused operational limitations`;
+      }
+      
       // Add special handling for specific quarters if needed
       const allQuarters = businessInfo.timePeriods || [businessInfo.timePeriod];
       if (allQuarters.some(q => q.includes('Q3 2021') || q.includes('3rd Quarter 2021'))) {
@@ -662,6 +734,10 @@ IMPORTANT FORMATTING RULES:
 - EXECUTIVE ORDER 14017 - SECURING AMERICA'S SUPPLY CHAINS (02/24/21 - ongoing)
 - CDC MASK CHANGES - DELTA VARIANT (07/27/21 - 02/25/22)`;
       }
+
+      // Ensure the Issue section is always included by adding this to the prompt
+      promptTemplate += `\n\nCRITICAL FORMATTING REQUIREMENT: You MUST include the Issue section at the beginning of the document. It should be labeled "1. Issue" and should specifically address the disallowance reason and mention government orders. DO NOT skip or omit this section under any circumstances.`;
+      
     } else {
       // Original protest letter prompt construction
       systemPrompt = `You are an expert in creating IRS Employee Retention Credit (ERC) protest letters.
@@ -737,6 +813,26 @@ IMPORTANT: Include ALL quarters where data is available in the table, not just t
 CRITICAL INSTRUCTION: ${includeRevenueSection ? 'NO REVENUE DATA WAS PROVIDED.' : 'DO NOT INCLUDE REVENUE ANALYSIS IN THIS DOCUMENT.'} DO NOT FABRICATE OR INVENT ANY REVENUE FIGURES. DO NOT INCLUDE ANY REVENUE DECLINE ANALYSIS. This protest should be based SOLELY on the partial suspension of operations caused by government orders.`;
       }
 
+      // Include supply chain disruption instructions if selected
+      if (businessInfo.includeSupplyChainDisruption === true) {
+        promptTemplate += `
+
+SUPPLY CHAIN DISRUPTION ANALYSIS:
+This protest should emphasize that the business was ALSO affected by supply chain disruptions caused by government orders.
+
+1. Include a dedicated section on supply chain disruption with these components:
+   * Cite IRS Notice 2021-20, Question & Answer #12 which specifically covers supply chain disruption qualification
+   * Identify which critical materials or components were unavailable due to supplier shutdowns
+   * Document specific supplier shutdowns caused by government mandates
+   * Explain why alternative suppliers were not available during the claimed period
+   * Show how these supply chain issues directly caused operational limitations
+
+2. Begin the supply chain section with this paragraph (modify as needed):
+"In addition to the direct impact of government orders, [BUSINESS_NAME] was also substantially affected by supply chain disruptions caused by government orders as described in IRS Notice 2021-20, Q/A #12. This provision states that an employer qualifies for the ERC when 'a supplier of the employer is unable to make deliveries of critical goods or materials due to a governmental order that causes the supplier to suspend its operations.'"
+
+3. Emphasize that these supply chain disruptions were sufficient to qualify for the ERC under this provision.`;
+      }
+
       promptTemplate += `
 
 FORMAT EXAMPLE (FOLLOW THIS GENERAL STRUCTURE BUT INCLUDE ONLY THE AVAILABLE EVIDENCE):
@@ -769,10 +865,35 @@ FINAL CRITICAL INSTRUCTION:
       ],
     });
     
-    const generatedDocument = response.choices[0].message.content.trim();
+    let generatedDocument = response.choices[0].message.content.trim();
     
     // Apply post-processing to ensure consistent formatting
-    const processedDocument = ensureConsistentFormatting(generatedDocument, businessInfo.documentType);
+    let processedDocument = ensureConsistentFormatting(generatedDocument, businessInfo.documentType);
+    
+    // Ensure the Issue section exists in the final document for Form 886-A
+    if (businessInfo.documentType === 'form886A' && !processedDocument.includes('1. Issue')) {
+      console.log('Issue section missing - forcing inclusion');
+      
+      // Create the Issue section with supply chain text if needed
+      let supplyChainText = '';
+      if (businessInfo.includeSupplyChainDisruption === true) {
+        supplyChainText = ', including the substantial effect of supply chain disruptions caused by these orders as specified in IRS Notice 2021-20, Q/A #12';
+      } else {
+        supplyChainText = businessInfo.governmentOrdersInfo && 
+                         businessInfo.governmentOrdersInfo.toLowerCase().includes('supply chain') 
+                         ? ', including the effect of supply chain disruptions caused by these orders (if applicable)'
+                         : '';
+      }
+      
+      // Format the Issue section
+      const issueSection = `1. Issue  
+Determine whether ${businessInfo.businessName} qualifies for the Employee Retention Credit based on the full or partial suspension of its operations due to COVID‑19 government orders over the periods ${businessInfo.allTimePeriods.join(', ')}. This analysis specifically addresses the disallowance reason that ${getDisallowanceReasonText(businessInfo.disallowanceReason, businessInfo.customDisallowanceReason)} by documenting that, in fact, multiple orders were enacted that directly limited business operations${supplyChainText}.
+
+`;
+
+      // Prepend the Issue section to the document
+      processedDocument = issueSection + processedDocument;
+    }
     
     console.log('Document successfully generated');
     
@@ -792,5 +913,6 @@ module.exports = {
   getQualifyingQuarters,
   getDisallowanceReasonText,
   createRevenueTable,
-  ensureConsistentFormatting
+  ensureConsistentFormatting,
+  processQualificationApproaches
 };

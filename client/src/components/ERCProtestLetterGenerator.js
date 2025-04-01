@@ -230,6 +230,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [outputFormat, setOutputFormat] = useState('pdf');
   const [customDisallowanceReason, setCustomDisallowanceReason] = useState('');
   const [timeoutWarning, setTimeoutWarning] = useState(false);
+  const [includeSupplyChainDisruption, setIncludeSupplyChainDisruption] = useState(false);
 
   // Initialize selected time period when form data changes
   useEffect(() => {
@@ -413,6 +414,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
       const currentApproach = determineUserApproach(formData);
       console.log("Final approach check before API call:", currentApproach);
       console.log("Include revenue section:", includeRevenueSection);
+      console.log("Include supply chain disruption:", includeSupplyChainDisruption);
       console.log("Output format:", outputFormat);
       
       // Prepare data for API call
@@ -447,6 +449,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         approachFocus: currentApproach, // Use the confirmed approach
         // Added new parameters for the requested features - ensure explicit boolean/string types
         includeRevenueSection: includeRevenueSection === true, // Force boolean type
+        includeSupplyChainDisruption: includeSupplyChainDisruption === true, // Force boolean type
         disallowanceReason: disallowanceReason,
         customDisallowanceReason: customDisallowanceReason,
         outputFormat: outputFormat
@@ -742,6 +745,21 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
                   />
                 }
                 label="Include revenue section in document (even if not qualifying)"
+              />
+            </Grid>
+
+            {/* Supply Chain Disruption Checkbox */}
+            <Grid item xs={12} md={6}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={includeSupplyChainDisruption}
+                    onChange={(e) => setIncludeSupplyChainDisruption(e.target.checked)}
+                    name="includeSupplyChainDisruption"
+                    disabled={generating}
+                  />
+                }
+                label="Include supply chain disruption analysis (Q/A #12)"
               />
             </Grid>
 

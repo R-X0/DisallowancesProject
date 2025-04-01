@@ -1,0 +1,80 @@
+FORM 886-A – EMPLOYEE RETENTION CREDIT (ERC) SUBSTANTIATION  
+Date: 3/31/2025
+
+────────────────────────────  
+I. FACTS SECTION
+
+• Business Name: West coast marble and granite  
+• EIN: 21‑542351  
+• Location: Camarillo, CA  
+• Business Type: Business – a provider of natural stone products and custom fabrication services  
+
+West coast marble and granite is a fully operational business specializing in the fabrication, supply, and installation of high‐quality marble, granite, and other natural stone products. The company designs and fabricates custom countertops, flooring, wall cladding, and bespoke stone installations for both residential and commercial projects across the Camarillo region. Its operations include showroom consultations, precise stone cutting and finishing at its fabrication facility, and on‐site installation under strict quality and safety protocols. During the COVID‑19 pandemic, particularly in Q2 2020 and Q3 2020, the business experienced substantial operational disruptions. Restricted customer access, limitations on on-site consultations, delayed project scheduling, and workforce adjustments were implemented as a direct result of government orders, causing a partial suspension of its normal business functions.
+
+────────────────────────────  
+II. LAW SECTION
+
+The Employee Retention Credit (ERC) under the CARES Act, the Subsequent Relief Acts, and the American Rescue Plan (ARP) provides a refundable tax credit against employment taxes for eligible employers whose operations are fully or partially suspended due to governmental orders related to COVID‑19. The credit is available when a business’s operations are “more than nominally” impacted—a “more than nominal” decrease in gross receipts test defined in part by a 10% decline in gross receipts and by a full or partial suspension test (see IRS Notice 2021‑20, Notice 2021‑23, and Notice 2021‑49).  
+ • Specifically, under Section 2301(c)(2)(A) of the relevant guidance, a business qualifies when a government order limits the type or scope of its operations.  
+ • IRS Notice 2021‑20 states that a “full or partial suspension” requires the in‑person operations to be curtailed by governmental mandates, while Notice 2021‑23 and Notice 2021‑49 further elaborate that even if a business is designated as “essential,” operational constraints imposed by specific government orders may cause a partial suspension of activities.  
+ • West coast marble and granite’s operations were directly impacted by statewide, county, and local government orders that restricted on‑site consultations, fabrication oversight, and installation activities. This comprehensive set of measures meets the legal tests established by the ERC provisions and supporting IRS guidance.
+
+────────────────────────────  
+III. ARGUMENT SECTION
+
+For purposes of ERC substantiation, the government orders that were in effect during the claimed periods are set forth below. Each order is documented as required:
+
+────────────────────────────  
+A. Quarter 2, 2020
+
+• Order Name: California COVID‑19 State of Emergency  
+  Order Number: Governor’s Proclamation (No specific order number)  
+  Date Enacted: 03/04/2020  
+  Date Rescinded: Still in effect during Q2 2020  
+  Order Summary: “By this proclamation, the Governor declared a state of emergency due to COVID‑19, thereby authorizing all necessary public health and safety measures, including the suspension of non‑essential services and the limitation of in‑person business interactions. All businesses are directed to comply with subsequent orders to protect public health. The language mandates that operations be adjusted in accordance with evolving health directives. This emergency declaration provided the legal basis for substantial operational restrictions.”  
+  Impact on Quarter: The statewide emergency necessitated significant changes within West coast marble and granite’s operations. With limited customer interaction and reduced onsite supervision of fabrication activities, the business experienced a partial suspension of its normal operational workflow during Q2 2020.
+
+• Order Name: Executive Order N‑33‑20 – Statewide “Stay‑at‑Home” Order  
+  Order Number: N‑33‑20  
+  Date Enacted: 03/19/2020  
+  Date Rescinded: 06/15/2021  
+  Order Summary: “This order mandated that all individuals remain at home except for those engaged in essential activities. It required the closure of non‑essential businesses and imposed severe restrictions on physical operations, stating that in‑person activities must be suspended unless otherwise permitted by law. The order emphasized that all non‑essential travel and face‑to‑face interactions were to be avoided. It further required that businesses comply immediately with established safety protocols to limit the spread of COVID‑19.”  
+  Impact on Quarter: In Q2 2020, the Stay‑at‑Home Order directly impacted West coast marble and granite by curtailing onsite consultations, delaying installation appointments, and reducing the capacity for face‑to‑face customer service. These limitations contributed to the partial suspension of both the supply chain and operational functions.
+
+• Order Name: Ventura County “Stay Well at Home” Order  
+  Order Number: Not Applicable  
+  Date Enacted: 03/20/2020  
+  Date Rescinded: 06/15/2021  
+  Order Summary: “This county order required all Ventura County residents to remain at home except for emergencies and essential activities. It prohibited any non‑essential in‑person retail or service interactions and imposed strict limitations on public gatherings. The language explicitly required the suspension of non‑essential business operations. The order was issued to reinforce state mandates and ensure public safety during the pandemic.”  
+  Impact on Quarter: The directive forced West coast marble and granite to modify its operations significantly, including limiting showroom visits and onsite evaluations, thereby resulting in a partial suspension of its typical business processes during Q2 2020.
+
+• Order Name: Local Emergency Proclamation (Camarillo)  
+  Order Number: EOC Director Order No. 20‑1  
+  Date Enacted: 03/13/2020  
+  Date Rescinded: Still in effect during Q2 2020  
+  Order Summary: “This local proclamation declared a citywide emergency in Camarillo in response to COVID‑19, authorizing the implementation of public safety measures and the restriction of non‑essential activities. It mandated closure of public facilities and encouraged remote operations where feasible. The language required adherence to all higher‑level governmental orders applicable to businesses. It provided the local legal framework to enforce and supplement statewide restrictions.”  
+  Impact on Quarter: The Camarillo emergency declaration compounded restrictive measures by reinforcing the suspension of day‑to‑day business interactions at West coast marble and granite. Limitations on public gatherings and mandatory remote operations led to a significant, partial suspension of normal business activities during Q2 2020.
+
+────────────────────────────  
+B. Quarter 3, 2020
+
+• Order Name: State Public Health Officer Order – Statewide Rollback of Reopening  
+  Order Number: Not Applicable  
+  Date Enacted: 07/13/2020  
+  Date Rescinded: 08/31/2020  
+  Order Summary: “In response to a sharp rise in COVID‑19 cases, this order mandated the immediate cessation of previously reopened indoor operations for all non‑essential businesses. It stated that all in‑person services that did not meet essential criteria must be suspended. The language required strict adherence to measures intended to curb the virus’s spread. It provided for immediate re‑imposition of restrictions on indoor operations as a condition for public safety.”  
+  Impact on Quarter: The rollback forced West coast marble and granite to limit face‑to‑face consultations, suspend indoor project evaluations, and reduce operational capacity across its fabrication facility. These measures contributed further to a partial suspension of business operations during Q3 2020.
+
+• Order Name: Ventura County July 2020 Order – Local Implementation of State Rollback  
+  Order Number: Not Applicable  
+  Date Enacted: 07/14/2020  
+  Date Rescinded: 10/06/2020  
+  Order Summary: “This county order reinforced state directives by mandating that all non‑essential indoor business operations be suspended immediately. It declared that only essential operations, as defined by public health criteria, were permitted to continue. The language required an immediate cessation of in‑person activities and enforced strict compliance measures. It emphasized the urgency of reducing public interactions to limit COVID‑19 transmission.”  
+  Impact on Quarter: As a direct consequence of this county order, West coast marble and granite experienced further delays in scheduling consultations and executing on‑site installations. The operational restrictions imposed by the order served to validate that the business’s activities were partially suspended in Q3 2020.
+
+────────────────────────────  
+IV. CONCLUSION SECTION
+
+Based on the foregoing facts, legal analysis, and documented government orders, West coast marble and granite clearly qualifies for the Employee Retention Credit for Q2 2020 and Q3 2020. The above orders—the California COVID‑19 State of Emergency, Executive Order N‑33‑20, the Ventura County “Stay Well at Home” Order, the Camarillo Local Emergency Proclamation, the State Public Health Officer Order (July 13, 2020), and the Ventura County July 2020 Order—collectively imposed significant restrictions that directly led to a partial suspension of the business’s operations. This directly refutes the disallowance reason that “no government orders were in effect” and demonstrates that West coast marble and granite’s operations were curtailed in accordance with the ERC provisions.
+
+Under penalties of perjury, I declare that I submitted this Form 886-A and accompanying documents, and to the best of my personal knowledge and belief, the information stated herein and in accompanying documents is true, correct, and complete.
