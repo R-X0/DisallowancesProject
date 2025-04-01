@@ -63,7 +63,21 @@ async function getTemplateContent(documentType) {
   
   if (documentType === 'form886A') {
     templatePath = path.join(__dirname, '../templates/form_886a_template.txt');
-    defaultTemplate = 'Form 886-A template with Issue, Facts, Law, Argument, and Conclusion sections';
+    defaultTemplate = `Form 886-A – ERC Eligibility Analysis
+Issue
+Was the business fully or partially suspended by governmental orders during the claimed periods?
+
+Facts
+[Detailed business operations facts should be provided here]
+
+Law
+[Comprehensive legal analysis of ERC provisions should be included here]
+
+Argument
+[Detailed analysis of government orders and their impact should be documented here]
+
+Conclusion
+[Summary of eligibility determination with specific findings]`;
   } else {
     templatePath = path.join(__dirname, '../templates/haven_for_hope_letter.txt');
     defaultTemplate = 'Standard protest letter format';
@@ -375,6 +389,49 @@ function getDisallowanceReasonText(reasonCode, customReason = '') {
 }
 
 /**
+ * Helper function to ensure consistent formatting in generated documents
+ * @param {string} document - The generated document text
+ * @param {string} documentType - The type of document
+ * @returns {string} - The formatted document
+ */
+function ensureConsistentFormatting(document, documentType) {
+  if (documentType !== 'form886A') {
+    return document; // Only apply to Form 886-A documents
+  }
+  
+  let processed = document;
+  
+  // Ensure consistent bullet points
+  processed = processed.replace(/[-*]\s/g, '• ');
+  
+  // Fix date formats to be consistent MM/DD/YYYY
+  processed = processed.replace(/(\d{1,2})\/(\d{1,2})\/(\d{2})(?!\d)/g, (match, month, day, year) => {
+    const paddedMonth = month.padStart(2, '0');
+    const paddedDay = day.padStart(2, '0');
+    return `${paddedMonth}/${paddedDay}/20${year}`;
+  });
+  
+  // Ensure government order formats are consistent
+  // Look for patterns like "Order Name:" or "Date Enacted:" that might be formatted incorrectly
+  const orderFields = [
+    'Order Name:',
+    'Order Number:',
+    'Date Enacted:',
+    'Date Rescinded:',
+    'Order Summary:',
+    'Impact on Quarter:'
+  ];
+  
+  orderFields.forEach(field => {
+    // Convert any variation like "Order name:" or "ORDER NAME:" to the correct format
+    const regex = new RegExp(`${field.replace(':', '').replace(/\s+/g, '\\s+')}:`, 'gi');
+    processed = processed.replace(regex, field);
+  });
+  
+  return processed;
+}
+
+/**
  * Generate an ERC document (protest letter or Form 886-A)
  * @param {Object} businessInfo - Business information
  * @param {string} covidData - Sanitized ChatGPT conversation containing COVID research
@@ -511,12 +568,20 @@ IMPORTANT: Include information about how government orders caused full or partia
     let systemPrompt;
     
     if (businessInfo.documentType === 'form886A') {
-      // For Form 886-A document
+      // For Form 886-A document - IMPROVED VERSION
       systemPrompt = `You are an expert in creating IRS Form 886-A documents for Employee Retention Credit (ERC) substantiation.
-      CRITICAL REQUIREMENT: This is a legal tax document. If exact revenue figures are provided, you MUST include them without rounding or generalizing.
-      If NO revenue data is provided, DO NOT mention any revenue figures or analysis - focus solely on government orders.
-      Create a comprehensive Form 886-A document with sections for Issue, Facts, Law, Argument, and Conclusion based on the specific business information and COVID-19 research data provided.`;
+      CRITICAL REQUIREMENT: This is a legal tax document that requires precise, comprehensive information about the business.
       
+      You must thoroughly research the business based on the provided information, including NAICS code and website if available.
+      Your document must include specific business operations details, not vague statements about information availability.
+      
+      Each government order must be documented in the EXACT required format with all fields completed.
+      
+      The Law section must be comprehensive with proper legal citations to statutes, IRS notices, and relevant guidance.
+      
+      If revenue data is provided, include it accurately. If not, focus exclusively on the government orders approach.`;
+
+      // Build the enhanced Form 886-A prompt template
       promptTemplate = `Please create a Form 886-A document for ERC substantiation using the following information:
 
 BUSINESS INFORMATION:
@@ -525,6 +590,8 @@ EIN: ${businessInfo.ein}
 Location: ${businessInfo.location}
 Time Periods: ${timePeriodsFormatted}
 Business Type: ${businessInfo.businessType || 'business'}
+${businessInfo.businessWebsite ? `Business Website: ${businessInfo.businessWebsite}` : ''}
+NAICS Code: ${businessInfo.naicsCode || 'Not provided'}
 
 DISALLOWANCE REASON:
 The ERC claim was disallowed because ${disallowanceReasonText}. Address this specific reason in your response.
@@ -534,78 +601,69 @@ ${evidenceContent}
 COVID-19 RESEARCH DATA:
 ${covidData}
 
-IMPORTANT FORMATTING INSTRUCTIONS:
-1. DO NOT include direct links or URLs in the document - they will be processed separately and added as attachments
-2. Instead of URLs, reference orders and sources by their names and dates
-3. Use CONSISTENT formatting throughout - use bullet points (•) for all lists, not dashes or mixed formats
-4. Include ONLY the evidence that has been provided - ${hasValidRevenueData && includeRevenueSection ? 'revenue decline AND/OR' : 'ONLY'} government orders
-5. ${hasValidRevenueData && includeRevenueSection ? 'If revenue decline data shows qualifying quarters, make this a PROMINENT part of the document' : 'DO NOT fabricate or invent revenue figures, as none were provided. Focus EXCLUSIVELY on the government orders approach.'}
-6. ${disallowanceReason === 'not_in_operation' ? 'Make sure to specifically address that the business was in operation during the claimed period, providing evidence from the research data.' : ''}
+BUSINESS RESEARCH INSTRUCTIONS:
+1. First, use the provided business information to create a detailed Facts section.
+2. ${businessInfo.businessWebsite ? `Research the business website (${businessInfo.businessWebsite}) to understand their specific operations.` : 'Research typical operations for a business of this type and NAICS code.'}
+3. Provide concrete details about what the business actually does, not vague statements.
+4. Avoid phrases like "information is not available" - use industry knowledge for reasonable inferences.
 
-SPECIFIC FORMAT REQUIREMENTS FOR GOVERNMENT ORDERS:
-For each government order mentioned, you MUST use this EXACT detailed format:
+CRITICAL SECTION REQUIREMENTS:
 
-• Order Name: [Full Name of Order]
-• Order Number: [Official Number/Identifier]
-• Date Enacted: [MM/DD/YYYY]
-• Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
-• Order Summary: [2-3 sentence detailed description of what the order mandated]
-• Impact on Quarter: [Specific explanation of how this affected the business operations]
+1. FACTS SECTION:
+   - Describe the business operations in detail: products/services, size, locations, workflows
+   - Explain the industry context for a ${businessInfo.businessType} in ${businessInfo.location}
+   - Summarize how COVID-19 affected their operations during the claimed periods
 
-IMPORTANT: Each order must be listed individually with ALL six fields above. Do not abbreviate or simplify this format, even for minor orders.`;
+2. LAW SECTION:
+   - Include comprehensive analysis of ERC provisions from the CARES Act, Relief Act, and ARP
+   - Cite specific sections of IRS Notice 2021-20, 2021-23, and 2021-49
+   - Detail the legal tests for "full or partial suspension" and "more than nominal" impact (10% rule)
+   - Include analysis of essential business qualification when applicable
+   - ${businessInfo.governmentOrdersInfo && businessInfo.governmentOrdersInfo.toLowerCase().includes('supply chain') ? 'Include detailed legal analysis of supply chain disruption qualification from IRS Notice 2021-20, Q/A #12' : ''}
 
-      // Only include revenue instructions if we have revenue data and includeRevenueSection is true
-      if (hasValidRevenueData && includeRevenueSection) {
-        promptTemplate += `
+3. ARGUMENT SECTION:
+   For each government order, use this EXACT format:
 
-REVENUE DECLINE PRESENTATION FORMAT:
-When including revenue decline information, use the following tabular format:
+   • Order Name: [Full official name of the order/proclamation]
+   • Order Number: [Official number or identifier]
+   • Date Enacted: [MM/DD/YYYY]
+   • Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
+   • Order Summary: [3-4 sentence description quoting the EXACT language of restrictions]
+   • Impact on Quarter: [Detailed explanation of how this specifically affected the business]
 
-1. Create a header paragraph that introduces the revenue data:
-"In addition to the government orders discussed above, we are submitting quarterly revenue data that demonstrates the revenue reductions for [BUSINESS_NAME]. The following table presents the quarterly revenue amounts and percentage changes for comparison purposes."
+   - Organize orders chronologically by quarter
+   - Ensure each claimed quarter has documented orders
+   - ${(timePeriodsFormatted.includes('Q3 2021') || timePeriodsFormatted.includes('3rd Quarter 2021')) ? 'For Q3 2021, ensure you include federal orders like PROCLAMATION 9994, EXECUTIVE ORDER 14017, and CDC Delta variant guidance from July 2021.' : ''}
+   ${businessInfo.governmentOrdersInfo && businessInfo.governmentOrdersInfo.toLowerCase().includes('supply chain') ? `
+   - Include a separate Supply Chain Disruption Analysis section detailing:
+     * How government orders disrupted the supply chain
+     * Which specific critical materials were affected
+     * Why alternative suppliers weren't available
+     * The direct impact on business operations` : ''}
 
-2. Present the comprehensive revenue data in a clear, table-like format showing ALL quarters with available data. For each quarter, include:
-   - The quarter being compared (e.g., "Q1 2019-2020")
-   - 2019 baseline revenue
-   - Comparison period revenue (2020 or 2021)
-   - Dollar amount of decline
-   - Percentage decline
-   - Whether the quarter qualifies for ERC based on revenue decline
+4. CONCLUSION SECTION:
+   - Clearly state that the business qualifies for ERC for the claimed periods
+   - Summarize the key government orders that caused suspension
+   - Directly refute the disallowance reason: ${disallowanceReasonText}
+   - Include the standard attestation language
 
-3. After the table, add a summary paragraph:
-"As shown in the revenue table above, the quarters with 'YES' in the QUALIFIES column meet the ERC threshold for revenue decline (50%+ for 2020, 20%+ for 2021). These revenue reductions, combined with the impact of government orders described earlier, provide substantiation for our ERC claim."
+IMPORTANT FORMATTING RULES:
+1. Use today's date: ${new Date().toLocaleDateString()}
+2. Use CONSISTENT bullet points (•) for all lists
+3. Include ALL required fields for EACH government order
+4. Format legal citations properly (e.g., "Section 2301(c)(2)(A)" not just "Section 2301")
+5. Include the attestation: "Under penalties of perjury, I declare that I submitted this Form 886-A and accompanying documents, and to the best of my personal knowledge and belief, the information stated herein and in accompanying documents is true, correct, and complete."`;
 
-DO NOT USE PHRASES like "audited figures" or "exact amounts" or "EXACT" revenues, as these values have not been audited. Simply present the data as reported by the business.
-
-IMPORTANT: Include ALL quarters where data is available in the table, not just the qualifying quarters. This comprehensive presentation provides better context for the ERC claim.`;
-      } else {
-        promptTemplate += `
-
-CRITICAL INSTRUCTION: ${includeRevenueSection ? 'NO REVENUE DATA WAS PROVIDED.' : 'DO NOT INCLUDE REVENUE ANALYSIS IN THIS DOCUMENT.'} DO NOT FABRICATE OR INVENT ANY REVENUE FIGURES. DO NOT INCLUDE ANY REVENUE DECLINE ANALYSIS. This protest should be based SOLELY on the partial suspension of operations caused by government orders.`;
+      // Add special handling for specific quarters if needed
+      const allQuarters = businessInfo.timePeriods || [businessInfo.timePeriod];
+      if (allQuarters.some(q => q.includes('Q3 2021') || q.includes('3rd Quarter 2021'))) {
+        promptTemplate += `\n\nIMPORTANT: For Q3 2021, you MUST address these specific federal orders:
+- PROCLAMATION 9994 - DECLARING A NATIONAL EMERGENCY (03/13/2020 - 04/10/2023)
+- EXECUTIVE ORDER 14017 - SECURING AMERICA'S SUPPLY CHAINS (02/24/21 - ongoing)
+- CDC MASK CHANGES - DELTA VARIANT (07/27/21 - 02/25/22)`;
       }
-
-      promptTemplate += `
-
-FORMAT: Create a comprehensive Form 886-A document with the following structure:
-1. Issue - Define the question of whether the business qualifies for ERC based on ${hasValidRevenueData && includeRevenueSection ? 'ALL available evidence' : 'partial suspension of operations due to government orders'}
-2. Facts - Detail the business operations and include ${hasValidRevenueData && includeRevenueSection ? 'ALL relevant evidence (revenue decline data AND/OR government orders)' : 'information about how government orders affected operations'}
-3. Law - Explain the ERC provisions, IRS Notice 2021-20, and other relevant guidance for ${hasValidRevenueData && includeRevenueSection ? 'ALL qualification methods' : 'the government orders approach'}
-4. Argument - Present the case for why the business qualifies based on ${hasValidRevenueData && includeRevenueSection ? 'ALL available evidence' : 'government orders causing partial suspension'}
-5. Conclusion - Summarize the eligibility determination 
-
-Use today's date: ${new Date().toLocaleDateString()}
-
-FINAL CRITICAL INSTRUCTION:
-1. Include ONLY the evidence that has actually been provided
-2. MAINTAIN the exact format for government orders specified above - this format is REQUIRED
-3. Do not abbreviate or simplify the government order format, even for minor orders
-4. ${hasValidRevenueData && includeRevenueSection ? 'If both revenue reduction and government orders information is available, include BOTH' : 'DO NOT fabricate or invent ANY revenue figures, as none were provided'}
-5. Format each government order with all six required fields (Name, Number, Dates, Summary, Impact)
-6. ${hasValidRevenueData && includeRevenueSection ? 'Present the revenue data in a clear tabular format showing ALL available quarters - do not imply the figures were audited' : 'Focus EXCLUSIVELY on how government orders caused a partial suspension of operations'}
-7. Directly address the disallowance reason: ${disallowanceReasonText}`;
-    
     } else {
-      // Default to protest letter (original functionality)
+      // Original protest letter prompt construction
       systemPrompt = `You are an expert in creating IRS Employee Retention Credit (ERC) protest letters.
       CRITICAL REQUIREMENT: This is a legal tax document. If exact revenue figures are provided, you MUST include them without rounding or generalizing.
       If NO revenue data is provided, DO NOT mention any revenue figures or analysis - focus solely on government orders.
@@ -692,7 +750,7 @@ FINAL CRITICAL INSTRUCTION:
 3. Do not abbreviate or simplify the government order format, even for minor orders
 4. ${hasValidRevenueData && includeRevenueSection ? 'If both revenue reduction and government orders information is available, include BOTH' : 'DO NOT fabricate or invent ANY revenue figures, as none were provided'}
 5. Format each government order with all six required fields (Name, Number, Dates, Summary, Impact)
-6. ${hasValidRevenueData && includeRevenueSection ? 'Present the revenue data in a clear tabular format showing ALL available quarters - do not imply the figures were audited' : 'Focus EXCLUSIVELY on how government orders caused a partial suspension of operations'}
+6. ${hasValidRevenueData && includeRevenueSection ? 'Present the revenue data in a clear tabular format showing ALL quarters where data is available - do not imply the figures were audited' : 'Focus EXCLUSIVELY on how government orders caused a partial suspension of operations'}
 7. For revenue figures, create a tabular format with ALL quarters where data is available - DO NOT selectively include only some quarters
 8. Directly address the disallowance reason: ${disallowanceReasonText}`;
     }
@@ -712,9 +770,13 @@ FINAL CRITICAL INSTRUCTION:
     });
     
     const generatedDocument = response.choices[0].message.content.trim();
+    
+    // Apply post-processing to ensure consistent formatting
+    const processedDocument = ensureConsistentFormatting(generatedDocument, businessInfo.documentType);
+    
     console.log('Document successfully generated');
     
-    return generatedDocument;
+    return processedDocument;
   } catch (error) {
     console.error('Error generating document:', error);
     throw new Error(`Failed to generate document: ${error.message}`);
@@ -729,5 +791,6 @@ module.exports = {
   calculateRevenueDeclines,
   getQualifyingQuarters,
   getDisallowanceReasonText,
-  createRevenueTable
+  createRevenueTable,
+  ensureConsistentFormatting
 };
