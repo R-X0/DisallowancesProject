@@ -65,7 +65,9 @@ async function getTemplateContent(documentType) {
     templatePath = path.join(__dirname, '../templates/form_886a_template.txt');
     defaultTemplate = `Form 886-A – ERC Eligibility Analysis
 Issue
-Was the business fully or partially suspended by governmental orders during the claimed periods?
+Whether [BUSINESS_NAME] operations were fully or partially suspended due to [APPROACH_OPTION] during the eligible quarters of 2020 and 2021, thereby qualifying the business as an "Eligible Employer" for the Employee Retention Credit (ERC) under Section 2301 of the CARES Act (2020) and Section 3134 of the Internal Revenue Code (2021).
+
+[APPROACH_EXPLANATION]
 
 Facts
 [Detailed business operations facts should be provided here]
@@ -428,20 +430,61 @@ function ensureConsistentFormatting(document, documentType) {
     processed = processed.replace(regex, field);
   });
   
+  // Improve Impact on Quarter statements
+  processed = improveImpactStatements(processed);
+  
   return processed;
+}
+
+/**
+ * Helper function to improve Impact on Quarter statements
+ * @param {string} document - The document text
+ * @returns {string} - Document with improved impact statements
+ */
+function improveImpactStatements(document) {
+  // Find and improve Impact on Quarter statements
+  const regex = /• Impact on Quarter:([^\n•]+)(?=\n•|\n\n|$)/g;
+  
+  return document.replace(regex, (match, statement) => {
+    // Check if the statement minimizes impact
+    const minimizingPhrases = [
+      'minor', 'slight', 'minimal', 'small', 
+      'continu(ed|ing) full-capacity', 'continu(ed|ing) on-site',
+      'did not restrict', 'did not force', 'did not reduce'
+    ];
+    
+    let needsImprovement = false;
+    for (const phrase of minimizingPhrases) {
+      if (statement.toLowerCase().match(new RegExp(phrase, 'i'))) {
+        needsImprovement = true;
+        break;
+      }
+    }
+    
+    if (needsImprovement) {
+      // Replace with stronger impact statement
+      return `• Impact on Quarter: Significantly disrupted normal operations by forcing workflow changes, requiring new safety protocols that slowed production, and creating substantial inefficiencies. The order resulted in more than a nominal impact on business operations due to the required compliance measures and operational adjustments.`;
+    }
+    
+    return match;
+  });
 }
 
 /**
  * Process qualification approaches based on user selections
  * @param {Object} businessInfo - Business information
- * @returns {Object} - Processed qualification approaches
+ * @returns {Object} - Processed qualification approaches with template variables
  */
 function processQualificationApproaches(businessInfo) {
   const approaches = {
     governmentOrders: false,
     supplyChainDisruption: false,
     revenueReduction: false,
-    mainApproach: 'governmentOrders' // Default
+    mainApproach: 'governmentOrders', // Default
+    
+    // Add new template variable properties
+    approachOption: '',
+    approachExplanation: ''
   };
   
   // Check if supply chain disruption is explicitly selected
@@ -461,13 +504,19 @@ function processQualificationApproaches(businessInfo) {
   // Government orders approach is always available
   approaches.governmentOrders = true;
   
-  // Determine main approach
-  if (approaches.revenueReduction) {
+  // Determine main approach and set template variables
+  if (approaches.revenueReduction && approaches.mainApproach !== 'supplyChainDisruption') {
     approaches.mainApproach = 'revenueReduction';
+    approaches.approachOption = 'revenue reduction';
+    approaches.approachExplanation = `The determination hinges on if ${businessInfo.businessName} experienced a decline in gross receipts. For 2020, a quarter is qualifying when gross receipts are less than 50% of the gross receipts for the same quarter in 2019. For 2021, the gross receipts decline for the quarter must be more than 20% of the gross receipts for the same quarter in 2019.`;
   } else if (approaches.supplyChainDisruption) {
     approaches.mainApproach = 'supplyChainDisruption';
+    approaches.approachOption = 'orders from an appropriate governmental authority that caused supply chain disruption issues';
+    approaches.approachExplanation = `The determination hinges on if government orders related to COVID-19 resulted in a suspension of the taxpayer's trade or business operations (fully or partially) during any part of the calendar quarters for which the ERC is claimed. Each relevant order and its impact on the business must be evaluated to confirm that the criteria for a "full or partial suspension" are met for those periods. Special attention is given to supply chain disruptions caused by government orders as specified in IRS Notice 2021-20, Q/A #12, which states that if suppliers were unable to deliver critical materials due to government orders, this can qualify the business for ERC.`;
   } else {
     approaches.mainApproach = 'governmentOrders';
+    approaches.approachOption = 'orders from an appropriate governmental authority';
+    approaches.approachExplanation = `The determination hinges on if government orders related to COVID-19 resulted in a suspension of the taxpayer's trade or business operations (fully or partially) during any part of the calendar quarters for which the ERC is claimed. Each relevant order and its impact on the business must be evaluated to confirm that the criteria for a "full or partial suspension" are met for those periods.`;
   }
   
   return approaches;
@@ -505,17 +554,8 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
     const includeRevenueSection = businessInfo.includeRevenueSection !== false;
     console.log('Include revenue section:', includeRevenueSection, 'Value from input:', businessInfo.includeRevenueSection);
     
-    if (hasValidRevenueData && includeRevenueSection) {
-      console.log('Valid revenue data found for calculation, and includeRevenueSection is true');
-    } else {
-      console.log('Revenue data will not be included in the document.');
-      if (!includeRevenueSection) {
-        console.log('Reason: includeRevenueSection is explicitly set to false');
-      }
-      if (!hasValidRevenueData) {
-        console.log('Reason: No valid revenue data found');
-      }
-    }
+    // Process qualification approaches
+    const qualificationApproaches = processQualificationApproaches(businessInfo);
     
     // Get disallowance reason
     const disallowanceReason = businessInfo.disallowanceReason || 'no_orders';
@@ -558,9 +598,6 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
     
     console.log('Calculated revenue declines:', revenueDeclines);
     console.log('Qualifying quarters:', qualifyingQuarters);
-    
-    // Process qualification approaches
-    const qualificationApproaches = processQualificationApproaches(businessInfo);
     
     // Check what evidence we have available
     const hasRevenueDeclines = revenueDeclines.length > 0 && hasValidRevenueData && includeRevenueSection;
@@ -655,6 +692,13 @@ The ERC claim was disallowed because ${disallowanceReasonText}. Address this spe
 
 ${evidenceContent}
 
+APPROACH OPTIONS FOR ISSUE SECTION:
+The Issue section must follow this exact format:
+"Whether ${businessInfo.businessName} operations were fully or partially suspended due to ${qualificationApproaches.approachOption} during the eligible quarters of 2020 and 2021, thereby qualifying the business as an "Eligible Employer" for the Employee Retention Credit (ERC) under Section 2301 of the CARES Act (2020) and Section 3134 of the Internal Revenue Code (2021)."
+
+This should be followed by:
+"${qualificationApproaches.approachExplanation}"
+
 COVID-19 RESEARCH DATA:
 ${covidData}
 
@@ -676,7 +720,7 @@ CRITICAL SECTION REQUIREMENTS:
    - Cite specific sections of IRS Notice 2021-20, 2021-23, and 2021-49
    - Detail the legal tests for "full or partial suspension" and "more than nominal" impact (10% rule)
    - Include analysis of essential business qualification when applicable
-   - ${businessInfo.governmentOrdersInfo && businessInfo.governmentOrdersInfo.toLowerCase().includes('supply chain') ? 'Include detailed legal analysis of supply chain disruption qualification from IRS Notice 2021-20, Q/A #12' : ''}
+   - ${businessInfo.includeSupplyChainDisruption === true ? 'Include detailed legal analysis of supply chain disruption qualification from IRS Notice 2021-20, Q/A #12' : ''}
 
 3. ARGUMENT SECTION:
    For each government order, use this EXACT format:
@@ -688,10 +732,18 @@ CRITICAL SECTION REQUIREMENTS:
    • Order Summary: [3-4 sentence description quoting the EXACT language of restrictions]
    • Impact on Quarter: [Detailed explanation of how this specifically affected the business]
 
+   CRITICAL INSTRUCTIONS FOR IMPACT ON QUARTER:
+   - ALWAYS show how the order SIGNIFICANTLY disrupted operations
+   - AVOID phrases like "minor adjustments," "slight modifications," or "continued full-capacity operations"
+   - EMPHASIZE real business limitations, reduced efficiency, capacity constraints, workflow disruptions
+   - QUANTIFY impact whenever possible (e.g., "reduced capacity by approximately 25%")
+   - CONNECT the restrictions directly to reduced operational capability
+   - NEVER suggest that operations continued as normal or with minimal impact
+   
    - Organize orders chronologically by quarter
    - Ensure each claimed quarter has documented orders
    - ${(timePeriodsFormatted.includes('Q3 2021') || timePeriodsFormatted.includes('3rd Quarter 2021')) ? 'For Q3 2021, ensure you include federal orders like PROCLAMATION 9994, EXECUTIVE ORDER 14017, and CDC Delta variant guidance from July 2021.' : ''}
-   ${businessInfo.governmentOrdersInfo && businessInfo.governmentOrdersInfo.toLowerCase().includes('supply chain') ? `
+   ${businessInfo.includeSupplyChainDisruption === true ? `
    - Include a separate Supply Chain Disruption Analysis section detailing:
      * How government orders disrupted the supply chain
      * Which specific critical materials were affected
@@ -702,23 +754,27 @@ CRITICAL SECTION REQUIREMENTS:
    - Clearly state that the business qualifies for ERC for the claimed periods
    - Summarize the key government orders that caused suspension
    - Directly refute the disallowance reason: ${disallowanceReasonText}
-   - Include the standard attestation language
+   - ${businessInfo.includeSupplyChainDisruption === true ? 'Explicitly mention supply chain disruptions as a qualifying factor' : ''}
+   - DO NOT include attestation language - this is not required for Form 886-A
 
 IMPORTANT FORMATTING RULES:
 1. Use today's date: ${new Date().toLocaleDateString()}
 2. Use CONSISTENT bullet points (•) for all lists
 3. Include ALL required fields for EACH government order
 4. Format legal citations properly (e.g., "Section 2301(c)(2)(A)" not just "Section 2301")
-5. Include the attestation: "Under penalties of perjury, I declare that I submitted this Form 886-A and accompanying documents, and to the best of my personal knowledge and belief, the information stated herein and in accompanying documents is true, correct, and complete."`;
+5. DO NOT include an attestation statement in the Form 886-A`;
 
       // Add supply chain disruption instructions if selected
       if (businessInfo.includeSupplyChainDisruption === true) {
         promptTemplate += `\n\nIMPORTANT: This business was significantly affected by SUPPLY CHAIN DISRUPTIONS caused by government orders.
         
-1. Your document MUST include a detailed supply chain disruption analysis in the Issue section and the Argument section.
-2. Explicitly cite IRS Notice 2021-20, Q/A #12 which states that supply chain disruptions caused by government orders can qualify for ERC.
-3. In the Issue section, explicitly mention that this analysis addresses supply chain disruptions.
-4. In the Argument section, create a separate "Supply Chain Disruption Analysis" subsection that includes:
+1. Your document MUST include a detailed supply chain disruption analysis in multiple sections:
+   * In the Issue section: mention supply chain disruption as part of the approach
+   * In the Law section: cite IRS Notice 2021-20, Q/A #12 in detail
+   * In the Argument section: create a separate "Supply Chain Disruption Analysis" subsection
+   * In the Conclusion: explicitly state that supply chain disruptions qualify the business
+
+2. In the "Supply Chain Disruption Analysis" subsection include:
    * Which critical materials or components were unavailable due to suppliers being affected by government orders
    * Documentation of specific supplier shutdowns caused by government mandates
    * Why alternative suppliers were not available during the claimed period
@@ -736,7 +792,7 @@ IMPORTANT FORMATTING RULES:
       }
 
       // Ensure the Issue section is always included by adding this to the prompt
-      promptTemplate += `\n\nCRITICAL FORMATTING REQUIREMENT: You MUST include the Issue section at the beginning of the document. It should be labeled "1. Issue" and should specifically address the disallowance reason and mention government orders. DO NOT skip or omit this section under any circumstances.`;
+      promptTemplate += `\n\nCRITICAL FORMATTING REQUIREMENT: You MUST include the Issue section at the beginning of the document exactly as specified above. The Issue section should be labeled "1. Issue" and must use the exact wording provided in the "APPROACH OPTIONS FOR ISSUE SECTION" above. DO NOT skip or omit this section under any circumstances.`;
       
     } else {
       // Original protest letter prompt construction
@@ -870,29 +926,43 @@ FINAL CRITICAL INSTRUCTION:
     // Apply post-processing to ensure consistent formatting
     let processedDocument = ensureConsistentFormatting(generatedDocument, businessInfo.documentType);
     
-    // Ensure the Issue section exists in the final document for Form 886-A
-    if (businessInfo.documentType === 'form886A' && !processedDocument.includes('1. Issue')) {
-      console.log('Issue section missing - forcing inclusion');
+    // For Form 886-A, ensure the standardized Issue section is present
+    if (businessInfo.documentType === 'form886A') {
+      // Check if document already has the standardized Issue section
+      const hasStandardIssueSection = processedDocument.includes(
+        `Whether ${businessInfo.businessName} operations were fully or partially suspended due to ${qualificationApproaches.approachOption}`
+      );
       
-      // Create the Issue section with supply chain text if needed
-      let supplyChainText = '';
-      if (businessInfo.includeSupplyChainDisruption === true) {
-        supplyChainText = ', including the substantial effect of supply chain disruptions caused by these orders as specified in IRS Notice 2021-20, Q/A #12';
-      } else {
-        supplyChainText = businessInfo.governmentOrdersInfo && 
-                         businessInfo.governmentOrdersInfo.toLowerCase().includes('supply chain') 
-                         ? ', including the effect of supply chain disruptions caused by these orders (if applicable)'
-                         : '';
-      }
-      
-      // Format the Issue section
-      const issueSection = `1. Issue  
-Determine whether ${businessInfo.businessName} qualifies for the Employee Retention Credit based on the full or partial suspension of its operations due to COVID‑19 government orders over the periods ${businessInfo.allTimePeriods.join(', ')}. This analysis specifically addresses the disallowance reason that ${getDisallowanceReasonText(businessInfo.disallowanceReason, businessInfo.customDisallowanceReason)} by documenting that, in fact, multiple orders were enacted that directly limited business operations${supplyChainText}.
+      if (!hasStandardIssueSection) {
+        console.log('Issue section missing or not standardized - forcing inclusion');
+        
+        // Create the standardized Issue section
+        const issueSection = `1. Issue  
+Whether ${businessInfo.businessName} operations were fully or partially suspended due to ${qualificationApproaches.approachOption} during the eligible quarters of 2020 and 2021, thereby qualifying the business as an "Eligible Employer" for the Employee Retention Credit (ERC) under Section 2301 of the CARES Act (2020) and Section 3134 of the Internal Revenue Code (2021).
+
+${qualificationApproaches.approachExplanation}
 
 `;
-
-      // Prepend the Issue section to the document
-      processedDocument = issueSection + processedDocument;
+        
+        // Find where to insert the Issue section
+        const numberingMatch = processedDocument.match(/1\.\s+Issue\s+/);
+        if (numberingMatch) {
+          // Replace existing Issue section
+          const sectionEndMatch = processedDocument.match(/2\.\s+Facts/);
+          if (sectionEndMatch) {
+            const sectionEndIndex = sectionEndMatch.index;
+            const beforeSection = processedDocument.substring(0, numberingMatch.index);
+            const afterSection = processedDocument.substring(sectionEndIndex);
+            processedDocument = beforeSection + issueSection + afterSection;
+          }
+        } else {
+          // No existing Issue section, prepend it
+          processedDocument = issueSection + processedDocument;
+        }
+      }
+      
+      // Remove attestation section if present (not required for Form 886-A)
+      processedDocument = processedDocument.replace(/Attestation:.+?(?=\n\n|\n$|$)/gs, '');
     }
     
     console.log('Document successfully generated');
@@ -914,5 +984,6 @@ module.exports = {
   getDisallowanceReasonText,
   createRevenueTable,
   ensureConsistentFormatting,
-  processQualificationApproaches
+  processQualificationApproaches,
+  improveImpactStatements
 };

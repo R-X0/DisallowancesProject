@@ -5,7 +5,9 @@ Location: [LOCATION]
 Date: [CURRENT_DATE]
 
 1. Issue  
-Determine whether [BUSINESS_NAME] qualifies for the Employee Retention Credit based on the full or partial suspension of its operations due to COVID‑19 government orders over the periods [TIME_PERIODS]. This analysis specifically addresses the disallowance reason that [DISALLOWANCE_REASON] by documenting that, in fact, multiple orders were enacted that directly limited business operations[SUPPLY_CHAIN_TEXT].
+Whether [BUSINESS_NAME] operations were fully or partially suspended due to [APPROACH_OPTION] during the eligible quarters of 2020 and 2021, thereby qualifying the business as an "Eligible Employer" for the Employee Retention Credit (ERC) under Section 2301 of the CARES Act (2020) and Section 3134 of the Internal Revenue Code (2021). 
+
+[APPROACH_EXPLANATION]
 
 2. Facts  
 [BUSINESS_NAME] is a [BUSINESS_TYPE] engaged in [DETAILED_BUSINESS_DESCRIPTION] located in [LOCATION]. The company provides [SPECIFIC_SERVICES_OR_PRODUCTS] to [CLIENT_BASE] in the [INDUSTRY_SECTOR] industry. The company's primary operations include [PRIMARY_BUSINESS_OPERATIONS], utilizing [EQUIPMENT/FACILITIES] and employing staff who perform [KEY_JOB_FUNCTIONS].
@@ -37,7 +39,3 @@ The evidence provided below demonstrates that, for the periods claimed, [BUSINES
 
 5. Conclusion  
 Based on the documented COVID‑19 government orders, [BUSINESS_NAME] experienced a qualified partial suspension of operations during [TIME_PERIODS]. The cumulative impact of these orders meets the requirements under IRS Notice 2021-20 for claiming the Employee Retention Credit. Therefore, the disallowance reason stating [DISALLOWANCE_REASON] is not accurate, and [BUSINESS_NAME] qualifies for the ERC for the applicable quarters based on the government orders approach.
-
-Attestation: "Under penalties of perjury, I declare that I submitted this Form 886-A and accompanying documents, and to the best of my personal knowledge and belief, the information stated herein and in accompanying documents is true, correct, and complete."
-
-[SIGNATURE_LINE]
