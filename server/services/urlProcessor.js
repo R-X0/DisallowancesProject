@@ -71,20 +71,48 @@ async function extractAndDownloadUrls(letter, outputDir) {
     return { letter, attachments };
   }
   
+  // NEW: Quickly pre-check URLs before launching Puppeteer to filter out obvious failures
+  console.log("Pre-checking URLs for accessibility...");
+  const validUrls = [];
+  for (const url of urls) {
+    try {
+      // Simple HEAD request to quickly check if URL is accessible
+      const headResponse = await axios.head(url, { 
+        timeout: 5000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
+      console.log(`URL ${url} is accessible (status ${headResponse.status})`);
+      validUrls.push(url);
+    } catch (error) {
+      console.log(`URL ${url} appears to be inaccessible - skipping`);
+      // Don't add to validUrls, effectively skipping it
+    }
+  }
+  
+  console.log(`${validUrls.length} of ${urls.length} URLs appear to be accessible`);
+  
+  // If no valid URLs, return early
+  if (validUrls.length === 0) {
+    console.log("No accessible URLs found, skipping PDF generation step");
+    return { letter, attachments };
+  }
+  
   // Launch browser for downloading
-  console.log("Launching browser to process URLs...");
+  console.log("Launching browser to process valid URLs...");
   const browser = await puppeteer.launch({
     headless: 'new',
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
   });
   
   try {
-    for (let i = 0; i < urls.length; i++) {
-      const url = urls[i];
+    for (let i = 0; i < validUrls.length; i++) {
+      const url = validUrls[i];
       const filename = `attachment_${i+1}_${url.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30)}.pdf`;
       const pdfPath = path.join(outputDir, filename);
       
-      console.log(`Processing URL (${i+1}/${urls.length}): ${url}`);
+      console.log(`Processing URL (${i+1}/${validUrls.length}): ${url}`);
       
       // Check if URL is already a PDF
       let isPdf = url.toLowerCase().endsWith('.pdf');
@@ -139,9 +167,8 @@ async function extractAndDownloadUrls(letter, outputDir) {
           }
         } catch (error) {
           console.error(`Error directly downloading PDF from ${url}:`, error);
-          // Fall back to Puppeteer method if direct download fails
-          console.log(`Falling back to browser-based capture for ${url}`);
-          await processPuppeteer(browser, url, pdfPath, i, filename, letter, attachments);
+          console.log(`Skipping URL ${url} due to download failure`);
+          // Skip this URL entirely rather than trying puppeteer as fallback
         }
       } else {
         // Use Puppeteer for non-PDF URLs
@@ -152,7 +179,7 @@ async function extractAndDownloadUrls(letter, outputDir) {
     await browser.close();
   }
   
-  console.log(`Processed ${attachments.length} attachments from ${urls.length} URLs`);
+  console.log(`Processed ${attachments.length} attachments from ${validUrls.length} URLs`);
   return { letter, attachments };
 }
 
@@ -184,10 +211,31 @@ async function processPuppeteer(browser, url, pdfPath, index, filename, letter, 
     });
     
     console.log(`Navigating to ${url} with Puppeteer`);
-    await page.goto(url, { 
-      waitUntil: 'networkidle2', 
-      timeout: 30000 
-    });
+    
+    // IMPROVED: First check if the page is accessible with a quicker timeout
+    try {
+      // Try a faster navigation with domcontentloaded first to fail quickly
+      await page.goto(url, { 
+        waitUntil: 'domcontentloaded', 
+        timeout: 15000  // Shorter timeout for initial check
+      });
+    } catch (navError) {
+      console.log(`URL appears to be inaccessible: ${url} - Error: ${navError.message}`);
+      console.log(`Skipping broken link: ${url}`);
+      // Skip this URL completely - return early
+      return;
+    }
+    
+    // If we get here, the URL seems accessible, continue with full loading
+    try {
+      await page.goto(url, { 
+        waitUntil: 'networkidle2', 
+        timeout: 30000 
+      });
+    } catch (fullLoadError) {
+      // If full loading fails, we'll continue with what we have, as the page might be partially loaded
+      console.log(`Full page load failed but page is accessible, continuing: ${fullLoadError.message}`);
+    }
     
     // Wait a bit for any remaining rendering
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -223,7 +271,8 @@ async function processPuppeteer(browser, url, pdfPath, index, filename, letter, 
     }
   } catch (err) {
     console.error(`Error capturing PDF for ${url}:`, err);
-    // Even if there's an error, we'll try to continue with other URLs
+    // IMPROVED: Don't add broken URLs to attachments, just log and continue
+    console.log(`Skipping broken link: ${url}`);
   } finally {
     await page.close();
   }
