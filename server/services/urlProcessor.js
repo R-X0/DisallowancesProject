@@ -7,7 +7,7 @@ const path = require('path');
 const axios = require('axios');
 
 /**
- * Extract URLs from the conversation and download them as PDFs
+ * Extract URLs from the document and download them as PDFs
  * @param {string} letter - The generated letter text
  * @param {string} outputDir - Directory to save the PDFs
  * @returns {Object} - Object containing updated letter text and attachment information
@@ -15,65 +15,87 @@ const axios = require('axios');
 async function extractAndDownloadUrls(letter, outputDir) {
   console.log("==== URL EXTRACTION DEBUG ====");
   
-  // We'll extract URLs from the conversation.txt file AND the generated letter
+  // Extract URLs ONLY from the dedicated Sources section
   let urls = [];
-  let conversationContent = "";
+  let sourceDescriptions = {};
   
   try {
-    const conversationPath = path.join(outputDir, 'conversation.txt');
-    if (fsSync.existsSync(conversationPath)) {
-      conversationContent = await fs.readFile(conversationPath, 'utf8');
-      console.log(`Read conversation content: ${conversationContent.length} characters`);
+    // Look for a dedicated Sources section
+    const sourcesRegex = /SOURCES:\s*([\s\S]+?)(?:\n\n|$)/i;
+    const sourcesMatch = letter.match(sourcesRegex);
+    
+    if (sourcesMatch && sourcesMatch[1]) {
+      // Extract numbered URLs from the Sources section
+      const sourceContent = sourcesMatch[1];
+      const urlLines = sourceContent.split('\n').filter(line => line.trim());
+      
+      console.log(`Found Sources section with ${urlLines.length} entries`);
+      
+      // Extract URL from each line (format: "1. https://example.gov - Description")
+      for (const line of urlLines) {
+        // Extract URL and description using regex
+        const urlMatch = line.match(/\d+\.\s*(https?:\/\/[^\s]+)(?:\s*-\s*(.+))?/);
+        
+        if (urlMatch && urlMatch[1]) {
+          const url = urlMatch[1].trim();
+          const description = urlMatch[2] ? urlMatch[2].trim() : '';
+          
+          if (url.length > 10) { // Simple validation
+            // Check if this URL is already in our list (avoid duplicates)
+            if (!urls.includes(url)) {
+              urls.push(url);
+              sourceDescriptions[url] = description;
+            }
+          }
+        }
+      }
+      
+      console.log(`Extracted ${urls.length} unique source URLs`);
     } else {
-      console.log("No conversation.txt file found, only extracting from letter");
+      console.log("No Sources section found in document");
+      
+      // Fallback to scanning for URLs only if no sources section found
+      // This is just a safety fallback
+      console.log("Using fallback URL detection method");
+      
+      // Only scan for government URLs as these are most likely to be valid sources
+      const govUrlRegex = /https?:\/\/[^\s\)\"\']+\.gov[^\s\)\"\']+/gi;
+      const govMatches = [...new Set(letter.match(govUrlRegex) || [])];
+      
+      // Add .us state sites too
+      const stateUrlRegex = /https?:\/\/[^\s\)\"\']+\.us[^\s\)\"\']+/gi;
+      const stateMatches = [...new Set(letter.match(stateUrlRegex) || [])];
+      
+      urls = [...govMatches, ...stateMatches];
+      console.log(`Fallback: Found ${urls.length} government/state URLs`);
+      
+      // Limit to max 10 URLs in fallback mode to avoid over-attachment
+      if (urls.length > 10) {
+        console.log(`Limiting fallback URLs from ${urls.length} to 10`);
+        urls = urls.slice(0, 10);
+      }
     }
     
-    // Combine both sources for URL extraction
-    const combinedText = conversationContent + "\n" + letter;
-    
     // Store for debugging
-    await fs.writeFile(path.join(outputDir, 'combined_for_url_extraction.txt'), combinedText, 'utf8');
-    
-    // Comprehensive regex for URL detection
-    const urlRegex = /(?:https?:\/\/)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
-    
-    // Find all matches in the combined content
-    const matches = combinedText.match(urlRegex) || [];
-    console.log(`Raw URL matches found: ${matches.length}`);
-    
-    // Post-process matches to normalize and filter
-    urls = [...new Set(matches)]
-      .filter(url => {
-        // Basic filtering to remove false positives
-        return url.includes('.') && 
-               !url.startsWith('...') && 
-               url.length > 4 &&
-               !/^[0-9.]+$/.test(url); // Avoid IP-like numbers
-      })
-      .map(url => {
-        // Normalize the URL by adding protocol if missing
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          return `https://${url}`;
-        }
-        return url;
-      });
-    
-    console.log(`Found ${urls.length} unique URLs to process`);
-    console.log('URLs to process:', urls);
+    await fs.writeFile(
+      path.join(outputDir, 'extracted_source_urls.txt'), 
+      urls.join('\n'), 
+      'utf8'
+    );
     
   } catch (err) {
-    console.error("Error processing content for URLs:", err);
+    console.error("Error extracting sources:", err);
     return { letter, attachments: [] };
   }
   
   const attachments = [];
   
   if (urls.length === 0) {
-    console.log("WARNING: No URLs found for processing.");
+    console.log("No source URLs found for processing.");
     return { letter, attachments };
   }
   
-  // NEW: Quickly pre-check URLs before launching Puppeteer to filter out obvious failures
+  // Pre-check URLs for accessibility
   console.log("Pre-checking URLs for accessibility...");
   const validUrls = [];
   for (const url of urls) {
@@ -111,10 +133,15 @@ async function extractAndDownloadUrls(letter, outputDir) {
   try {
     for (let i = 0; i < validUrls.length; i++) {
       const url = validUrls[i];
-      const filename = `attachment_${i+1}_${url.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30)}.pdf`;
+      const description = sourceDescriptions[url] || '';
+      
+      // Create a sanitized filename with source number
+      const sourceNum = i + 1;
+      const urlDomain = new URL(url).hostname.replace('www.', '');
+      const filename = `source_${sourceNum}_${urlDomain}.pdf`.replace(/[^a-zA-Z0-9_.-]/g, '_');
       const pdfPath = path.join(outputDir, filename);
       
-      console.log(`Processing URL (${i+1}/${validUrls.length}): ${url}`);
+      console.log(`Processing source #${sourceNum}: ${url}`);
       
       // Check if URL is already a PDF
       let isPdf = url.toLowerCase().endsWith('.pdf');
@@ -139,8 +166,8 @@ async function extractAndDownloadUrls(letter, outputDir) {
       
       if (isPdf) {
         // Direct download for PDF URLs
-        console.log(`Detected PDF URL, downloading directly: ${url}`);
         try {
+          console.log(`Downloading PDF directly: ${url}`);
           const response = await axios({
             method: 'get',
             url: url,
@@ -152,29 +179,28 @@ async function extractAndDownloadUrls(letter, outputDir) {
           });
           
           await fs.writeFile(pdfPath, response.data);
-          console.log(`Successfully downloaded PDF directly from ${url} to ${pdfPath}`);
+          console.log(`Successfully downloaded PDF from ${url} to ${pdfPath}`);
           
           attachments.push({
             originalUrl: url,
             filename: filename,
-            path: pdfPath
+            path: pdfPath,
+            description: description
           });
           
           // Update letter references
-          if (letter.includes(url)) {
-            letter = letter.replace(
-              new RegExp(url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), 
-              `[See Attachment ${i+1}: ${filename}]`
-            );
-          }
+          letter = letter.replace(
+            new RegExp(`\\b${sourceNum}\\.\\s*${escapeRegExp(url)}\\b`, 'g'), 
+            `${sourceNum}. [Attachment ${sourceNum}: ${filename}]`
+          );
         } catch (error) {
           console.error(`Error directly downloading PDF from ${url}:`, error);
-          console.log(`Skipping URL ${url} due to download failure`);
-          // Skip this URL entirely rather than trying puppeteer as fallback
+          console.log(`Trying Puppeteer as fallback for PDF URL: ${url}`);
+          await processPuppeteer(browser, url, pdfPath, sourceNum, filename, description, letter, attachments);
         }
       } else {
         // Use Puppeteer for non-PDF URLs
-        await processPuppeteer(browser, url, pdfPath, i, filename, letter, attachments);
+        await processPuppeteer(browser, url, pdfPath, sourceNum, filename, description, letter, attachments);
       }
     }
   } finally {
@@ -182,20 +208,22 @@ async function extractAndDownloadUrls(letter, outputDir) {
   }
   
   console.log(`Processed ${attachments.length} attachments from ${validUrls.length} URLs`);
+  
+  // Final update to letter - replace the entire Sources section with an Attachments section
+  if (attachments.length > 0) {
+    const attachmentsSection = `ATTACHMENTS:\n${attachments.map((a, i) => 
+      `${i+1}. ${a.filename} - ${a.description || a.originalUrl}`
+    ).join('\n')}`;
+    
+    // Replace the Sources section with Attachments section
+    letter = letter.replace(/SOURCES:[\s\S]+?(?:\n\n|$)/i, attachmentsSection + '\n\n');
+  }
+  
   return { letter, attachments };
 }
 
-/**
- * Process a URL using Puppeteer to generate a PDF
- * @param {Object} browser - Puppeteer browser instance
- * @param {string} url - URL to process
- * @param {string} pdfPath - Path to save the PDF
- * @param {number} index - Index of the URL in the list
- * @param {string} filename - Filename for the attachment
- * @param {string} letter - The letter text to update references in
- * @param {Array} attachments - Array to add the attachment to
- */
-async function processPuppeteer(browser, url, pdfPath, index, filename, letter, attachments) {
+// Helper function to process a URL using Puppeteer to generate a PDF
+async function processPuppeteer(browser, url, pdfPath, sourceNum, filename, description, letter, attachments) {
   const page = await browser.newPage();
   try {
     // Set a longer timeout and try to wait for network idle
@@ -214,28 +242,25 @@ async function processPuppeteer(browser, url, pdfPath, index, filename, letter, 
     
     console.log(`Navigating to ${url} with Puppeteer`);
     
-    // IMPROVED: First check if the page is accessible with a quicker timeout
+    // First check if the page is accessible with a quicker timeout
     try {
-      // Try a faster navigation with domcontentloaded first to fail quickly
       await page.goto(url, { 
         waitUntil: 'domcontentloaded', 
-        timeout: 15000  // Shorter timeout for initial check
+        timeout: 15000
       });
     } catch (navError) {
       console.log(`URL appears to be inaccessible: ${url} - Error: ${navError.message}`);
       console.log(`Skipping broken link: ${url}`);
-      // Skip this URL completely - return early
       return;
     }
     
-    // If we get here, the URL seems accessible, continue with full loading
+    // Continue with full loading
     try {
       await page.goto(url, { 
         waitUntil: 'networkidle2', 
         timeout: 30000 
       });
     } catch (fullLoadError) {
-      // If full loading fails, we'll continue with what we have, as the page might be partially loaded
       console.log(`Full page load failed but page is accessible, continuing: ${fullLoadError.message}`);
     }
     
@@ -259,25 +284,26 @@ async function processPuppeteer(browser, url, pdfPath, index, filename, letter, 
     attachments.push({
       originalUrl: url,
       filename: filename,
-      path: pdfPath
+      path: pdfPath,
+      description: description
     });
     
     // Update letter references
-    if (letter.includes(url)) {
-      letter = letter.replace(
-        new RegExp(url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), 
-        `[See Attachment ${index+1}: ${filename}]`
-      );
-    } else {
-      console.log(`URL ${url} not found in letter, not replacing`);
-    }
+    letter = letter.replace(
+      new RegExp(`\\b${sourceNum}\\.\\s*${escapeRegExp(url)}\\b`, 'g'), 
+      `${sourceNum}. [Attachment ${sourceNum}: ${filename}]`
+    );
   } catch (err) {
     console.error(`Error capturing PDF for ${url}:`, err);
-    // IMPROVED: Don't add broken URLs to attachments, just log and continue
     console.log(`Skipping broken link: ${url}`);
   } finally {
     await page.close();
   }
+}
+
+// Helper function to escape special characters for regex
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 module.exports = {

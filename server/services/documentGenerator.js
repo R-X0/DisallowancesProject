@@ -794,6 +794,19 @@ IMPORTANT FORMATTING RULES:
       // Ensure the Issue section is always included by adding this to the prompt
       promptTemplate += `\n\nCRITICAL FORMATTING REQUIREMENT: You MUST include the Issue section at the beginning of the document exactly as specified above. The Issue section should be labeled "1. Issue" and must use the exact wording provided in the "APPROACH OPTIONS FOR ISSUE SECTION" above. DO NOT skip or omit this section under any circumstances.`;
       
+      // ADD SOURCE DOCUMENTATION REQUIREMENT
+      promptTemplate += `\n\nSOURCE DOCUMENTATION REQUIREMENT:
+At the end of your document, you MUST include a "SOURCES" section with this exact format:
+
+SOURCES:
+1. [Full URL to government order or official document] - [Brief description]
+2. [Full URL to government order or official document] - [Brief description]
+...
+
+Include ONLY PRIMARY source URLs (government websites) that you directly cited in your arguments. 
+Number each source and include the exact, complete URL. DO NOT include news articles or secondary sources.
+This section is critical as these sources will be automatically attached to your document as PDFs.`;
+
     } else {
       // Original protest letter prompt construction
       systemPrompt = `You are an expert in creating IRS Employee Retention Credit (ERC) protest letters.
@@ -830,12 +843,12 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 SPECIFIC FORMAT REQUIREMENTS FOR GOVERNMENT ORDERS:
 For each government order mentioned, you MUST use this EXACT detailed format:
 
-• Order Name: [Full Name of Order]
-• Order Number: [Official Number/Identifier]
-• Date Enacted: [MM/DD/YYYY]
-• Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
-• Order Summary: [2-3 sentence detailed description of what the order mandated]
-• Impact on Quarter: [Specific explanation of how this affected the business operations]
+- Order Name: [Full Name of Order]
+- Order Number: [Official Number/Identifier]
+- Date Enacted: [MM/DD/YYYY]
+- Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
+- Order Summary: [2-3 sentence detailed description of what the order mandated]
+- Impact on Quarter: [Specific explanation of how this affected the business operations]
 
 IMPORTANT: Each order must be listed individually with ALL six fields above. Do not abbreviate or simplify this format, even for minor orders.`;
 
@@ -905,6 +918,19 @@ FINAL CRITICAL INSTRUCTION:
 6. ${hasValidRevenueData && includeRevenueSection ? 'Present the revenue data in a clear tabular format showing ALL quarters where data is available - do not imply the figures were audited' : 'Focus EXCLUSIVELY on how government orders caused a partial suspension of operations'}
 7. For revenue figures, create a tabular format with ALL quarters where data is available - DO NOT selectively include only some quarters
 8. Directly address the disallowance reason: ${disallowanceReasonText}`;
+
+      // ADD SOURCE DOCUMENTATION REQUIREMENT
+      promptTemplate += `\n\nSOURCE DOCUMENTATION REQUIREMENT:
+At the end of your letter, you MUST include a "SOURCES" section with this exact format:
+
+SOURCES:
+1. [Full URL to government order or official document] - [Brief description]
+2. [Full URL to government order or official document] - [Brief description]
+...
+
+Include ONLY PRIMARY source URLs (government websites) that you directly cited in your arguments. 
+Number each source and include the exact, complete URL. DO NOT include news articles or secondary sources.
+This section is critical as these sources will be automatically attached to your letter as PDFs.`;
     }
     
     const response = await openai.chat.completions.create({
