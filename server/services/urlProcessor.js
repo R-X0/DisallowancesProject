@@ -4,7 +4,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
-const axios = require('axios'); // Make sure to install this: npm install axios --save
+const axios = require('axios');
 
 /**
  * Extract URLs from the conversation and download them as PDFs
@@ -15,29 +15,31 @@ const axios = require('axios'); // Make sure to install this: npm install axios 
 async function extractAndDownloadUrls(letter, outputDir) {
   console.log("==== URL EXTRACTION DEBUG ====");
   
-  // We'll extract URLs from the conversation.txt file instead of the letter
+  // We'll extract URLs from the conversation.txt file AND the generated letter
   let urls = [];
   let conversationContent = "";
   
   try {
     const conversationPath = path.join(outputDir, 'conversation.txt');
-    if (!fsSync.existsSync(conversationPath)) {
-      console.log("No conversation.txt file found, cannot extract URLs");
-      return { letter, attachments: [] };
+    if (fsSync.existsSync(conversationPath)) {
+      conversationContent = await fs.readFile(conversationPath, 'utf8');
+      console.log(`Read conversation content: ${conversationContent.length} characters`);
+    } else {
+      console.log("No conversation.txt file found, only extracting from letter");
     }
     
-    conversationContent = await fs.readFile(conversationPath, 'utf8');
-    console.log(`Read conversation content: ${conversationContent.length} characters`);
+    // Combine both sources for URL extraction
+    const combinedText = conversationContent + "\n" + letter;
     
     // Store for debugging
-    await fs.writeFile(path.join(outputDir, 'conversation_for_url_extraction.txt'), conversationContent, 'utf8');
+    await fs.writeFile(path.join(outputDir, 'combined_for_url_extraction.txt'), combinedText, 'utf8');
     
     // Comprehensive regex for URL detection
     const urlRegex = /(?:https?:\/\/)?(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
     
-    // Find all matches in the conversation content
-    const matches = conversationContent.match(urlRegex) || [];
-    console.log(`Raw URL matches found in conversation: ${matches.length}`);
+    // Find all matches in the combined content
+    const matches = combinedText.match(urlRegex) || [];
+    console.log(`Raw URL matches found: ${matches.length}`);
     
     // Post-process matches to normalize and filter
     urls = [...new Set(matches)]
@@ -56,18 +58,18 @@ async function extractAndDownloadUrls(letter, outputDir) {
         return url;
       });
     
-    console.log(`Found ${urls.length} unique URLs to process from conversation`);
+    console.log(`Found ${urls.length} unique URLs to process`);
     console.log('URLs to process:', urls);
     
   } catch (err) {
-    console.error("Error reading conversation file:", err);
+    console.error("Error processing content for URLs:", err);
     return { letter, attachments: [] };
   }
   
   const attachments = [];
   
   if (urls.length === 0) {
-    console.log("WARNING: No URLs found in conversation for processing.");
+    console.log("WARNING: No URLs found for processing.");
     return { letter, attachments };
   }
   

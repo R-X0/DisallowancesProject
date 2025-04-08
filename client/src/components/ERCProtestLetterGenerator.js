@@ -10,7 +10,7 @@ import {
   FormControlLabel, Checkbox, RadioGroup, Radio,
   Grid, CircularProgress, Snackbar, GlobalStyles
 } from '@mui/material';
-import { ContentCopy, CheckCircle, Description, Link, FileDownload, SwapHoriz } from '@mui/icons-material';
+import { ContentCopy, CheckCircle, Description, FileDownload, SwapHoriz } from '@mui/icons-material';
 import axios from 'axios';
 
 // Utility function to map NAICS code to business type
@@ -210,21 +210,16 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState(null);
-  const [chatGptLink, setChatGptLink] = useState('');
+  const [chatGptContent, setChatGptContent] = useState('');
   const [processing, setProcessing] = useState(false);
   const [processingMessage, setProcessingMessage] = useState('');
   const [processingStep, setProcessingStep] = useState(0);
   const [packageData, setPackageData] = useState(null);
-  const [documentType, setDocumentType] = useState('protestLetter'); // State for toggling document type
-  const [selectedTimePeriod, setSelectedTimePeriod] = useState(''); // For selecting which period to focus on for protest letter
-  const [approachFocus, setApproachFocus] = useState('governmentOrders'); // Default approach
-  const [pollInterval, setPollInterval] = useState(null); // For tracking the job status polling interval
-  // Fix: Remove unused variables from state (still keeping the variables themselves for reference)
-  // const [jobId, setJobId] = useState(null); // Store the job ID for status checks
-  // const [maxPollingTime, setMaxPollingTime] = useState(300000); // 5 minutes in milliseconds
+  const [documentType, setDocumentType] = useState('protestLetter');
+  const [selectedTimePeriod, setSelectedTimePeriod] = useState('');
+  const [approachFocus, setApproachFocus] = useState('governmentOrders');
+  const [pollInterval, setPollInterval] = useState(null);
   const [pollingStartTime, setPollingStartTime] = useState(null);
-  
-  // New state variables for the requested features
   const [includeRevenueSection, setIncludeRevenueSection] = useState(true);
   const [disallowanceReason, setDisallowanceReason] = useState('no_orders');
   const [outputFormat, setOutputFormat] = useState('pdf');
@@ -265,16 +260,11 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
     if (!jobId) return;
     
     const currentTime = new Date().getTime();
-    
-    // Define the max polling time constant here instead of using state
     const maxPollingTime = 300000; // 5 minutes in milliseconds
     
     // Check if we've exceeded the max polling time
     if (pollingStartTime && (currentTime - pollingStartTime > maxPollingTime)) {
       clearInterval(pollInterval);
-      
-      // Don't reset generating/processing here - this state will show a warning
-      // but continue polling in case the job eventually completes
       setTimeoutWarning(true);
       
       // Continue with reduced frequency polling (every 30 seconds)
@@ -299,8 +289,8 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
       console.log(`Job status: ${job.status}, Progress: ${job.progress || 0}%`);
       
       // Update UI based on job status
-      if (job.status === 'scraping') {
-        setProcessingMessage('Extracting COVID-19 orders and research data...');
+      if (job.status === 'processing_content') {
+        setProcessingMessage('Processing ChatGPT conversation content...');
         setProcessingStep(2);
       } else if (job.status === 'preparing_document' || job.status === 'generating_document') {
         setProcessingMessage(documentType === 'protestLetter' ? 
@@ -379,7 +369,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
     }
   }, [documentType, onGenerated, outputFormat, pollInterval, pollingStartTime, selectedTimePeriod]);
 
-  // Function to generate protest letter using our LLM API - UPDATED FOR ASYNC JOB APPROACH
+  // Function to generate protest letter using our LLM API
   const generateProtestLetter = async () => {
     // Clear any previous error
     setError(null);
@@ -424,7 +414,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         location: formData.location,
         timePeriod: timePeriodToUse,
         allTimePeriods: allTimePeriods,
-        chatGptLink: chatGptLink,
+        chatGptContent: chatGptContent,
         businessType: businessType,
         trackingId: formData.trackingId || '',
         documentType: documentType,
@@ -460,7 +450,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
       setProcessingStep(1);
       
       // Start the job
-      const response = await axios.post('/api/erc-protest/chatgpt/process-chatgpt', letterData, {
+      const response = await axios.post('/api/erc-protest/chatgpt/process-content', letterData, {
         headers: {
           'Content-Type': 'application/json'
         },
@@ -473,9 +463,8 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
       
       const newJobId = response.data.jobId;
       console.log(`Started job with ID: ${newJobId}`);
-      // setJobId(newJobId); // We'll just use the local variable instead of state
       
-      setProcessingMessage('Connecting to ChatGPT conversation...');
+      setProcessingMessage('Processing conversation content...');
       setProcessingStep(1);
       
       // Start the polling with timestamp for timeout tracking
@@ -527,15 +516,6 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
     setDialogOpen(false);
   };
   
-  const validateChatGptLink = (link) => {
-    return link && (
-      link.startsWith('https://chat.openai.com/') || 
-      link.startsWith('https://chatgpt.com/') ||
-      link.includes('chat.openai.com') ||
-      link.includes('chatgpt.com')
-    );
-  };
-
   const downloadProtestPackage = () => {
     if (packageData && packageData.zipPath) {
       console.log("Downloading protest package with path:", packageData.zipPath);
@@ -559,7 +539,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
     }
   };
 
-  // New function to download just the document (PDF or DOCX)
+  // Function to download just the document (PDF or DOCX)
   const downloadDocument = () => {
     if (packageData) {
       const path = outputFormat === 'docx' ? packageData.docxPath : packageData.pdfPath;
@@ -684,23 +664,25 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
               </Grid>
             )}
 
-            {/* ChatGPT Link Input */}
+            {/* ChatGPT Content Textarea */}
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="ChatGPT Conversation Link"
+                label="Paste ChatGPT Conversation"
                 variant="outlined"
-                value={chatGptLink}
-                onChange={(e) => setChatGptLink(e.target.value)}
-                placeholder="https://chat.openai.com/c/..."
-                error={chatGptLink !== '' && !validateChatGptLink(chatGptLink)}
-                helperText={chatGptLink !== '' && !validateChatGptLink(chatGptLink) ? 
-                  "Please enter a valid ChatGPT conversation link" : ""}
-                InputProps={{
-                  startAdornment: <Link color="action" sx={{ mr: 1 }} />,
-                }}
+                value={chatGptContent}
+                onChange={(e) => setChatGptContent(e.target.value)}
+                placeholder="Paste your entire ChatGPT conversation here..."
+                multiline
+                rows={8}
+                error={chatGptContent === ''}
+                helperText={chatGptContent === '' ? 
+                  "Please paste your ChatGPT conversation" : ""}
                 disabled={generating}
               />
+              <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+                Paste the complete conversation from ChatGPT including all messages and referenced links. The system will extract relevant information and URLs.
+              </Typography>
             </Grid>
 
             {/* Disallowance Reason Selection */}
@@ -790,8 +772,8 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
           
           <Alert severity="info" sx={{ mb: 2, mt: 2 }}>
             {documentType === 'protestLetter' 
-              ? `Make sure your ChatGPT conversation includes specific COVID-19 orders that affected your business during ${selectedTimePeriod || 'the selected time period'}.` 
-              : `Make sure your ChatGPT conversation includes comprehensive information about government orders affecting your business across all ERC quarters: ${hasTimePeriods ? formData.timePeriods.join(', ') : 'the selected time periods'}.`}
+              ? `Make sure your pasted ChatGPT conversation includes specific COVID-19 orders that affected your business during ${selectedTimePeriod || 'the selected time period'}.` 
+              : `Make sure your pasted ChatGPT conversation includes comprehensive information about government orders affecting your business across all ERC quarters: ${hasTimePeriods ? formData.timePeriods.join(', ') : 'the selected time periods'}.`}
           </Alert>
           
           {timeoutWarning && (
@@ -818,8 +800,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
               onClick={generateProtestLetter}
               disabled={
                 generating || 
-                !chatGptLink || 
-                !validateChatGptLink(chatGptLink) || 
+                !chatGptContent || 
                 (documentType === 'protestLetter' && !selectedTimePeriod && hasTimePeriods)
               }
               sx={{ 
@@ -849,7 +830,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
                 Package Generation In Progress
               </Typography>
               <Typography variant="body2" align="center" gutterBottom>
-                {processingMessage || "Connecting to ChatGPT and generating your documents..."}
+                {processingMessage || "Processing conversation content and generating your documents..."}
               </Typography>
               <LinearProgress 
                 variant={processingStep > 0 ? "determinate" : "indeterminate"} 
@@ -857,7 +838,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
                 sx={{ mt: 1, mb: 2 }}
               />
               <Typography variant="caption" align="center" display="block" color="text.secondary">
-                This process takes 2-3 minutes to extract data from ChatGPT, generate documents, and create PDFs of all referenced sources.
+                This process takes 2-3 minutes to extract data from your conversation, generate documents, and create PDFs of all referenced sources.
                 <strong> Please do not refresh or navigate away from this page.</strong>
               </Typography>
             </Box>

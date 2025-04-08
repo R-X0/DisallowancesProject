@@ -5,7 +5,6 @@ const router = express.Router();
 const path = require('path');
 const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
-const chatgptScraper = require('../services/chatgptScraper');
 const documentGenerator = require('../services/documentGenerator');
 const pdfGenerator = require('../services/pdfGenerator');
 const urlProcessor = require('../services/urlProcessor');
@@ -41,11 +40,11 @@ router.post('/generate-prompt', async (req, res) => {
   }
 });
 
-// Main process to handle ChatGPT conversation - with improved job queue handling
-router.post('/process-chatgpt', async (req, res) => {
+// NEW ENDPOINT: Process pasted ChatGPT content directly
+router.post('/process-content', async (req, res) => {
   try {
     const {
-      chatGptLink,
+      chatGptContent,
       businessName,
       ein,
       location,
@@ -53,10 +52,10 @@ router.post('/process-chatgpt', async (req, res) => {
     } = req.body;
 
     // Validate required inputs
-    if (!chatGptLink) {
+    if (!chatGptContent) {
       return res.status(400).json({
         success: false,
-        message: 'ChatGPT conversation link is required'
+        message: 'ChatGPT conversation content is required'
       });
     }
     
@@ -67,7 +66,7 @@ router.post('/process-chatgpt', async (req, res) => {
       });
     }
 
-    console.log(`Processing ChatGPT link: ${chatGptLink}`);
+    console.log(`Processing ChatGPT content (${chatGptContent.length} chars)`);
     console.log(`Business: ${businessName}, Period: ${timePeriod}`);
     
     // Create a new job
@@ -82,13 +81,40 @@ router.post('/process-chatgpt', async (req, res) => {
     
     // Process the job asynchronously after sending response
     setTimeout(() => {
-      processJobAsync(jobId, req.body);
+      processContentJobAsync(jobId, req.body);
     }, 100);
   } catch (error) {
     console.error('Error initiating document generation:', error);
     res.status(500).json({
       success: false,
       message: `Error initiating document generation: ${error.message}`
+    });
+  }
+});
+
+// Old endpoint for backward compatibility - redirects to new process
+router.post('/process-chatgpt', async (req, res) => {
+  try {
+    const { chatGptLink } = req.body;
+
+    // Validate required inputs
+    if (!chatGptLink) {
+      return res.status(400).json({
+        success: false,
+        message: 'ChatGPT conversation link is required'
+      });
+    }
+    
+    // Return a helpful message suggesting to use the new process
+    res.status(202).json({
+      success: false,
+      message: 'This endpoint is deprecated. Please use /process-content with pasted conversation text instead.',
+    });
+  } catch (error) {
+    console.error('Error in legacy process:', error);
+    res.status(500).json({
+      success: false,
+      message: `Error: ${error.message}`
     });
   }
 });
@@ -152,14 +178,14 @@ router.get('/job-status/:jobId', async (req, res) => {
   }
 });
 
-// Helper function to process the job asynchronously
-async function processJobAsync(jobId, requestData) {
+// Helper function to process the job with pasted content asynchronously
+async function processContentJobAsync(jobId, requestData) {
   try {
     // Update job status to processing
     await jobQueue.updateJob(jobId, { 
-      status: 'processing',
+      status: 'processing_content',
       progress: 5,
-      message: 'Starting job processing'
+      message: 'Processing conversation content'
     });
     
     // Create unique directory for request
@@ -168,23 +194,22 @@ async function processJobAsync(jobId, requestData) {
     await fs.mkdir(outputDir, { recursive: true });
 
     try {
-      // 1. Scrape and process the ChatGPT conversation
-      await jobQueue.updateJob(jobId, { 
-        status: 'scraping',
-        progress: 10,
-        message: 'Scraping ChatGPT conversation'
-      });
-      
-      const conversationContent = await chatgptScraper.scrapeConversation(requestData.chatGptLink, outputDir);
-      console.log(`Conversation content retrieved (${conversationContent.length} chars)`);
+      // 1. Save the conversation content to a file
+      const conversationContent = requestData.chatGptContent;
+      await fs.writeFile(
+        path.join(outputDir, 'conversation.txt'),
+        conversationContent,
+        'utf8'
+      );
+      console.log(`Saved conversation content (${conversationContent.length} chars)`);
 
-      // 2. Get the appropriate template based on document type
       await jobQueue.updateJob(jobId, { 
         status: 'preparing_document',
         progress: 30,
         message: 'Preparing document template'
       });
       
+      // 2. Get the appropriate template based on document type
       let templateContent = await documentGenerator.getTemplateContent(requestData.documentType || 'protestLetter');
 
       // 3. Create business info object
