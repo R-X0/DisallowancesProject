@@ -20,7 +20,7 @@ const openai = new OpenAI({
 async function generateCustomPrompt(basePrompt, businessInfo) {
   try {
     const response = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'o3-mini',
+      model: process.env.OPENAI_MODEL || 'o1',
       messages: [
         {
           role: 'system',
@@ -934,7 +934,7 @@ This section is critical as these sources will be automatically attached to your
     }
     
     const response = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'o3-mini',
+      model: process.env.OPENAI_MODEL || 'o1',
       messages: [
         {
           role: 'system',

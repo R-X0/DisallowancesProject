@@ -134,7 +134,7 @@ async function scrapeConversation(chatGptLink, outputDir) {
 async function sanitizeConversation(rawHtml) {
   try {
     const response = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'o3-mini',
+      model: process.env.OPENAI_MODEL || 'o1',
       messages: [
         {
           role: 'system',
