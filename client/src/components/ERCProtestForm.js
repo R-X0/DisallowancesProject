@@ -36,6 +36,7 @@ const ERCProtestForm = () => {
     governmentOrdersInfo: '', // Additional info for Government Orders section
     revenueReductionInfo: '', // Additional info for Revenue Reduction section
     trackingId: '', // Added to track the ID for updates
+    isControlledGroup: false, // Added for controlled groups with multiple locations
     // Adding new quarterly revenue fields
     q1_2019: '',
     q2_2019: '',
@@ -187,6 +188,15 @@ const ERCProtestForm = () => {
   useEffect(() => {
     console.log("protestLetterData changed:", protestLetterData);
   }, [protestLetterData]);
+  
+  // Function to parse locations 
+  function parseLocations(locationString) {
+    if (!locationString) return [];
+    
+    return locationString.includes(';') 
+      ? locationString.split(';').map(loc => loc.trim()).filter(Boolean)
+      : [locationString];
+  }
   
   // Handle input changes
   const handleInputChange = (e) => {
@@ -396,11 +406,32 @@ const ERCProtestForm = () => {
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
-                      label="Business Location"
+                      label="Business Location(s)"
                       name="location"
                       value={formData.location}
                       onChange={handleInputChange}
-                      placeholder="City, State"
+                      placeholder="City, State (use ; for multiple locations: City1, State1; City2, State2)"
+                      helperText={formData.location && formData.location.includes(';') ? 
+                        "Multiple locations detected. Orders will be generated for all jurisdictions." : 
+                        "For multiple locations, separate each with semicolons (;)"}
+                    />
+                  </Grid>
+                  
+                  <Grid item xs={12} md={6}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={formData.isControlledGroup || false}
+                          onChange={(e) => {
+                            setFormData(prevData => ({
+                              ...prevData,
+                              isControlledGroup: e.target.checked
+                            }));
+                          }}
+                          name="isControlledGroup"
+                        />
+                      }
+                      label="This is a controlled group with multiple entities/locations"
                     />
                   </Grid>
                   
@@ -678,6 +709,7 @@ const ERCProtestForm = () => {
                       governmentOrdersInfo: '',
                       revenueReductionInfo: '',
                       trackingId: '', // Clear the tracking ID for a truly new submission
+                      isControlledGroup: false,
                       // Reset all quarterly revenue fields
                       q1_2019: '',
                       q2_2019: '',

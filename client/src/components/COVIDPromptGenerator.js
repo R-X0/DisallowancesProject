@@ -19,6 +19,15 @@ const extractCityState = (location) => {
   };
 };
 
+// Utility function to parse multiple locations
+const parseLocations = (locationString) => {
+  if (!locationString) return [];
+  
+  return locationString.includes(';') 
+    ? locationString.split(';').map(loc => loc.trim()).filter(Boolean)
+    : [locationString];
+};
+
 // Utility function to map NAICS code to business type
 const getNaicsDescription = (naicsCode) => {
   // This is a simplified mapping - you'd want a more comprehensive one in production
@@ -212,7 +221,22 @@ const COVIDPromptGenerator = ({ formData }) => {
     console.log("Generating prompt...");
     
     try {
-      const { city, state } = extractCityState(formData.location || '');
+      // Get all locations as an array
+      const locations = parseLocations(formData.location || '');
+      let locationPrompt = '';
+      
+      if (locations.length > 1 || formData.isControlledGroup) {
+        // Multiple locations/controlled group case
+        locationPrompt = `
+MULTIPLE LOCATIONS / CONTROLLED GROUP:
+This business operates in multiple locations:
+${locations.map((loc, i) => `Location ${i+1}: ${loc}`).join('\n')}
+
+IMPORTANT: Research government orders for ALL these jurisdictions during ${selectedTimePeriod}.
+Include federal orders and relevant orders for EACH location.
+`;
+      }
+
       const businessType = getNaicsDescription(formData.naicsCode);
       
       // Use the selected time period for generating the prompt
@@ -233,6 +257,28 @@ const COVIDPromptGenerator = ({ formData }) => {
         }
       }
       
+      // Set up businessInfo with proper location handling
+      const businessInfo = {};
+      
+      if (locations.length > 1 || formData.isControlledGroup) {
+        // For multiple locations
+        businessInfo.hasMultipleLocations = true;
+        businessInfo.locations = locations;
+        businessInfo.isControlledGroup = formData.isControlledGroup;
+      } else {
+        // For single location
+        const { city, state } = extractCityState(formData.location || '');
+        businessInfo.city = city;
+        businessInfo.state = state;
+      }
+      
+      // Add the rest of the business info
+      businessInfo.businessType = businessType;
+      businessInfo.quarter = quarter;
+      businessInfo.year = year;
+      businessInfo.timePeriod = timePeriod;
+      businessInfo.allPeriods = allPeriods;
+      
       // Calculate revenue declines for relevant information
       const revenueDeclines = calculateRevenueDeclines(formData);
       const qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
@@ -240,12 +286,18 @@ const COVIDPromptGenerator = ({ formData }) => {
       // Determine which approach the user is focusing on
       const approachFocus = determineUserApproach(formData);
       
+      businessInfo.revenueDeclines = revenueDeclines;
+      businessInfo.qualifyingQuarters = qualifyingQuarters;
+      businessInfo.approachFocus = approachFocus;
+      businessInfo.governmentOrdersInfo = formData.governmentOrdersInfo || '';
+      businessInfo.revenueReductionInfo = formData.revenueReductionInfo || '';
+      
       // Choose the right base prompt based on promptType
       let basePrompt = '';
       
       if (promptType === 'covidOrders') {
         // Improved template prompt for COVID orders research with better structure
-        basePrompt = `FIND AND DOCUMENT ONLY OFFICIAL GOVERNMENT ORDERS for COVID-19 that affected a "${businessType}" business located in ${city}, ${state} during ${timePeriod}.
+        basePrompt = `FIND AND DOCUMENT ONLY OFFICIAL GOVERNMENT ORDERS for COVID-19 that affected a "${businessType}" business located in ${locations.length === 1 ? formData.location : 'multiple jurisdictions'} during ${timePeriod}.
 
 CRITICAL LEGAL REQUIREMENTS:
 1. You MUST find and cite the ACTUAL TEXT of official government orders - the IRS will REJECT secondary sources or news articles
@@ -366,7 +418,7 @@ SOURCE REQUIREMENTS - CRITICALLY IMPORTANT FOR IRS ACCEPTANCE:
    • Note any legal challenges that affected implementation`;
       } else {
         // Improved template prompt for Form 886-A, now including all selected quarters
-        basePrompt = `Please help me create a comprehensive Form 886-A response for ${formData.businessName}, a ${businessType} located in ${city}, ${state}, regarding their Employee Retention Credit (ERC) claim for the following quarters: ${allPeriods}.
+        basePrompt = `Please help me create a comprehensive Form 886-A response for ${formData.businessName}, a ${businessType} located in ${locations.length === 1 ? formData.location : 'multiple jurisdictions'}, regarding their Employee Retention Credit (ERC) claim for the following quarters: ${allPeriods}.
 
 First, provide a general overview of the business operations for ${formData.businessName}.`;
 
@@ -441,25 +493,19 @@ REMEMBER: THE IRS WILL REJECT CLAIMS WITHOUT PROPER ORDER DOCUMENTATION.
 FOCUS ON QUALITY AND AUTHENTICITY OVER QUANTITY.`;
       }
       
+      // Add location-specific prompt for multiple locations if needed
+      if (locationPrompt) {
+        basePrompt = `${basePrompt}
+
+${locationPrompt}`;
+      }
+      
       // Use OpenAI API to generate a customized prompt based on the business info
       try {
         console.log("Calling API to generate customized prompt...");
         const response = await axios.post('/api/erc-protest/chatgpt/generate-prompt', {
           basePrompt,
-          businessInfo: {
-            businessType,
-            city,
-            state,
-            quarter,
-            year,
-            timePeriod,
-            allPeriods,
-            revenueDeclines,
-            qualifyingQuarters,
-            approachFocus,
-            governmentOrdersInfo: formData.governmentOrdersInfo || '',
-            revenueReductionInfo: formData.revenueReductionInfo || ''
-          }
+          businessInfo
         });
         
         if (response.data && response.data.prompt) {
@@ -618,6 +664,13 @@ FOCUS ON QUALITY AND AUTHENTICITY OVER QUANTITY.`;
           {hasTimePeriods && (
             <Typography variant="body2">
               Time Periods Selected: {formData.timePeriods.join(', ')}
+            </Typography>
+          )}
+          
+          {formData.location && formData.location.includes(';') && (
+            <Typography variant="body2" mt={1}>
+              Multiple Locations: {formData.location}
+              {formData.isControlledGroup && " (Controlled Group)"}
             </Typography>
           )}
           

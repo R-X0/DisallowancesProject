@@ -534,7 +534,6 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
     console.log('Generating document using GPT...');
     
     // Enhanced check for meaningful revenue data
-    // Only consider revenue data valid if it's actually a positive number
     const hasValidRevenueData = 
       (businessInfo.q1_2019 && parseFloat(businessInfo.q1_2019) > 0) || 
       (businessInfo.q2_2019 && parseFloat(businessInfo.q2_2019) > 0) || 
@@ -550,7 +549,7 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
 
     console.log('Has valid revenue data:', hasValidRevenueData);
     
-    // Check if we should include revenue section - FIXED: strictly check for false
+    // Check if we should include revenue section
     const includeRevenueSection = businessInfo.includeRevenueSection !== false;
     console.log('Include revenue section:', includeRevenueSection, 'Value from input:', businessInfo.includeRevenueSection);
     
@@ -563,21 +562,31 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
     const disallowanceReasonText = getDisallowanceReasonText(disallowanceReason, customDisallowanceReason);
     console.log('Disallowance reason:', disallowanceReason, '- Text:', disallowanceReasonText);
     
-    // Handle multiple time periods
+    // Handle multiple time periods and locations
     let timePeriods = businessInfo.timePeriod;
     let allTimePeriods = businessInfo.allTimePeriods || [businessInfo.timePeriod];
+    
+    // Parse business locations
+    let businessLocations = [];
+    if (businessInfo.location && businessInfo.location.includes(';')) {
+      // Format for multiple locations is "City1, State1; City2, State2"
+      businessLocations = businessInfo.location.split(';').map(loc => loc.trim())
+        .filter(loc => loc.length > 0);
+    } else if (businessInfo.location) {
+      businessLocations = [businessInfo.location];
+    }
     
     // Format the time periods for display
     const timePeriodsFormatted = Array.isArray(allTimePeriods) 
       ? allTimePeriods.join(', ') 
       : timePeriods;
     
-    // Process revenue data only if we have actual values and includeRevenueSection is true
+    // Process revenue data
     let revenueDeclines = [];
     let qualifyingQuarters = [];
     let approachFocus = businessInfo.approachFocus || 'governmentOrders';
     
-    // If revenue data is sent directly from client and valid, use it
+    // Use pre-calculated revenue declines if provided
     if (businessInfo.revenueDeclines && Array.isArray(businessInfo.revenueDeclines) && 
         businessInfo.revenueDeclines.length > 0 && hasValidRevenueData && includeRevenueSection) {
       console.log('Using pre-calculated revenue declines from client');
@@ -586,7 +595,7 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
         qualifyingQuarters = businessInfo.qualifyingQuarters;
       }
     } else if (hasValidRevenueData && includeRevenueSection) {
-      // Otherwise calculate from individual quarter data if we have some
+      // Otherwise calculate from individual quarter data
       console.log('Calculating revenue declines from individual quarter data');
       revenueDeclines = calculateRevenueDeclines(businessInfo);
       qualifyingQuarters = getQualifyingQuarters(revenueDeclines);
@@ -596,21 +605,16 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
       approachFocus = 'governmentOrders';
     }
     
-    console.log('Calculated revenue declines:', revenueDeclines);
-    console.log('Qualifying quarters:', qualifyingQuarters);
-    
     // Check what evidence we have available
     const hasRevenueDeclines = revenueDeclines.length > 0 && hasValidRevenueData && includeRevenueSection;
     const hasQualifyingQuarters = qualifyingQuarters.length > 0 && hasValidRevenueData && includeRevenueSection;
-
-    // Check for government orders info
     const hasGovernmentOrdersInfo = 
       (businessInfo.timePeriods && businessInfo.timePeriods.length > 0) || 
       (businessInfo.governmentOrdersInfo && businessInfo.governmentOrdersInfo.trim().length > 0);
 
     // Build content that includes ONLY available evidence
     let evidenceContent = '';
-
+    
     // Include revenue data in the evidence content ONLY if we have actual valid data and includeRevenueSection is true
     if (hasRevenueDeclines && includeRevenueSection) {
       // Create a revenue section with the table format
@@ -644,24 +648,54 @@ ${businessInfo.timePeriods && businessInfo.timePeriods.length > 0 ? `\nRelevant 
 IMPORTANT: Include information about how government orders caused full or partial suspension of operations.
 `;
     }
-
+    
     // Determine which template to use based on the document type
     let promptTemplate;
     let systemPrompt;
     
+    // Source section format - same for both document types
+    const sourcesSectionPrompt = `
+SOURCES SECTION REQUIREMENT (CRITICAL):
+At the end of your document, you MUST include a "SOURCES" section with EXACTLY this format:
+
+SOURCES:
+1. https://full-url-to-source.gov - Brief description of source
+2. https://another-source-url.gov - Another description
+...etc
+
+Requirements for your SOURCES section:
+1. ONLY include primary sources (government websites)
+2. Include the FULL URL to each source (not just the domain)
+3. Number each source sequentially starting from 1
+4. Include EXACTLY the URLs you're referencing in your document
+5. Each source MUST be on its own line with its number, URL, and description
+6. DO NOT link to search pages or homepages - link to the SPECIFIC document pages
+7. Include ALL government orders you've referenced in your document
+8. Format as shown above with no additional text or explanations
+
+The URLs in your SOURCES section will be automatically converted to PDF attachments.
+If you don't include a source URL, we cannot include that evidence in the final package.
+`;
+    
     if (businessInfo.documentType === 'form886A') {
-      // For Form 886-A document - IMPROVED VERSION
+      // For Form 886-A document - improved system prompt
       systemPrompt = `You are an expert in creating IRS Form 886-A documents for Employee Retention Credit (ERC) substantiation.
-      CRITICAL REQUIREMENT: This is a legal tax document that requires precise, comprehensive information about the business.
-      
-      You must thoroughly research the business based on the provided information, including NAICS code and website if available.
-      Your document must include specific business operations details, not vague statements about information availability.
-      
-      Each government order must be documented in the EXACT required format with all fields completed.
-      
-      The Law section must be comprehensive with proper legal citations to statutes, IRS notices, and relevant guidance.
-      
-      If revenue data is provided, include it accurately. If not, focus exclusively on the government orders approach.`;
+This is a legal tax document that requires precise, comprehensive information about the business.
+
+CRITICAL BUSINESS DESCRIPTION GUIDELINES:
+1. NEVER use the phrase "Based on the name, address, and common operations in this area" - this creates false assumptions
+2. NEVER assume a business only operates locally unless explicitly stated
+3. If a business website is provided, accurately reflect the actual scope of operations shown on the website
+4. For businesses with multiple locations or entities, address ALL locations provided
+5. Do not artificially limit business scope to regional operations unless specifically indicated
+6. Be factual and precise about business operations rather than making assumptions
+
+Your document must include specific business operations details based on provided information.
+Each government order must be documented in the EXACT required format with all fields completed.
+The Law section must be comprehensive with proper legal citations to statutes, IRS notices, and relevant guidance.
+If revenue data is provided, include it accurately. If not, focus exclusively on the government orders approach.
+
+Your SOURCES section must list the exact URLs for ALL government orders referenced in the document.`;
 
       // Adjust prompt based on qualification approaches
       let approachFocusText = '';
@@ -679,7 +713,7 @@ IMPORTANT: Include information about how government orders caused full or partia
 BUSINESS INFORMATION:
 Business Name: ${businessInfo.businessName}
 EIN: ${businessInfo.ein}
-Location: ${businessInfo.location}
+Location: ${businessLocations.join('; ')}
 Time Periods: ${timePeriodsFormatted}
 Business Type: ${businessInfo.businessType || 'business'}
 ${businessInfo.businessWebsite ? `Business Website: ${businessInfo.businessWebsite}` : ''}
@@ -705,14 +739,19 @@ ${covidData}
 BUSINESS RESEARCH INSTRUCTIONS:
 1. First, use the provided business information to create a detailed Facts section.
 2. ${businessInfo.businessWebsite ? `Research the business website (${businessInfo.businessWebsite}) to understand their specific operations.` : 'Research typical operations for a business of this type and NAICS code.'}
-3. Provide concrete details about what the business actually does, not vague statements.
-4. Avoid phrases like "information is not available" - use industry knowledge for reasonable inferences.
+3. DO NOT include the phrase "Based on the name, address, and common operations in this area".
+4. NEVER assume geographic limitations unless explicitly stated in the information provided.
+5. If the business website indicates nationwide or international service, reflect this accurately.
+6. For controlled groups with multiple locations (${businessLocations.length > 1 ? 'this is a controlled group' : 'this is NOT a controlled group'}), describe operations at ALL locations: ${businessLocations.join(', ')}
+7. Provide concrete details about what the business actually does, not assumptions about typical businesses.
+8. If precise details aren't available, describe business operations in more general terms without assuming limitations.
 
 CRITICAL SECTION REQUIREMENTS:
 
 1. FACTS SECTION:
-   - Describe the business operations in detail: products/services, size, locations, workflows
-   - Explain the industry context for a ${businessInfo.businessType} in ${businessInfo.location}
+   - Describe the business operations in detail: products/services, size, locations, workflows 
+   - Explain the industry context for a ${businessInfo.businessType} in ${businessLocations[0]}
+   - If this is a controlled group with multiple locations (${businessLocations.length > 1 ? 'it is' : 'it is not'}), describe operations across all locations: ${businessLocations.join(', ')}
    - Summarize how COVID-19 affected their operations during the claimed periods
 
 2. LAW SECTION:
@@ -742,6 +781,7 @@ CRITICAL SECTION REQUIREMENTS:
    
    - Organize orders chronologically by quarter
    - Ensure each claimed quarter has documented orders
+   - For controlled groups, include orders from ALL relevant jurisdictions: ${businessLocations.join(', ')}
    - ${(timePeriodsFormatted.includes('Q3 2021') || timePeriodsFormatted.includes('3rd Quarter 2021')) ? 'For Q3 2021, ensure you include federal orders like PROCLAMATION 9994, EXECUTIVE ORDER 14017, and CDC Delta variant guidance from July 2021.' : ''}
    ${businessInfo.includeSupplyChainDisruption === true ? `
    - Include a separate Supply Chain Disruption Analysis section detailing:
@@ -757,6 +797,10 @@ CRITICAL SECTION REQUIREMENTS:
    - ${businessInfo.includeSupplyChainDisruption === true ? 'Explicitly mention supply chain disruptions as a qualifying factor' : ''}
    - DO NOT include attestation language - this is not required for Form 886-A
 
+5. REVENUE TABLE REQUIREMENT:
+   ${hasRevenueDeclines ? `- You MUST include the complete revenue table in the document exactly as provided below:
+   ${createRevenueTable(businessInfo)}` : '- Do NOT include any revenue table or specific revenue figures as none were provided.'}
+
 IMPORTANT FORMATTING RULES:
 1. Use today's date: ${new Date().toLocaleDateString()}
 2. Use CONSISTENT bullet points (•) for all lists
@@ -764,63 +808,34 @@ IMPORTANT FORMATTING RULES:
 4. Format legal citations properly (e.g., "Section 2301(c)(2)(A)" not just "Section 2301")
 5. DO NOT include an attestation statement in the Form 886-A`;
 
-      // Add supply chain disruption instructions if selected
-      if (businessInfo.includeSupplyChainDisruption === true) {
-        promptTemplate += `\n\nIMPORTANT: This business was significantly affected by SUPPLY CHAIN DISRUPTIONS caused by government orders.
-        
-1. Your document MUST include a detailed supply chain disruption analysis in multiple sections:
-   * In the Issue section: mention supply chain disruption as part of the approach
-   * In the Law section: cite IRS Notice 2021-20, Q/A #12 in detail
-   * In the Argument section: create a separate "Supply Chain Disruption Analysis" subsection
-   * In the Conclusion: explicitly state that supply chain disruptions qualify the business
-
-2. In the "Supply Chain Disruption Analysis" subsection include:
-   * Which critical materials or components were unavailable due to suppliers being affected by government orders
-   * Documentation of specific supplier shutdowns caused by government mandates
-   * Why alternative suppliers were not available during the claimed period
-   * Quantification of the impact as "more than nominal" (exceeding 10% of operations)
-   * Analysis of how these supply chain issues directly caused operational limitations`;
-      }
-      
-      // Add special handling for specific quarters if needed
-      const allQuarters = businessInfo.timePeriods || [businessInfo.timePeriod];
-      if (allQuarters.some(q => q.includes('Q3 2021') || q.includes('3rd Quarter 2021'))) {
-        promptTemplate += `\n\nIMPORTANT: For Q3 2021, you MUST address these specific federal orders:
-- PROCLAMATION 9994 - DECLARING A NATIONAL EMERGENCY (03/13/2020 - 04/10/2023)
-- EXECUTIVE ORDER 14017 - SECURING AMERICA'S SUPPLY CHAINS (02/24/21 - ongoing)
-- CDC MASK CHANGES - DELTA VARIANT (07/27/21 - 02/25/22)`;
-      }
-
-      // Ensure the Issue section is always included by adding this to the prompt
-      promptTemplate += `\n\nCRITICAL FORMATTING REQUIREMENT: You MUST include the Issue section at the beginning of the document exactly as specified above. The Issue section should be labeled "1. Issue" and must use the exact wording provided in the "APPROACH OPTIONS FOR ISSUE SECTION" above. DO NOT skip or omit this section under any circumstances.`;
-      
-      // ADD SOURCE DOCUMENTATION REQUIREMENT
-      promptTemplate += `\n\nSOURCE DOCUMENTATION REQUIREMENT:
-At the end of your document, you MUST include a "SOURCES" section with this exact format:
-
-SOURCES:
-1. [Full URL to government order or official document] - [Brief description]
-2. [Full URL to government order or official document] - [Brief description]
-...
-
-Include ONLY PRIMARY source URLs (government websites) that you directly cited in your arguments. 
-Number each source and include the exact, complete URL. DO NOT include news articles or secondary sources.
-This section is critical as these sources will be automatically attached to your document as PDFs.`;
+      // Add sources section requirement
+      promptTemplate += sourcesSectionPrompt;
 
     } else {
-      // Original protest letter prompt construction
+      // For protest letter
       systemPrompt = `You are an expert in creating IRS Employee Retention Credit (ERC) protest letters.
-      CRITICAL REQUIREMENT: This is a legal tax document. If exact revenue figures are provided, you MUST include them without rounding or generalizing.
-      If NO revenue data is provided, DO NOT mention any revenue figures or analysis - focus solely on government orders.
-      Create a formal protest letter following the exact format and style of the example letter provided,
-      using the specific business information and COVID-19 research data provided.`;
+This is a legal tax document. If exact revenue figures are provided, you MUST include them without rounding or generalizing.
+If NO revenue data is provided, DO NOT mention any revenue figures or analysis - focus solely on government orders.
+
+CRITICAL BUSINESS DESCRIPTION GUIDELINES:
+1. NEVER use the phrase "Based on the name, address, and common operations in this area" - this creates false assumptions
+2. NEVER assume a business only operates locally unless explicitly stated
+3. If a business website is provided, accurately reflect the actual scope of operations shown on the website
+4. For businesses with multiple locations or entities, address ALL locations provided
+5. Do not artificially limit business scope to regional operations unless specifically indicated
+6. Be factual and precise about business operations rather than making assumptions
+
+Create a formal protest letter following the exact format and style of the example letter provided,
+using the specific business information and COVID-19 research data provided.
+
+Your SOURCES section must list the exact URLs for ALL government orders referenced in the letter.`;
       
       promptTemplate = `Please create an ERC protest letter using the following information:
 
 BUSINESS INFORMATION:
 Business Name: ${businessInfo.businessName}
 EIN: ${businessInfo.ein}
-Location: ${businessInfo.location}
+Location: ${businessLocations.join('; ')}
 Time Period: ${timePeriods}
 Business Type: ${businessInfo.businessType || 'business'}
 
@@ -839,21 +854,30 @@ IMPORTANT FORMATTING INSTRUCTIONS:
 4. Include ONLY the evidence that has been provided - ${hasValidRevenueData && includeRevenueSection ? 'revenue decline AND/OR' : 'ONLY'} government orders
 5. ${hasValidRevenueData && includeRevenueSection ? 'If revenue decline data shows qualifying quarters, make this a PROMINENT part of the document' : 'DO NOT fabricate or invent revenue figures, as none were provided. Focus EXCLUSIVELY on the government orders approach.'}
 6. ${disallowanceReason === 'not_in_operation' ? 'Make sure to specifically address that the business was in operation during the claimed period, providing evidence from the research data.' : ''}
+7. DO NOT include the phrase "Based on the name, address, and common operations in this area" in your business description
+
+BUSINESS DESCRIPTION INSTRUCTIONS:
+1. DO NOT assume the business only operates locally unless explicitly stated
+2. DO NOT include the phrase "Based on the name, address, and common operations in this area"
+3. If the business website indicates nationwide service, reflect this accurately
+4. For controlled groups with multiple locations (${businessLocations.length > 1 ? 'this is a controlled group' : 'this is NOT a controlled group'}), describe operations at ALL locations: ${businessLocations.join(', ')}
+5. Be factual about the business scope - don't artificially limit to regional operations
+6. If you don't have precise details, describe operations in general terms without geographic assumptions
 
 SPECIFIC FORMAT REQUIREMENTS FOR GOVERNMENT ORDERS:
 For each government order mentioned, you MUST use this EXACT detailed format:
 
-- Order Name: [Full Name of Order]
-- Order Number: [Official Number/Identifier]
-- Date Enacted: [MM/DD/YYYY]
-- Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
-- Order Summary: [2-3 sentence detailed description of what the order mandated]
-- Impact on Quarter: [Specific explanation of how this affected the business operations]
+• Order Name: [Full Name of Order]
+• Order Number: [Official Number/Identifier]
+• Date Enacted: [MM/DD/YYYY]
+• Date Rescinded: [MM/DD/YYYY or "Still in effect" if applicable]
+• Order Summary: [2-3 sentence detailed description of what the order mandated]
+• Impact on Quarter: [Specific explanation of how this affected the business operations]
 
 IMPORTANT: Each order must be listed individually with ALL six fields above. Do not abbreviate or simplify this format, even for minor orders.`;
 
       // Only include revenue instructions if we have revenue data and includeRevenueSection is true
-      if (hasValidRevenueData && includeRevenueSection) {
+      if (hasRevenueDeclines && includeRevenueSection) {
         promptTemplate += `
 
 REVENUE DECLINE PRESENTATION FORMAT:
@@ -919,20 +943,11 @@ FINAL CRITICAL INSTRUCTION:
 7. For revenue figures, create a tabular format with ALL quarters where data is available - DO NOT selectively include only some quarters
 8. Directly address the disallowance reason: ${disallowanceReasonText}`;
 
-      // ADD SOURCE DOCUMENTATION REQUIREMENT
-      promptTemplate += `\n\nSOURCE DOCUMENTATION REQUIREMENT:
-At the end of your letter, you MUST include a "SOURCES" section with this exact format:
-
-SOURCES:
-1. [Full URL to government order or official document] - [Brief description]
-2. [Full URL to government order or official document] - [Brief description]
-...
-
-Include ONLY PRIMARY source URLs (government websites) that you directly cited in your arguments. 
-Number each source and include the exact, complete URL. DO NOT include news articles or secondary sources.
-This section is critical as these sources will be automatically attached to your letter as PDFs.`;
+      // Add source section requirement
+      promptTemplate += sourcesSectionPrompt;
     }
     
+    // Submit the refined prompt to OpenAI
     const response = await openai.chat.completions.create({
       model: process.env.OPENAI_MODEL || 'o1',
       messages: [
@@ -951,45 +966,6 @@ This section is critical as these sources will be automatically attached to your
     
     // Apply post-processing to ensure consistent formatting
     let processedDocument = ensureConsistentFormatting(generatedDocument, businessInfo.documentType);
-    
-    // For Form 886-A, ensure the standardized Issue section is present
-    if (businessInfo.documentType === 'form886A') {
-      // Check if document already has the standardized Issue section
-      const hasStandardIssueSection = processedDocument.includes(
-        `Whether ${businessInfo.businessName} operations were fully or partially suspended due to ${qualificationApproaches.approachOption}`
-      );
-      
-      if (!hasStandardIssueSection) {
-        console.log('Issue section missing or not standardized - forcing inclusion');
-        
-        // Create the standardized Issue section
-        const issueSection = `1. Issue  
-Whether ${businessInfo.businessName} operations were fully or partially suspended due to ${qualificationApproaches.approachOption} during the eligible quarters of 2020 and 2021, thereby qualifying the business as an "Eligible Employer" for the Employee Retention Credit (ERC) under Section 2301 of the CARES Act (2020) and Section 3134 of the Internal Revenue Code (2021).
-
-${qualificationApproaches.approachExplanation}
-
-`;
-        
-        // Find where to insert the Issue section
-        const numberingMatch = processedDocument.match(/1\.\s+Issue\s+/);
-        if (numberingMatch) {
-          // Replace existing Issue section
-          const sectionEndMatch = processedDocument.match(/2\.\s+Facts/);
-          if (sectionEndMatch) {
-            const sectionEndIndex = sectionEndMatch.index;
-            const beforeSection = processedDocument.substring(0, numberingMatch.index);
-            const afterSection = processedDocument.substring(sectionEndIndex);
-            processedDocument = beforeSection + issueSection + afterSection;
-          }
-        } else {
-          // No existing Issue section, prepend it
-          processedDocument = issueSection + processedDocument;
-        }
-      }
-      
-      // Remove attestation section if present (not required for Form 886-A)
-      processedDocument = processedDocument.replace(/Attestation:.+?(?=\n\n|\n$|$)/gs, '');
-    }
     
     console.log('Document successfully generated');
     
