@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="Author" content="State of California" />
+	<meta name="Description" content="State of California" />
+	<meta name="Keywords" content="California, government" />
+
+	<!-- http://t.co/dKP3o1e -->
+	<meta name="HandheldFriendly" content="True">
+
+	<!-- for Blackberry, AvantGo -->
+	<meta name="MobileOptimized" content="320">
+
+	<!-- for Windows mobile -->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+
+	<!-- Google Meta-->
+	
+	
+	
+	<link rel="apple-touch-icon-precomposed" sizes="100x100" href="http://www.gov.ca.gov/wp-content/themes/CAWeb/src/images/system/apple-touch-icon-precomposed.png">
+	<link rel="apple-touch-icon-precomposed" sizes="192x192" href="http://www.gov.ca.gov/wp-content/themes/CAWeb/src/images/system/apple-touch-icon-192x192.png">
+	<link rel="apple-touch-icon-precomposed" sizes="180x180" href="http://www.gov.ca.gov/wp-content/themes/CAWeb/src/images/system/apple-touch-icon-180x180.png">
+	<link rel="apple-touch-icon-precomposed" sizes="152x152" href="http://www.gov.ca.gov/wp-content/themes/CAWeb/src/images/system/apple-touch-icon-152x152.png">
+	<link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://www.gov.ca.gov/wp-content/themes/CAWeb/src/images/system/apple-touch-icon-144x144.png">
+	<link rel="apple-touch-icon-precomposed" sizes="120x120" href="http://www.gov.ca.gov/wp-content/themes/CAWeb/src/images/system/apple-touch-icon-120x120.png">
+	<link rel="apple-touch-icon-precomposed" sizes="114x114" href="http://www.gov.ca.gov/wp-content/themes/CAWeb/src/images/system/apple-touch-icon-114x114.png">
+	<link rel="apple-touch-icon-precomposed" sizes="72x72" href="http://www.gov.ca.gov/wp-content/themes/CAWeb/src/images/system/apple-touch-icon-72x72.png">
+	<link rel="apple-touch-icon-precomposed" sizes="57x57" href="http://www.gov.ca.gov/wp-content/themes/CAWeb/src/images/system/apple-touch-icon-57x57.png">
+	<link rel="apple-touch-icon" href="http://www.gov.ca.gov/wp-content/themes/CAWeb/src/images/system/apple-touch-icon.png">
+
+	<link title="Fav Icon" rel="icon" href="https://www.gov.ca.gov/wp-content/uploads/2024/10/cagov-favicon.ico">
+	<link rel="shortcut icon" href="https://www.gov.ca.gov/wp-content/uploads/2024/10/cagov-favicon.ico">
+
+	<title>Governor Newsom Declares State of Emergency to Help State Prepare for Broader Spread of COVID&#x2d;19 | Governor of California</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><style id="et-divi-open-sans-inline-css">/* Original: https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800&#038;subset=latin,latin-ext&#038;display=swap *//* User Agent: Mozilla/5.0 (Unknown; Linux x86_64) AppleWebKit/538.1 (KHTML, like Gecko) Safari/538.1 Daum/4.1 */@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 300;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0Rk5hkWV4exQ.ttf) format('truetype');}@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 400;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0Rk8ZkWV4exQ.ttf) format('truetype');}@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 600;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0RkxhjWV4exQ.ttf) format('truetype');}@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 700;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0RkyFjWV4exQ.ttf) format('truetype');}@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 800;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0Rk0ZjWV4exQ.ttf) format('truetype');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 300;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsiH0B4uaVc.ttf) format('truetype');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 400;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsjZ0B4uaVc.ttf) format('truetype');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 600;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsgH1x4uaVc.ttf) format('truetype');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 700;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsg-1x4uaVc.ttf) format('truetype');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 800;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgshZ1x4uaVc.ttf) format('truetype');}/* User Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:27.0) Gecko/20100101 Firefox/27.0 */@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 300;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0Rk5hkWV4exg.woff) format('woff');}@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 400;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0Rk8ZkWV4exg.woff) format('woff');}@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 600;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0RkxhjWV4exg.woff) format('woff');}@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 700;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0RkyFjWV4exg.woff) format('woff');}@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 800;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0Rk0ZjWV4exg.woff) format('woff');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 300;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsiH0B4uaVQ.woff) format('woff');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 400;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsjZ0B4uaVQ.woff) format('woff');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 600;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsgH1x4uaVQ.woff) format('woff');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 700;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsg-1x4uaVQ.woff) format('woff');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 800;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgshZ1x4uaVQ.woff) format('woff');}/* User Agent: Mozilla/5.0 (Windows NT 6.3; rv:39.0) Gecko/20100101 Firefox/39.0 */@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 300;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0Rk5hkWV4ewA.woff2) format('woff2');}@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 400;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0Rk8ZkWV4ewA.woff2) format('woff2');}@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 600;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0RkxhjWV4ewA.woff2) format('woff2');}@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 700;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0RkyFjWV4ewA.woff2) format('woff2');}@font-face {font-family: 'Open Sans';font-style: italic;font-weight: 800;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memQYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWq8tWZ0Pw86hd0Rk0ZjWV4ewA.woff2) format('woff2');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 300;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsiH0B4uaVI.woff2) format('woff2');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 400;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsjZ0B4uaVI.woff2) format('woff2');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 600;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsgH1x4uaVI.woff2) format('woff2');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 700;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsg-1x4uaVI.woff2) format('woff2');}@font-face {font-family: 'Open Sans';font-style: normal;font-weight: 800;font-stretch: normal;font-display: swap;src: url(https://fonts.gstatic.com/s/opensans/v40/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgshZ1x4uaVI.woff2) format('woff2');}</style>
+<!-- The SEO Framework by Sybre Waaijer -->
+<meta name="robots" content="max-snippet:-1,max-image-preview:standard,max-video-preview:-1" />
+<link rel="canonical" href="https://www.gov.ca.gov/2020/03/04/governor-newsom-declares-state-of-emergency-to-help-state-prepare-for-broader-spread-of-covid-19/" />
+<meta name="description" content="Emergency proclamation builds on work already underway across state government to protect public health and safety Proclamation includes increased protections&#8230;" />
+<meta property="og:type" content="article" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:site_name" content="Governor of California" />
+<meta property="og:title" content="Governor Newsom Declares State of Emergency to Help State Prepare for Broader Spread of COVID&#x2d;19 | Governor of California" />
+<meta property="og:description" content="Emergency proclamation builds on work already underway across state government to protect public health and safety Proclamation includes increased protections against price gouging&#8230;" />
+<meta property="og:url" content="https://www.gov.ca.gov/2020/03/04/governor-newsom-declares-state-of-emergency-to-help-state-prepare-for-broader-spread-of-covid-19/" />
+<meta property="og:image" content="https://www.gov.ca.gov/wp-content/uploads/2019/02/GovernorSeal-Blue.png" />
+<meta property="og:image:width" content="900" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image:alt" content="GovernorSeal-Blue." />
+<meta property="article:published_time" content="2020-03-05T00:19:16+00:00" />
+<meta property="article:modified_time" content="2024-07-18T23:56:06+00:00" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Governor Newsom Declares State of Emergency to Help State Prepare for Broader Spread of COVID&#x2d;19 | Governor of California" />
+<meta name="twitter:description" content="Emergency proclamation builds on work already underway across state government to protect public health and safety Proclamation includes increased protections against price gouging&#8230;" />
+<meta name="twitter:image" content="https://www.gov.ca.gov/wp-content/uploads/2019/02/GovernorSeal-Blue.png" />
+<meta name="twitter:image:alt" content="GovernorSeal-Blue." />
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://www.gov.ca.gov/#/schema/WebSite","url":"https://www.gov.ca.gov/","name":"Governor of California","inLanguage":"en-US","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://www.gov.ca.gov/search/{search_term_string}/"},"query-input":"required name=search_term_string"},"publisher":{"@type":"Organization","@id":"https://www.gov.ca.gov/#/schema/Organization","name":"Governor of California","url":"https://www.gov.ca.gov/"}},{"@type":"WebPage","@id":"https://www.gov.ca.gov/2020/03/04/governor-newsom-declares-state-of-emergency-to-help-state-prepare-for-broader-spread-of-covid-19/","url":"https://www.gov.ca.gov/2020/03/04/governor-newsom-declares-state-of-emergency-to-help-state-prepare-for-broader-spread-of-covid-19/","name":"Governor Newsom Declares State of Emergency to Help State Prepare for Broader Spread of COVID&#x2d;19 | Governor of California","description":"Emergency proclamation builds on work already underway across state government to protect public health and safety Proclamation includes increased protections&#8230;","inLanguage":"en-US","isPartOf":{"@id":"https://www.gov.ca.gov/#/schema/WebSite"},"breadcrumb":{"@type":"BreadcrumbList","@id":"https://www.gov.ca.gov/#/schema/BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"item":"https://www.gov.ca.gov/","name":"Governor of California"},{"@type":"ListItem","position":2,"item":"https://www.gov.ca.gov/category/proclamations/","name":"Category: Proclamations"},{"@type":"ListItem","position":3,"name":"Governor Newsom Declares State of Emergency to Help State Prepare for Broader Spread of COVID&#x2d;19"}]},"potentialAction":{"@type":"ReadAction","target":"https://www.gov.ca.gov/2020/03/04/governor-newsom-declares-state-of-emergency-to-help-state-prepare-for-broader-spread-of-covid-19/"},"datePublished":"2020-03-05T00:19:16+00:00","dateModified":"2024-07-18T23:56:06+00:00","author":{"@type":"Person","@id":"https://www.gov.ca.gov/#/schema/Person/146eee560ecf7aba498ab303401f22e5","name":"danelladebel"}}]}</script>
+<!-- / The SEO Framework by Sybre Waaijer | 6.09ms meta | 0.24ms boot -->
+
+<script type="text/javascript">
+			let jqueryParams=[],jQuery=function(r){return jqueryParams=[...jqueryParams,r],jQuery},$=function(r){return jqueryParams=[...jqueryParams,r],$};window.jQuery=jQuery,window.$=jQuery;let customHeadScripts=!1;jQuery.fn=jQuery.prototype={},$.fn=jQuery.prototype={},jQuery.noConflict=function(r){if(window.jQuery)return jQuery=window.jQuery,$=window.jQuery,customHeadScripts=!0,jQuery.noConflict},jQuery.ready=function(r){jqueryParams=[...jqueryParams,r]},$.ready=function(r){jqueryParams=[...jqueryParams,r]},jQuery.load=function(r){jqueryParams=[...jqueryParams,r]},$.load=function(r){jqueryParams=[...jqueryParams,r]},jQuery.fn.ready=function(r){jqueryParams=[...jqueryParams,r]},$.fn.ready=function(r){jqueryParams=[...jqueryParams,r]};</script><link rel='dns-prefetch' href='//static.addtoany.com' />
+<link rel='dns-prefetch' href='//www.googletagmanager.com' />
+<link rel='dns-prefetch' href='//cse.google.com' />
+<link rel='dns-prefetch' href='//translate.google.com' />
+<link rel='dns-prefetch' href='//alert.cdt.ca.gov' />
+<link rel='dns-prefetch' href='//fonts.googleapis.com' />
+<link rel="alternate" type="application/rss+xml" title="Governor of California &raquo; Feed" href="https://www.gov.ca.gov/feed/" />
+<meta content="CAWeb v.1.13.1" name="generator"/><link rel='stylesheet' id='dashicons-css' href='http://www.gov.ca.gov/wp-includes/css/dashicons.min.css?ver=6.7.2' type='text/css' media='all' />
+<link rel='stylesheet' id='thickbox-css' href='http://www.gov.ca.gov/wp-includes/js/thickbox/thickbox.css?ver=6.7.2' type='text/css' media='all' />
+<link rel='stylesheet' id='wp-block-library-css' href='http://www.gov.ca.gov/wp-includes/css/dist/block-library/style.min.css?ver=6.7.2' type='text/css' media='all' />
+<style id='wp-block-library-theme-inline-css' type='text/css'>
+.wp-block-audio :where(figcaption){color:#555;font-size:13px;text-align:center}.is-dark-theme .wp-block-audio :where(figcaption){color:#ffffffa6}.wp-block-audio{margin:0 0 1em}.wp-block-code{border:1px solid #ccc;border-radius:4px;font-family:Menlo,Consolas,monaco,monospace;padding:.8em 1em}.wp-block-embed :where(figcaption){color:#555;font-size:13px;text-align:center}.is-dark-theme .wp-block-embed :where(figcaption){color:#ffffffa6}.wp-block-embed{margin:0 0 1em}.blocks-gallery-caption{color:#555;font-size:13px;text-align:center}.is-dark-theme .blocks-gallery-caption{color:#ffffffa6}:root :where(.wp-block-image figcaption){color:#555;font-size:13px;text-align:center}.is-dark-theme :root :where(.wp-block-image figcaption){color:#ffffffa6}.wp-block-image{margin:0 0 1em}.wp-block-pullquote{border-bottom:4px solid;border-top:4px solid;color:currentColor;margin-bottom:1.75em}.wp-block-pullquote cite,.wp-block-pullquote footer,.wp-block-pullquote__citation{color:currentColor;font-size:.8125em;font-style:normal;text-transform:uppercase}.wp-block-quote{border-left:.25em solid;margin:0 0 1.75em;padding-left:1em}.wp-block-quote cite,.wp-block-quote footer{color:currentColor;font-size:.8125em;font-style:normal;position:relative}.wp-block-quote:where(.has-text-align-right){border-left:none;border-right:.25em solid;padding-left:0;padding-right:1em}.wp-block-quote:where(.has-text-align-center){border:none;padding-left:0}.wp-block-quote.is-large,.wp-block-quote.is-style-large,.wp-block-quote:where(.is-style-plain){border:none}.wp-block-search .wp-block-search__label{font-weight:700}.wp-block-search__button{border:1px solid #ccc;padding:.375em .625em}:where(.wp-block-group.has-background){padding:1.25em 2.375em}.wp-block-separator.has-css-opacity{opacity:.4}.wp-block-separator{border:none;border-bottom:2px solid;margin-left:auto;margin-right:auto}.wp-block-separator.has-alpha-channel-opacity{opacity:1}.wp-block-separator:not(.is-style-wide):not(.is-style-dots){width:100px}.wp-block-separator.has-background:not(.is-style-dots){border-bottom:none;height:1px}.wp-block-separator.has-background:not(.is-style-wide):not(.is-style-dots){height:2px}.wp-block-table{margin:0 0 1em}.wp-block-table td,.wp-block-table th{word-break:normal}.wp-block-table :where(figcaption){color:#555;font-size:13px;text-align:center}.is-dark-theme .wp-block-table :where(figcaption){color:#ffffffa6}.wp-block-video :where(figcaption){color:#555;font-size:13px;text-align:center}.is-dark-theme .wp-block-video :where(figcaption){color:#ffffffa6}.wp-block-video{margin:0 0 1em}:root :where(.wp-block-template-part.has-background){margin-bottom:0;margin-top:0;padding:1.25em 2.375em}
+</style>
+<style id='caweb-cdt-ds-cards-style-inline-css' type='text/css'>
+:root{--grey:#ccc;--radius:1rem;--font-size:1rem;--ratio:1.24;--s0:calc(var(--font-size) - 0.3rem) + 0.2vw;--h6:calc(var(--s0)*var(--ratio));--h5:calc(var(--h6)*var(--ratio));--h4:calc(var(--h5)*var(--ratio));--h3:calc(var(--h4)*var(--ratio));--h2:calc(var(--h3)*var(--ratio));--h1:calc(var(--h2)*var(--ratio)*var(--ratio))}ul.cards{font-size:.85rem;padding:0;--card-spacing:1.5rem}ul.cards>li{border:1px solid var(--grey);border-radius:var(--radius);display:flex;flex-direction:column;justify-content:space-between;list-style:none;margin-block-start:0}ul.cards>li>a.action{--outline-color:var(--brand-primary);align-self:start;background:var(--brand-primary);border-radius:calc(var(--radius)*1.5);box-shadow:var(--shadow);color:#fff;display:inline-block;margin:var(--card-spacing);margin-block:0 1.5rem;margin-top:auto;order:3;padding-block:.55rem;padding-inline:1.5rem;text-decoration:none;transition:box-shadow .3s ease-out}ul.cards>li>a.action:focus,ul.cards>li>a.action:hover{background:var(--action-hover);box-shadow:var(--shadow-focus);transform:scale(1.06)}ul.cards>li>a.action:active{background:var(--action-active);transform:scale(.95)}ul.cards>li>img{aspect-ratio:3/2;block-size:auto;border-radius:var(--radius) var(--radius) 0 0;filter:saturate(20%);margin:unset;max-inline-size:100%;-o-object-fit:cover;object-fit:cover;-o-object-position:center;object-position:center;order:1}ul.cards>li[data-featured]{grid-column-start:span 2}ul.cards>li[data-featured]>img{aspect-ratio:16/5;width:100%}ul.cards>li>div.card-text{margin:0;order:2;padding:var(--card-spacing)}ul.cards>li>div.card-text>:is(h1,h2,h3,h4,h5,h6){font-size:var(--h3)}ul.cards[data-orientation^=media-]>li{display:flex;flex-direction:row;height:100%}ul.cards[data-orientation^=media-]>li>img{border-radius:var(--radius) 0 0 var(--radius);max-block-size:100%;max-inline-size:33%}ul.cards[data-orientation=media-end]>li{flex-direction:row-reverse}ul.cards[data-orientation=media-end]>li>img{border-radius:0 var(--radius) var(--radius) 0}ul.cards[data-orientation=media-end]>li>div.card-text{flex-grow:2}ul.cards[data-action=interactive]>li{box-shadow:var(--shadow);cursor:pointer;justify-content:start;position:relative;transition:all .3s ease-out}ul.cards[data-action=interactive]>li>img{margin-block-start:unset}ul.cards[data-action=interactive]>li>a{border-radius:var(--radius);color:currentcolor;display:block;height:100%;text-decoration:none;--outline-color:var(--brand-primary)}ul.cards[data-action=interactive]>li>div.card-text>:is(h1,h2,h3,h4,h5,h6)>a{color:inherit;text-decoration:none}ul.cards[data-action=interactive]>li>div.card-text>:is(h1,h2,h3,h4,h5,h6)>a:before{content:"";inset:0;position:absolute;z-index:3000}ul.cards[data-action=interactive]>li:focus-within{--outline-size:max(2px,0.08rem);--outline-style:solid;outline:var(--outline-size) var(--outline-style) var(--brand-primary);outline-offset:var(--outline-offset,var(--outline-size))}ul.cards[data-action=interactive]>li:focus-within a:focus{outline:none}ul.cards[data-action=interactive]>li:focus-within>img{filter:saturate(100%)}ul.cards[data-action=interactive]>li:focus,ul.cards[data-action=interactive]>li:hover{box-shadow:var(--shadow-focus);transform:scale(1.04)}ul.cards[data-action=interactive]>li:focus>img,ul.cards[data-action=interactive]>li:hover>img{filter:saturate(100%)}ul.cards[data-action=interactive]>li:active{transform:scale(1.02)}ul.cards[data-orientation^=media-]>li:only-child>img{max-inline-size:30%}ul.cards+ul.cards{margin-top:var(--gutter-gap)}ul.cards>li:has(.action:focus,.action:hover,.card-text:focus)>img{filter:saturate(100%)}@supports(display:grid){ul.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));grid-gap:var(--gutter-gap)}ul.cards>li{height:100%}ul.cards[data-orientation^=media-]{grid-auto-rows:minmax(20ch,auto);grid-template-columns:repeat(auto-fit,minmax(max(50ch,30vw),2fr))}ul.cards[data-orientation^=media-]:has(li:only-child){display:block;max-width:120ch}}
+
+</style>
+<style id='feedzy-rss-feeds-loop-style-inline-css' type='text/css'>
+.wp-block-feedzy-rss-feeds-loop{display:grid;gap:24px;grid-template-columns:repeat(1,1fr)}@media(min-width:782px){.wp-block-feedzy-rss-feeds-loop.feedzy-loop-columns-2,.wp-block-feedzy-rss-feeds-loop.feedzy-loop-columns-3,.wp-block-feedzy-rss-feeds-loop.feedzy-loop-columns-4,.wp-block-feedzy-rss-feeds-loop.feedzy-loop-columns-5{grid-template-columns:repeat(2,1fr)}}@media(min-width:960px){.wp-block-feedzy-rss-feeds-loop.feedzy-loop-columns-2{grid-template-columns:repeat(2,1fr)}.wp-block-feedzy-rss-feeds-loop.feedzy-loop-columns-3{grid-template-columns:repeat(3,1fr)}.wp-block-feedzy-rss-feeds-loop.feedzy-loop-columns-4{grid-template-columns:repeat(4,1fr)}.wp-block-feedzy-rss-feeds-loop.feedzy-loop-columns-5{grid-template-columns:repeat(5,1fr)}}.wp-block-feedzy-rss-feeds-loop .wp-block-image.is-style-rounded img{border-radius:9999px}
+
+</style>
+<style id='filebird-block-filebird-gallery-style-inline-css' type='text/css'>
+ul.filebird-block-filebird-gallery{margin:auto!important;padding:0!important;width:100%}ul.filebird-block-filebird-gallery.layout-grid{display:grid;grid-gap:20px;align-items:stretch;grid-template-columns:repeat(var(--columns),1fr);justify-items:stretch}ul.filebird-block-filebird-gallery.layout-grid li img{border:1px solid #ccc;box-shadow:2px 2px 6px 0 rgba(0,0,0,.3);height:100%;max-width:100%;-o-object-fit:cover;object-fit:cover;width:100%}ul.filebird-block-filebird-gallery.layout-masonry{-moz-column-count:var(--columns);-moz-column-gap:var(--space);column-gap:var(--space);-moz-column-width:var(--min-width);columns:var(--min-width) var(--columns);display:block;overflow:auto}ul.filebird-block-filebird-gallery.layout-masonry li{margin-bottom:var(--space)}ul.filebird-block-filebird-gallery li{list-style:none}ul.filebird-block-filebird-gallery li figure{height:100%;margin:0;padding:0;position:relative;width:100%}ul.filebird-block-filebird-gallery li figure figcaption{background:linear-gradient(0deg,rgba(0,0,0,.7),rgba(0,0,0,.3) 70%,transparent);bottom:0;box-sizing:border-box;color:#fff;font-size:.8em;margin:0;max-height:100%;overflow:auto;padding:3em .77em .7em;position:absolute;text-align:center;width:100%;z-index:2}ul.filebird-block-filebird-gallery li figure figcaption a{color:inherit}
+
+</style>
+<style id='global-styles-inline-css' type='text/css'>
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgba(6,147,227,1) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgba(252,185,0,1) 0%,rgba(255,105,0,1) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgba(255,105,0,1) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgba(255, 255, 255, 1), 6px 6px rgba(0, 0, 0, 1);--wp--preset--shadow--crisp: 6px 6px 0px rgba(0, 0, 0, 1);}:root { --wp--style--global--content-size: 823px;--wp--style--global--wide-size: 1080px; }:where(body) { margin: 0; }.wp-site-blocks > .alignleft { float: left; margin-right: 2em; }.wp-site-blocks > .alignright { float: right; margin-left: 2em; }.wp-site-blocks > .aligncenter { justify-content: center; margin-left: auto; margin-right: auto; }:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}.is-layout-flow > .alignleft{float: left;margin-inline-start: 0;margin-inline-end: 2em;}.is-layout-flow > .alignright{float: right;margin-inline-start: 2em;margin-inline-end: 0;}.is-layout-flow > .aligncenter{margin-left: auto !important;margin-right: auto !important;}.is-layout-constrained > .alignleft{float: left;margin-inline-start: 0;margin-inline-end: 2em;}.is-layout-constrained > .alignright{float: right;margin-inline-start: 2em;margin-inline-end: 0;}.is-layout-constrained > .aligncenter{margin-left: auto !important;margin-right: auto !important;}.is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)){max-width: var(--wp--style--global--content-size);margin-left: auto !important;margin-right: auto !important;}.is-layout-constrained > .alignwide{max-width: var(--wp--style--global--wide-size);}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}body{padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;}:root :where(.wp-element-button, .wp-block-button__link){background-color: #32373c;border-width: 0;color: #fff;font-family: inherit;font-size: inherit;line-height: inherit;padding: calc(0.667em + 2px) calc(1.333em + 2px);text-decoration: none;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+:where(.wp-block-post-template.is-layout-flex){gap: 1.25em;}:where(.wp-block-post-template.is-layout-grid){gap: 1.25em;}
+:where(.wp-block-columns.is-layout-flex){gap: 2em;}:where(.wp-block-columns.is-layout-grid){gap: 2em;}
+:root :where(.wp-block-pullquote){font-size: 1.5em;line-height: 1.6;}
+</style>
+<link rel='stylesheet' id='toc-screen-css' href='http://www.gov.ca.gov/wp-content/plugins/table-of-contents-plus/screen.min.css?ver=2411.1' type='text/css' media='all' />
+<style id='toc-screen-inline-css' type='text/css'>
+div#toc_container ul li {font-size: 100%;}
+</style>
+<link rel='stylesheet' id='divi-style-css' href='http://www.gov.ca.gov/wp-content/themes/CAWeb/style.css?ver=4.27.4' type='text/css' media='all' />
+<link rel='stylesheet' id='caweb-module-extension-styles-css' href='http://www.gov.ca.gov/wp-content/themes/CAWeb/divi/extension/styles/style.min.css?ver=1.0.0' type='text/css' media='all' />
+<link rel='stylesheet' id='wpforms-choicesjs-css' href='http://www.gov.ca.gov/wp-content/plugins/wpforms/assets/css/integrations/divi/choices.min.css?ver=10.2.0' type='text/css' media='all' />
+<link rel='stylesheet' id='wpforms-smart-phone-field-css' href='http://www.gov.ca.gov/wp-content/plugins/wpforms/assets/pro/css/integrations/divi/intl-tel-input.min.css?ver=21.2.8' type='text/css' media='all' />
+<link rel='stylesheet' id='wpforms-richtext-field-css' href='http://www.gov.ca.gov/wp-content/plugins/wpforms/assets/pro/css/integrations/divi/richtext.min.css?ver=1.9.4.1' type='text/css' media='all' />
+<link rel='stylesheet' id='wpforms-content-field-css' href='http://www.gov.ca.gov/wp-content/plugins/wpforms/assets/pro/css/integrations/divi/content.min.css?ver=1.9.4.1' type='text/css' media='all' />
+<link rel='stylesheet' id='wpforms-divi-pro-modern-full-css' href='http://www.gov.ca.gov/wp-content/plugins/wpforms/assets/pro/css/integrations/divi/wpforms-modern-full.min.css?ver=1.9.4.1' type='text/css' media='all' />
+<link rel='stylesheet' id='addtoany-css' href='http://www.gov.ca.gov/wp-content/plugins/add-to-any/addtoany.min.css?ver=1.16' type='text/css' media='all' />
+<link rel='stylesheet' id='divi-style-parent-css' href='http://www.gov.ca.gov/wp-content/themes/Divi/style-static.min.css?ver=4.27.4' type='text/css' media='all' />
+<link rel='stylesheet' id='caweb-core-style-css' href='http://www.gov.ca.gov/wp-content/themes/CAWeb/build/caweb-core.min.css?ver=1.13.1' type='text/css' media='all' />
+<link rel='stylesheet' id='caweb-google-font-style-css' href='https://fonts.googleapis.com/css?family=Asap+Condensed%3A400%2C600%7CSource+Sans+Pro%3A400%2C700&#038;ver=1.13.1' type='text/css' media='all' />
+<link rel='stylesheet' id='caweb-external-custom-1-css' href='https://www.gov.ca.gov/wp-content/uploads/caweb-ext/css/govapps2.1.css?ver=1.13.1' type='text/css' media='all' />
+<link rel='stylesheet' id='caweb-external-custom-2-css' href='https://www.gov.ca.gov/wp-content/uploads/caweb-ext/css/header-fix-43.css?ver=1.13.1' type='text/css' media='all' />
+<link rel='stylesheet' id='caweb-external-custom-3-css' href='https://www.gov.ca.gov/wp-content/uploads/caweb-ext/css/global-2.95-32.css?ver=1.13.1' type='text/css' media='all' />
+<link rel='stylesheet' id='cagov-design-system-colorscheme-css' href='http://www.gov.ca.gov/wp-content/plugins/design-system-wordpress/build/campaign.css?ver=1.2.6' type='text/css' media='all' />
+<!--n2css--><!--n2js--><script type="text/javascript" src="http://www.gov.ca.gov/wp-includes/js/jquery/jquery.min.js?ver=3.7.1" id="jquery-core-js"></script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1" id="jquery-migrate-js"></script>
+<script type="text/javascript" id="jquery-js-after">
+/* <![CDATA[ */
+jqueryParams.length&&$.each(jqueryParams,function(e,r){if("function"==typeof r){var n=String(r);n.replace("$","jQuery");var a=new Function("return "+n)();$(document).ready(a)}});
+/* ]]> */
+</script>
+<script type="text/javascript" id="addtoany-core-js-before">
+/* <![CDATA[ */
+window.a2a_config=window.a2a_config||{};a2a_config.callbacks=[];a2a_config.overlays=[];a2a_config.templates={};
+a2a_config.icon_color="transparent,#494949";
+/* ]]> */
+</script>
+<script type="text/javascript" defer src="https://static.addtoany.com/menu/page.js" id="addtoany-core-js"></script>
+<script type="text/javascript" defer src="http://www.gov.ca.gov/wp-content/plugins/add-to-any/addtoany.min.js?ver=1.1" id="addtoany-jquery-js"></script>
+<script type="text/javascript" defer crossorigin="anonymous" src="https://alert.cdt.ca.gov/alert.js?ver=1.0.0" id="cagov-statewide-alerts-js"></script>
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://www.gov.ca.gov/xmlrpc.php?rsd" />
+<link rel="alternate" title="oEmbed (JSON)" type="application/json+oembed" href="https://www.gov.ca.gov/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.gov.ca.gov%2F2020%2F03%2F04%2Fgovernor-newsom-declares-state-of-emergency-to-help-state-prepare-for-broader-spread-of-covid-19%2F" />
+<link rel="alternate" title="oEmbed (XML)" type="text/xml+oembed" href="https://www.gov.ca.gov/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.gov.ca.gov%2F2020%2F03%2F04%2Fgovernor-newsom-declares-state-of-emergency-to-help-state-prepare-for-broader-spread-of-covid-19%2F&#038;format=xml" />
+<style>.nav li.et-hover > ul,
+.menu li.et-hover > ul {
+	visibility: visible !important;
+	opacity: 1 !important; }
+.da11y-submenu-show {
+	visibility: visible !important;
+}
+.keyboard-outline {
+		outline: #2ea3f2 solid 2px;
+	-webkit-transition: none !important;
+	transition: none !important;
+}
+button:active.keyboard-outline,
+button:focus.keyboard-outline,
+input:active.keyboard-outline,
+input:focus.keyboard-outline,
+a[role="tab"].keyboard-outline {
+	outline-offset: -5px;
+}
+.et-search-form input:focus.keyboard-outline {
+	padding-left: 15px;
+	padding-right: 15px;
+}
+.et_pb_tab {
+	-webkit-animation: none !important;
+	animation: none !important;
+}
+.et_pb_contact_form_label,
+.widget_search .screen-reader-text,
+.et_pb_social_media_follow_network_name,
+.et_pb_search .screen-reader-text {
+	display: block !important; }
+.da11y-screen-reader-text,
+.et_pb_contact_form_label,
+.widget_search .screen-reader-text,
+.et_pb_social_media_follow_network_name,
+.et_pb_search .screen-reader-text {
+	clip: rect(1px, 1px, 1px, 1px);
+	position: absolute !important;
+	height: 1px;
+	width: 1px;
+	overflow: hidden;
+	text-shadow: none;
+	text-transform: none;
+	letter-spacing: normal;
+	line-height: normal;
+	font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+	font-size: 1em;
+	font-weight: 600;
+	-webkit-font-smoothing: subpixel-antialiased;
+}
+.da11y-screen-reader-text:focus {
+	background: #f1f1f1;
+	color: #00547A;
+	-webkit-box-shadow: 0 0 2px 2px rgba(0,0,0,.6);
+	box-shadow: 0 0 2px 2px rgba(0,0,0,.6);
+	clip: auto !important;
+	display: block;
+	height: auto;
+	left: 5px;
+	padding: 15px 23px 14px;
+	text-decoration: none;
+	top: 7px;
+	width: auto;
+	z-index: 1000000; }
+</style><meta name="viewport" content="width=device-width, initial-scale=1.0" /><style type="text/css">
+.feedzy-rss-link-icon:after {
+	content: url("http://www.gov.ca.gov/wp-content/plugins/feedzy-rss-feeds/img/external-link.png");
+	margin-left: 3px;
+}
+</style>
+		<link rel="stylesheet" id="et-divi-customizer-global-cached-inline-styles" href="http://www.gov.ca.gov/wp-content/et-cache/3/1/global/et-divi-customizer-global.min.css?ver=1744307544" /><link rel="stylesheet" id="et-core-unified-15576-cached-inline-styles" href="http://www.gov.ca.gov/wp-content/et-cache/3/1/15576/et-core-unified-15576.min.css?ver=1744309268" /><link rel="stylesheet" id="et-core-unified-deferred-15576-cached-inline-styles" href="http://www.gov.ca.gov/wp-content/et-cache/3/1/15576/et-core-unified-deferred-15576.min.css?ver=1744309268" />
+</head>
+<body class="post-template-default single single-post postid-15576 single-format-standard primary et_pb_button_helper_class et_header_style_left et_pb_footer_columns4 et_cover_background et_pb_gutter windows et_pb_gutters3 et_divi_theme et-db  title-displayed classic-built sidebar-displayed design-system">
+
+<!-- Google Tag Manager (noscript) -->
+<noscript>
+	<iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TP25MN7" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+</noscript>
+
+	<div id="cagov-alerts">
+				<div  id="cagov-alert-0" style="background-color: #fdb55b" class="alert alert-dismissible alert-banner alert-0">
+				<div>
+					
+											<span class="alert-level">
+							Los Angeles fires:						</span>
+					
+					<a href="https://www.ca.gov/LAfires/">Go to CA.gov/LAfires for latest information and resources</a>
+					<button data-alert="0" class="ca-gov-close-icon close" aria-label="Close Alert 0"></button>
+
+				</div>
+			</div>
+				</div>
+	
+
+<header>
+      <!-- Mobile -->
+      <div class="mobile">
+        <button
+          class="nav-toggle"
+          aria-expanded="false"
+          aria-label="Open the navigation menu">
+          <svg
+            width="2rem"
+            viewBox="0 0 936 569"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M907.6 560.88C901.18 561 836.95 560.73 822.42 560.88C811.65 558.41 826.44 536.75 840.85 531.19C855.68 525.46 876.33 537.96 877.64 528.84C875.76 512.95 811.89 508.6 790.72 496.74C780.43 487.28 769.93 450.58 764.99 450.63C760.01 450.96 707.38 524.09 698.75 528.81C688.14 533.5 681.82 535.64 678.48 540.08C675.53 546.61 680.74 567.93 674.03 568.61C639.23 568.89 564.23 568.65 560.08 568.61C550.06 563.5 560.55 546.87 573.47 542.4C595.91 534.65 610.36 545.95 612.38 543.79C618.76 539.82 590.84 463 616.18 423.89C615.36 420.82 609.32 416.79 606.25 415.94C595.23 431.92 547.6 434.52 513.02 427.85C515.29 443.72 540.23 480.86 537.05 499.71C531.45 517.57 499.7 560.7 495.54 560.7C495.54 560.7 426.1 560.68 420.19 560.68C416.47 557.68 425.56 543.56 430.04 539.64C444.7 526.36 466.11 546.77 472.05 523.96C474.3 515.9 464.36 505.01 440.06 487.19C422.88 474.59 403.65 452.73 399.58 453.95C365.73 493.87 329.05 517.48 302.62 528.11C279.16 540.34 257.04 569.04 255.16 568.61C255.16 568.61 150.73 569.02 145.36 568.61C137.19 563.59 159.55 542.54 169.1 538.91C179.16 535.08 200.92 546.49 209.99 540.26C219.49 533.6 220.38 499.35 251.8 467.98C257.99 461.74 254.11 417.62 272.08 384.77C261.33 379.63 243.16 383.33 230.26 389.32C212.54 397.54 208.57 425.18 179.44 431.21C157.36 433.49 140.92 424.24 134.48 424.39C124.05 425.56 76.38 435.02 54.09 435.02C37.89 430.69 -0.440015 398.63 1.75999 392.8C5.21999 386.07 41.58 356.27 48.31 339.41C50.79 333.19 47.24 317.76 50.42 311.86C58.14 297.53 78.46 276.74 84.6 268.33C88.71 263.13 79.59 247.64 96.71 238.13C112.85 231.01 119.46 240.84 123.62 242.54C123.65 236.84 122.49 224.97 138.17 218.33C153.29 214.58 164.63 230.45 165.51 233.79C172.71 228.9 189.85 200.4 214.05 192.21C216.13 191.51 220.64 191.52 222.73 190.85C232.37 184.59 266.33 169.74 276.82 163.85C292.12 155.26 333.39 128.21 351.01 126.02C384.3 121.89 447.73 157.76 462.22 158.53C476.71 159.3 569.4 144.56 606.25 146.31C721.91 148.7 805.06 186.99 834.07 232.04C839 234.12 850.08 237.02 853.39 241.21C858.99 248.31 868.75 259.17 861.76 280.53C878.01 295.65 896.53 343.27 897.6 366.55C897.95 396.58 900.92 427.5 903.8 442.98C908.22 466.71 938.77 483.78 935.61 496.35C913.83 540.95 917.52 561.04 907.6 560.92V560.88Z"
+              fill="#1B499B"
+              class="testing-animation" />
+            <path
+              d="M158.39 184.56C141.11 172.25 106.15 147.2 105.62 146.81C98.8 141.83 98.83 141.87 92.06 146.78C75.26 158.99 40.42 184.55 39.08 184.13C39.08 179.49 53.29 135.66 59.08 118.18C60.22 114.75 58.98 113.55 56.77 111.96C38.68 98.91 1.59 71.92 0 70.47C8.87 70.47 55.5 69.42 71.14 69.68C73.25 69.72 74.85 69.58 75.63 67.11C82.72 44.76 89.91 22.44 97.1 0C99.29 1.15 114.04 45.69 120.44 66.05C121.58 69.69 123.39 69.68 126.12 69.68C149.09 69.65 172.05 69.66 195.27 69.66C194.54 72.83 142.55 109.79 139.55 111.95C136.94 113.83 136.75 115.01 137.69 117.86C144.18 137.68 159.41 181.36 158.38 184.55L158.39 184.56Z"
+              fill="#1B499B" />
+          </svg>
+          <svg class="menu-icon" focusable="false" viewBox="0 0 32 32">
+            <path d="M3,10 30,10 M3,20 30,20"></path>
+          </svg>
+        </button>
+      </div>
+		<!-- Site Logo -->
+	<div class="logo">
+		<figure>
+			<a href="/">
+				<img
+					src="https://www.gov.ca.gov/wp-content/uploads/2024/04/new-gov-logo-test.png"
+					alt="Governor Gavin Newsom logo" />
+				<span class="sr-only">Governor of California</span>
+			</a>
+		</figure>
+	</div>
+		<div class="navigation">
+				<!-- Singlelevel navigation -->
+<nav>
+  <ul class="navlinks">
+  				<li>
+					<a 
+						href="https://www.gov.ca.gov/about/" 
+																				>About</a>
+				</li>		
+							<li>
+					<a 
+						href="https://www.gov.ca.gov/priorities-and-progress/" 
+																				>Priorities</a>
+				</li>		
+							<li>
+					<a 
+						href="https://www.gov.ca.gov/newsroom/" 
+																				>News</a>
+				</li>		
+							<li>
+					<a 
+						href="https://www.gov.ca.gov/join-the-administration/" 
+																				>Join the Administration</a>
+				</li>		
+							<li>
+					<a 
+						href="https://www.gov.ca.gov/about/first-partner/" 
+																				>First Partner</a>
+				</li>		
+							<li>
+					<a 
+						href="https://www.gov.ca.gov/contact/" 
+																				>Contact</a>
+				</li>		
+					<li class="search">
+			<!-- Search -->
+			<form class="search-container"  id="search-form" autocomplete="off" action="http://www.gov.ca.gov/serp" role="search">
+				<button id="close_search"  class="ca-gov-close-icon-small" aria-label="Close the search box"></button>
+                <label for="search-box" id="label_search-box">
+                  <span class="sr-only">To search the site, enter a search term</span>
+                </label>
+                <input id="search-box" type="text" class="search-box search-svg" name="q" value=""/>
+                <button type="submit" class="search-submit-icon" id="search-submit" aria-label="Submit the search form"></button>
+			</form>
+		</li>
+
+				<li class="google-translate">
+			<a 
+				id="caweb-gtrans-custom" 
+				target="" 
+				href="/translate" 
+				aria-label="Google Custom Translate">
+									<span class="ca-gov-icon-globe"></span>
+											</a>
+		</li>
+		
+		  </ul>
+</nav>
+	</div>
+	<!-- BEGIN CAgov Offical  -->
+  <div id="ca_gov_sidebar">
+    <div class="cagov">
+      <button
+        aria-label="Open the CA.gov menu"
+        class="ca-gov-svg"
+        id="caGov"
+        tabindex="0"
+        title="Resources for California"></button>
+    </div>
+    <div class="sidebar-container">
+      <p>Official website of the State of California</p>
+      <p><a href="https://www.ca.gov/">CA.gov</a></p>
+      <p id="resources">Resources for California</p>
+      <hr />
+      <div class="ca-gov-services-container">
+        <ul>
+          <li>Key services</li>
+          <li>
+            <a href="https://www.coveredca.com/"
+              >Health insurance or Medi-Cal</a
+            >
+          </li>
+          <li>
+            <a href="https://www.cdtfa.ca.gov/services/#Register-Renewals"
+              >Business licenses</a
+            >
+          </li>
+          <li>
+            <a href="https://benefitscal.com/">Food & social assistance</a>
+          </li>
+          <li>
+            <a href="https://calcareers.ca.gov/">Find a CA state job</a>
+          </li>
+          <li>
+            <a
+              href="https://www.dmv.ca.gov/portal/vehicle-registration/vehicle-registration-renewal/"
+              >Vehicle registration</a
+            >
+          </li>
+
+          <li id="more_services_toggle" class="pointer-cursor">
+            <button>More +</button>
+          </li>
+        </ul>
+      </div>
+      <div
+        id="more_services_container"
+        class="ca-gov-services-container hidden">
+        <ul>
+          <li>
+            <a href="https://myvaccinerecord.cdph.ca.gov/"
+              >Digital vaccine record</a
+            >
+          </li>
+          <li>
+            <a href="https://www.ca.gov/service/?item=traffic-tickets"
+              >Traffic tickets</a
+            >
+          </li>
+
+          <li>
+            <a
+              href="https://www.cdph.ca.gov/Programs/CHSI/Pages/Vital-Records-Obtaining-Certified-Copies-of-Birth-Records.aspx"
+              >Birth certificates</a
+            >
+          </li>
+          <li>
+            <a href="https://www.calottery.com/draw-games">Lottery numbers</a>
+          </li>
+          <li>
+            <a href="https://edd.ca.gov/en/Unemployment/UI_Online"
+              >Unemployment</a
+            >
+          </li>
+          <li id="view_all_cagov_li">
+            <a href="https://www.ca.gov/services/">
+              View all CA.gov services
+            </a>
+          </li>
+          <li id="less_services_toggle" class="pointer-cursor">
+            <button>Less -</button>
+          </li>
+        </ul>
+      </div>
+      <hr />
+      <div class="ca-gov-services-container">
+        <ul>
+          <li>Popular topics</li>
+          <li><a href="https://abortion.ca.gov/">Abortion</a></li>
+          <li><a href="https://build.ca.gov/">Building California</a></li>
+          <li>
+            <a href="https://climateaction.ca.gov/">Climate Action</a>
+          </li>
+          <li>
+            <a href="https://www.caloes.ca.gov/gunsafety/">Gun Safety</a>
+          </li>
+          <li>
+            <a href="https://mentalhealth.ca.gov/"
+              >Mental health care for all</a
+            >
+          </li>
+          <li>
+            <a
+              href="https://www.cdph.ca.gov/Programs/CCDPHP/opioids/Pages/landingpage.aspx"
+              >Opioids</a
+            >
+          </li>
+        </ul>
+      </div>
+      <hr />
+    </div>
+  </div>
+  <!-- END CAgov Offical -->
+  <button class="return-top">
+    <span class="sr-only">Back to top</span>
+  </button>
+</header>
+
+<div id="page-container" class="page-container-ds ">
+	<div id="et-main-area">
+		<div id="main-content" class="main-content-ds " tabindex="-1">
+			<main class="main-primary">
+
+	<article id="post-15576" class="post-15576 post type-post status-publish format-standard has-post-thumbnail hentry category-press-releases category-proclamations category-recent-news category-top-story tag-other">
+
+		<!-- Page Title--><h1 class="page-title">Governor Newsom Declares State of Emergency to Help State Prepare for Broader Spread of COVID-19 </h1>		<div class="entry-content">
+		<hr />
+<p style="text-align: center"><em>Emergency proclamation builds on work already underway across state government to protect public health and safety</em></p>
+<p style="text-align: center"><em>Proclamation includes increased protections against price gouging, offers more assistance to local governments and allows health care workers to come from out of state</em></p>
+<p style="text-align: center"><em>All levels of state government are being deployed to tackle this evolving situation</em></p>
+<p>SACRAMENTO – As part of the state’s response to address the global COVID-19 outbreak, Governor Gavin Newsom today declared a State of Emergency to make additional resources available, formalize emergency actions already underway across multiple state agencies and departments, and help the state prepare for broader spread of COVID-19. The proclamation comes as the number of positive California cases rises and following one official COVID-19 death.</p>
+<p>Today’s proclamation builds on work already underway by the California Department of Public Health, California Health and Human Services Agency, Governor’s Office of Emergency Services and other agencies which have been on the front lines of the state’s response to COVID-19 since January.</p>
+<p>“The State of California is deploying every level of government to help identify cases and slow the spread of this coronavirus,” said Governor Newsom. “This emergency proclamation will help the state further prepare our communities and our health care system in the event it spreads more broadly.”</p>
+<p>The emergency proclamation includes provisions that protect consumers against price gouging, allow for health care workers to come from out of state to assist at health care facilities, and give health care facilities the flexibility to plan and adapt to accommodate incoming patients.</p>
+<p>Yesterday, Governor Newsom announced the release of millions of <a href="https://www.cdph.ca.gov/Programs/OPA/Pages/NR20-010.aspx">N95 masks</a> to address shortages caused by COVID-19. Today’s action also follows the announcement earlier this week that the state has secured the <a href="https://www.cdph.ca.gov/Programs/OPA/Pages/NR20-009.aspx">capacity to test</a> thousands of specimens from the federal Centers for Disease Control and Prevention to expedite testing.</p>
+<p>For the latest on the state’s COVID-19 preparedness and response, visit <a href="https://www.cdph.ca.gov/Programs/CID/DCDC/Pages/Immunization/ncov2019.aspx">cdph.ca.gov</a>.</p>
+<p>A copy of today’s emergency proclamation can be found <a href="https://www.gov.ca.gov/wp-content/uploads/2020/03/3.4.20-Coronavirus-SOE-Proclamation.pdf">here</a>.</p>
+<p>&nbsp;</p>
+<p align="center">###</p>
+		</div>
+
+		
+	</article>
+
+				</main> <!-- .main-primary -->
+
+							<aside id="caweb-sidebar">
+					<div id="sidebar">
+		<div id="block-16" class="et_pb_widget widget_block widget_search"><form role="search" method="get" action="https://www.gov.ca.gov/" class="wp-block-search__button-outside wp-block-search__icon-button widget-search-bar wp-block-search"    ><label class="wp-block-search__label" for="wp-block-search__input-1" >Search for:</label><div class="wp-block-search__inside-wrapper " ><input class="wp-block-search__input" id="wp-block-search__input-1" placeholder="Search News" value="" type="search" name="s" required /><button aria-label="Search" class="wp-block-search__button has-icon wp-element-button" type="submit" ><svg class="search-icon" viewBox="0 0 24 24" width="24" height="24">
+					<path d="M13 5c-3.3 0-6 2.7-6 6 0 1.4.5 2.7 1.3 3.7l-3.8 3.8 1.1 1.1 3.8-3.8c1 .8 2.3 1.3 3.7 1.3 3.3 0 6-2.7 6-6S16.3 5 13 5zm0 10.5c-2.5 0-4.5-2-4.5-4.5s2-4.5 4.5-4.5 4.5 2 4.5 4.5-2 4.5-4.5 4.5z"></path>
+				</svg></button></div></form></div><div id="block-15" class="et_pb_widget widget_block"><a class="all-stories" href="https://www.gov.ca.gov/all-stories/">All Stories</a></div><div id="block-5" class="et_pb_widget widget_block">
+<h2 class="wp-block-heading">Topics</h2>
+</div><div id="block-4" class="et_pb_widget widget_block widget_tag_cloud"><p class="wp-block-tag-cloud"><a href="https://www.gov.ca.gov/tag/appointments/" class="tag-cloud-link tag-link-93 tag-link-position-1" style="font-size: 22pt;" aria-label="Appointments (592 items)">Appointments</a>
+<a href="https://www.gov.ca.gov/tag/budget/" class="tag-cloud-link tag-link-190 tag-link-position-2" style="font-size: 16.048582996pt;" aria-label="Budget (51 items)">Budget</a>
+<a href="https://www.gov.ca.gov/tag/california-for-all/" class="tag-cloud-link tag-link-92 tag-link-position-3" style="font-size: 19.2793522267pt;" aria-label="California for All (193 items)">California for All</a>
+<a href="https://www.gov.ca.gov/tag/climate/" class="tag-cloud-link tag-link-88 tag-link-position-4" style="font-size: 21.7165991903pt;" aria-label="Climate (518 items)">Climate</a>
+<a href="https://www.gov.ca.gov/tag/economy/" class="tag-cloud-link tag-link-103 tag-link-position-5" style="font-size: 18.5991902834pt;" aria-label="Economy (147 items)">Economy</a>
+<a href="https://www.gov.ca.gov/tag/education/" class="tag-cloud-link tag-link-98 tag-link-position-6" style="font-size: 17.9190283401pt;" aria-label="Education (112 items)">Education</a>
+<a href="https://www.gov.ca.gov/tag/health-care/" class="tag-cloud-link tag-link-89 tag-link-position-7" style="font-size: 19.2226720648pt;" aria-label="Health care (188 items)">Health care</a>
+<a href="https://www.gov.ca.gov/tag/housing-homelessness/" class="tag-cloud-link tag-link-95 tag-link-position-8" style="font-size: 19.1093117409pt;" aria-label="Housing &amp; homelessness (183 items)">Housing &amp; homelessness</a>
+<a href="https://www.gov.ca.gov/tag/la-fires/" class="tag-cloud-link tag-link-199 tag-link-position-9" style="font-size: 17.3522267206pt;" aria-label="LA Fires (89 items)">LA Fires</a>
+<a href="https://www.gov.ca.gov/tag/legislation/" class="tag-cloud-link tag-link-189 tag-link-position-10" style="font-size: 21.036437247pt;" aria-label="Legislation (393 items)">Legislation</a>
+<a href="https://www.gov.ca.gov/tag/other/" class="tag-cloud-link tag-link-90 tag-link-position-11" style="font-size: 19.1093117409pt;" aria-label="Other (182 items)">Other</a>
+<a href="https://www.gov.ca.gov/tag/public-safety/" class="tag-cloud-link tag-link-91 tag-link-position-12" style="font-size: 20.6963562753pt;" aria-label="Public safety (349 items)">Public safety</a>
+<a href="https://www.gov.ca.gov/tag/technology/" class="tag-cloud-link tag-link-97 tag-link-position-13" style="font-size: 14.1214574899pt;" aria-label="Technology (23 items)">Technology</a>
+<a href="https://www.gov.ca.gov/tag/transportation-infrastructure/" class="tag-cloud-link tag-link-96 tag-link-position-14" style="font-size: 18.4858299595pt;" aria-label="Transportation &amp; infrastructure (141 items)">Transportation &amp; infrastructure</a>
+<a href="https://www.gov.ca.gov/tag/veterans/" class="tag-cloud-link tag-link-198 tag-link-position-15" style="font-size: 8pt;" aria-label="Veterans (1 item)">Veterans</a></p></div><div id="block-2" class="et_pb_widget widget_block">
+<h2 class="wp-block-heading">News type</h2>
+</div><div id="block-3" class="et_pb_widget widget_block widget_categories"><ul class="wp-block-categories-list wp-block-categories">	<li class="cat-item cat-item-27"><a href="https://www.gov.ca.gov/category/executive-orders/">Executive Orders</a>
+</li>
+	<li class="cat-item cat-item-71"><a href="https://www.gov.ca.gov/category/first-partner/">First Partner</a>
+</li>
+	<li class="cat-item cat-item-22"><a href="https://www.gov.ca.gov/category/media-advisories/">Media Advisories</a>
+</li>
+	<li class="cat-item cat-item-17"><a href="https://www.gov.ca.gov/category/press-releases/">Press Releases</a>
+</li>
+	<li class="cat-item cat-item-47"><a href="https://www.gov.ca.gov/category/proclamations/">Proclamations</a>
+</li>
+	<li class="cat-item cat-item-107"><a href="https://www.gov.ca.gov/category/spanish/">Spanish</a>
+</li>
+</ul></div><div id="block-10" class="et_pb_widget widget_block">
+<h2 class="wp-block-heading">Date</h2>
+</div><div id="block-11" class="et_pb_widget widget_block widget_archive"><div class="wp-block-archives-dropdown wp-block-archives"><label for="wp-block-archives-2" class="wp-block-archives__label screen-reader-text">Archives</label>
+		<select id="wp-block-archives-2" name="archive-dropdown" onchange="document.location.href=this.options[this.selectedIndex].value;">
+		<option value="">Select Month</option>	<option value='https://www.gov.ca.gov/2025/04/'> April 2025 </option>
+	<option value='https://www.gov.ca.gov/2025/03/'> March 2025 </option>
+	<option value='https://www.gov.ca.gov/2025/02/'> February 2025 </option>
+	<option value='https://www.gov.ca.gov/2025/01/'> January 2025 </option>
+	<option value='https://www.gov.ca.gov/2024/12/'> December 2024 </option>
+	<option value='https://www.gov.ca.gov/2024/11/'> November 2024 </option>
+	<option value='https://www.gov.ca.gov/2024/10/'> October 2024 </option>
+	<option value='https://www.gov.ca.gov/2024/09/'> September 2024 </option>
+	<option value='https://www.gov.ca.gov/2024/08/'> August 2024 </option>
+	<option value='https://www.gov.ca.gov/2024/07/'> July 2024 </option>
+	<option value='https://www.gov.ca.gov/2024/06/'> June 2024 </option>
+	<option value='https://www.gov.ca.gov/2024/05/'> May 2024 </option>
+	<option value='https://www.gov.ca.gov/2024/04/'> April 2024 </option>
+	<option value='https://www.gov.ca.gov/2024/03/'> March 2024 </option>
+	<option value='https://www.gov.ca.gov/2024/02/'> February 2024 </option>
+	<option value='https://www.gov.ca.gov/2024/01/'> January 2024 </option>
+	<option value='https://www.gov.ca.gov/2023/12/'> December 2023 </option>
+	<option value='https://www.gov.ca.gov/2023/11/'> November 2023 </option>
+	<option value='https://www.gov.ca.gov/2023/10/'> October 2023 </option>
+	<option value='https://www.gov.ca.gov/2023/09/'> September 2023 </option>
+	<option value='https://www.gov.ca.gov/2023/08/'> August 2023 </option>
+	<option value='https://www.gov.ca.gov/2023/07/'> July 2023 </option>
+	<option value='https://www.gov.ca.gov/2023/06/'> June 2023 </option>
+	<option value='https://www.gov.ca.gov/2023/05/'> May 2023 </option>
+	<option value='https://www.gov.ca.gov/2023/04/'> April 2023 </option>
+	<option value='https://www.gov.ca.gov/2023/03/'> March 2023 </option>
+	<option value='https://www.gov.ca.gov/2023/02/'> February 2023 </option>
+	<option value='https://www.gov.ca.gov/2023/01/'> January 2023 </option>
+	<option value='https://www.gov.ca.gov/2022/12/'> December 2022 </option>
+	<option value='https://www.gov.ca.gov/2022/11/'> November 2022 </option>
+	<option value='https://www.gov.ca.gov/2022/10/'> October 2022 </option>
+	<option value='https://www.gov.ca.gov/2022/09/'> September 2022 </option>
+	<option value='https://www.gov.ca.gov/2022/08/'> August 2022 </option>
+	<option value='https://www.gov.ca.gov/2022/07/'> July 2022 </option>
+	<option value='https://www.gov.ca.gov/2022/06/'> June 2022 </option>
+	<option value='https://www.gov.ca.gov/2022/05/'> May 2022 </option>
+	<option value='https://www.gov.ca.gov/2022/04/'> April 2022 </option>
+	<option value='https://www.gov.ca.gov/2022/03/'> March 2022 </option>
+	<option value='https://www.gov.ca.gov/2022/02/'> February 2022 </option>
+	<option value='https://www.gov.ca.gov/2022/01/'> January 2022 </option>
+	<option value='https://www.gov.ca.gov/2021/12/'> December 2021 </option>
+	<option value='https://www.gov.ca.gov/2021/11/'> November 2021 </option>
+	<option value='https://www.gov.ca.gov/2021/10/'> October 2021 </option>
+	<option value='https://www.gov.ca.gov/2021/09/'> September 2021 </option>
+	<option value='https://www.gov.ca.gov/2021/08/'> August 2021 </option>
+	<option value='https://www.gov.ca.gov/2021/07/'> July 2021 </option>
+	<option value='https://www.gov.ca.gov/2021/06/'> June 2021 </option>
+	<option value='https://www.gov.ca.gov/2021/05/'> May 2021 </option>
+	<option value='https://www.gov.ca.gov/2021/04/'> April 2021 </option>
+	<option value='https://www.gov.ca.gov/2021/03/'> March 2021 </option>
+	<option value='https://www.gov.ca.gov/2021/02/'> February 2021 </option>
+	<option value='https://www.gov.ca.gov/2021/01/'> January 2021 </option>
+	<option value='https://www.gov.ca.gov/2020/12/'> December 2020 </option>
+	<option value='https://www.gov.ca.gov/2020/11/'> November 2020 </option>
+	<option value='https://www.gov.ca.gov/2020/10/'> October 2020 </option>
+	<option value='https://www.gov.ca.gov/2020/09/'> September 2020 </option>
+	<option value='https://www.gov.ca.gov/2020/08/'> August 2020 </option>
+	<option value='https://www.gov.ca.gov/2020/07/'> July 2020 </option>
+	<option value='https://www.gov.ca.gov/2020/06/'> June 2020 </option>
+	<option value='https://www.gov.ca.gov/2020/05/'> May 2020 </option>
+	<option value='https://www.gov.ca.gov/2020/04/'> April 2020 </option>
+	<option value='https://www.gov.ca.gov/2020/03/'> March 2020 </option>
+	<option value='https://www.gov.ca.gov/2020/02/'> February 2020 </option>
+	<option value='https://www.gov.ca.gov/2020/01/'> January 2020 </option>
+	<option value='https://www.gov.ca.gov/2019/12/'> December 2019 </option>
+	<option value='https://www.gov.ca.gov/2019/11/'> November 2019 </option>
+	<option value='https://www.gov.ca.gov/2019/10/'> October 2019 </option>
+	<option value='https://www.gov.ca.gov/2019/09/'> September 2019 </option>
+	<option value='https://www.gov.ca.gov/2019/08/'> August 2019 </option>
+	<option value='https://www.gov.ca.gov/2019/07/'> July 2019 </option>
+	<option value='https://www.gov.ca.gov/2019/06/'> June 2019 </option>
+	<option value='https://www.gov.ca.gov/2019/05/'> May 2019 </option>
+	<option value='https://www.gov.ca.gov/2019/04/'> April 2019 </option>
+	<option value='https://www.gov.ca.gov/2019/03/'> March 2019 </option>
+	<option value='https://www.gov.ca.gov/2019/02/'> February 2019 </option>
+	<option value='https://www.gov.ca.gov/2019/01/'> January 2019 </option>
+</select></div></div>	</div>
+				</aside>
+							</div> <!-- #main-content -->
+		</div> <!-- #et-main-area -->
+	</div> <!-- #page-container -->
+	
+	<script type="text/javascript">
+		jQuery(document).ready(function($) {
+
+			if($('.menu-item-has-children').find('a') ) {
+				$('.menu-item-has-children').find('a').addClass('da11y-submenu');
+				$('.menu-item-has-children').find('a').not('.sub-menu a').attr('aria-expanded', 'false');
+			}
+
+			$('.da11y-submenu').on('focus', function() {
+				$(this).not('.sub-menu a').attr('aria-expanded', 'true');
+				$(this).siblings('.sub-menu').addClass('da11y-submenu-show');
+				$(this).trigger('mouseenter');
+			});
+
+			$('.menu-item-has-children a').on('focusout', function() {
+				if($(this).parent().not('.menu-item-has-children').is(':last-child')) {
+					$(this).parents('.menu-item-has-children').children('.da11y-submenu').attr('aria-expanded', 'false').trigger('mouseleave').siblings('.sub-menu').removeClass('da11y-submenu-show');
+				}
+			});
+
+			/**
+			 * Generate search form styles.
+			 *
+			 * @since Divi v3.0.23
+			 */
+			function et_set_search_form_css() {
+				const search_container = $('.et_search_form_container');
+				const body = $('body');
+				if (search_container.hasClass('et_pb_search_visible')) {
+					const header_height = $('#main-header').innerHeight();
+					const menu_width = $('#top-menu').width();
+					const font_size = $('#top-menu li a').css('font-size');
+					search_container.css({ height: header_height + 'px' });
+					search_container.find('input').css('font-size', font_size);
+					if (!body.hasClass('et_header_style_left')) {
+						search_container.css('max-width', menu_width + 60);
+					} else {
+						search_container.find('form').css('max-width', menu_width + 60);
+					}
+				}
+			}
+
+			/**
+			 * Show the search.
+			 *
+			 * @since Divi v3.0.23
+			 */
+			function show_search() {
+				const search_container = $('.et_search_form_container');
+				if (search_container.hasClass('et_pb_is_animating')) {
+					return;
+				}
+				$('.et_menu_container').removeClass('et_pb_menu_visible et_pb_no_animation').addClass('et_pb_menu_hidden');
+				search_container.removeClass('et_pb_search_form_hidden et_pb_no_animation').addClass('et_pb_search_visible et_pb_is_animating');
+				setTimeout(function () {
+					$('.et_menu_container').addClass('et_pb_no_animation');
+					search_container.addClass('et_pb_no_animation').removeClass('et_pb_is_animating');
+				}, 1000);
+				search_container.find('input').focus();
+				et_set_search_form_css();
+			}
+
+			/**
+			 * Hide the search.
+			 *
+			 * @since Divi v3.0.23
+			 */
+			function hide_search() {
+				if ($('.et_search_form_container').hasClass('et_pb_is_animating')) {
+					return;
+				}
+				$('.et_menu_container').removeClass('et_pb_menu_hidden et_pb_no_animation').addClass('et_pb_menu_visible');
+				$('.et_search_form_container').removeClass('et_pb_search_visible et_pb_no_animation').addClass('et_pb_search_form_hidden et_pb_is_animating');
+				setTimeout(function () {
+					$('.et_menu_container').addClass('et_pb_no_animation');
+					$('.et_search_form_container').addClass('et_pb_no_animation').removeClass('et_pb_is_animating');
+				}, 1000);
+			}
+
+			$(this).keyup(function () {
+				$('.et-search-field').focus(function () {
+					show_search();
+				}).blur(function () {
+					hide_search();
+				});
+			});
+
+		});
+	</script>
+
+
+	<script type="text/javascript">
+		jQuery(document).ready(function($) {
+
+			/**
+			 * Add skiplink to page.
+			 */
+			function skipTo(target) {
+				const skiplink = '<a href="' + target + '" class="skip-link da11y-screen-reader-text">Skip to content</a>';
+				$(target).attr('tabindex', -1);
+				$('body').prepend(skiplink);
+			}
+			skipTo('#main-content');
+
+			/**
+			 * Use js to focus for internal links.
+			 */
+			$('a[href^="#"]').click(function () {
+				const content = $('#' + $(this).attr('href').slice(1));
+				content.focus();
+			});
+
+		});
+	</script>
+
+
+	<script type="text/javascript">
+	jQuery(document).ready(function($) {
+
+			let lastKey = new Date();
+			let lastClick = new Date();
+
+			/**
+			 * Only apply focus styles for keyboard usage.
+			 */
+			$(this).on('focusin', function (e) {
+				$('.keyboard-outline').removeClass('keyboard-outline');
+				const wasByKeyboard = lastClick < lastKey;
+				if (wasByKeyboard) {
+					$(e.target).addClass('keyboard-outline');
+				}
+			});
+
+			$(this).on('mousedown', function () {
+				lastClick = new Date();
+			});
+
+			$(this).on('keydown', function () {
+				lastKey = new Date();
+			});
+
+		});
+	</script>
+
+
+	<script type="text/javascript">
+		jQuery(document).ready(function($) {
+
+			/**
+			 * Allow Accordion & Toggle Divi modules to be focusable.
+			 *
+			 * @divi-module  Accordion, Toggle
+			 */
+			$('.et_pb_toggle').each(function () {
+				$(this).attr('tabindex', 0);
+			});
+
+			/**
+			 * Prevent spacebar from scolling page when toggle & accordion have focus.
+			 *
+			 * @divi-module  Accordion, Toggle
+			 */
+			$('.et_pb_toggle').on('keydown', function(e) {
+				// Spacebar.
+				if (e.which === 32){
+					e.preventDefault();
+				}
+			});
+
+			/**
+			 * Expand Accordion & Toggle modules when enter or spacebar are pressed while focused.
+			 *
+			 * @divi-module  Accordion, Toggle
+			 */
+			$(document).on('keyup', function(e) {
+				// Spacebar & Enter.
+				if (e.which === 13 || e.which === 32) {
+					$('.et_pb_toggle:focus .et_pb_toggle_title').trigger('click');
+				}
+			});
+
+		});
+	</script>
+
+
+	<script type="text/javascript">
+		jQuery(document).ready(function($) {
+
+			/**
+			 * Add unique ID to search module input with matching label.
+			 *
+			 * @divi-module  Search
+			 */
+			$('.et-search-field').each(function (e) {
+				$(this).attr('id', 'et_pb_search_module_input_' + e);
+				$('#et_pb_search_module_input_' + e).before('<label class="da11y-screen-reader-text" for="et_pb_search_module_input_' + e + '">Search for...</label>');
+				$('#et_pb_search_module_input_' + e).after('<button type="submit" class="da11y-screen-reader-text">Search</button>');
+			});
+
+			/**
+			 * Add unique ID to contact module input with matching label.
+			 *
+			 * @divi-module  Contact
+			 */
+			$('.et_pb_contact_form').each(function (e) {
+				$(this).find('.et_pb_contact_captcha_question').parent().wrap('<label></label>');
+			});
+
+			/**
+			* Correct labels on social media icons
+			*/
+			$('.et-social-facebook a.icon span').text('Facebook');
+			$('.et-social-twitter a.icon span').text('Twitter');
+			$('.et-social-google-plus a.icon span').text('Google Plus');
+			$('.et-social-pinterest a.icon span').text('Pinterest');
+			$('.et-social-linkedin a.icon span').text('LinkedIn');
+			$('.et-social-tumblr a.icon span').text('Tumblr');
+            $('.et-social-instagram a.icon span').text('Instagram');
+			$('.et-social-skype a.icon span').text('Skype');
+			$('.et-social-flikr a.icon span').text('Flickr');
+			$('.et-social-myspace a.icon span').text('Myspace');
+			$('.et-social-dribbble a.icon span').text('Dribble');
+			$('.et-social-youtube a.icon span').text('YouTube');
+			$('.et-social-vimeo a.icon span').text('Vimeo');
+			$('.et-social-rss a.icon span').text('RSS');
+
+		});
+	</script>
+
+
+	<script type="text/javascript">
+		jQuery(document).ready(function($) {
+
+			/**
+			 * Add role="tabList".
+			 *
+			 * @divi-module  Tab
+			 */
+			$('.et_pb_tabs_controls').each(function () {
+				$(this).attr('role', 'tabList');
+			});
+
+			/**
+			 * Add role="presentation".
+			 *
+			 * @divi-module  Tab
+			 */
+			$('.et_pb_tabs_controls li').each(function () {
+				$(this).attr('role', 'presentation');
+			});
+
+			/**
+			 * Add role="tab".
+			 *
+			 * @divi-module  Tab
+			 */
+			$('.et_pb_tabs_controls a').each(function () {
+				$(this).attr('role', 'tab');
+			});
+
+			/**
+			 * Add role="tabpanel".
+			 *
+			 * @divi-module  Tab
+			 */
+			$('.et_pb_tab').each(function () {
+				$(this).attr('role', 'tabpanel');
+			});
+
+			/**
+			 * Add initial state:
+			 *
+			 * aria-selected="false"
+			 * aria-expanded="false"
+			 * tabindex=-1
+			 *
+			 * @divi-module  Tab
+			 */
+			$('.et_pb_tabs_controls li:not(.et_pb_tab_active) a').each(function () {
+				$(this).attr({
+					'aria-selected': 'false',
+					'aria-expanded': 'false',
+					tabindex: -1
+				});
+			});
+
+			/**
+			* Add initial state:
+			*
+			* aria-selected="true"
+			* aria-expanded="true"
+			* tabindex=-1
+			*
+			* @divi-module  Tab
+			 */
+			$('.et_pb_tabs_controls li.et_pb_tab_active a').each(function () {
+				$(this).attr({
+					'aria-selected': 'true',
+					'aria-expanded': 'true',
+					tabindex: 0
+				});
+			});
+
+			/**
+			 * Add unique ID to tab controls.
+			 * Add aria-controls="x".
+			 *
+			 * @divi-module  Tab
+			 */
+			$('.et_pb_tabs_controls a').each(function (e) {
+				$(this).attr({
+					id: 'et_pb_tab_control_' + e,
+					'aria-controls': 'et_pb_tab_panel_' + e
+				});
+			});
+
+			/**
+			 * Add unique ID to tab panels.
+			 * Add aria-labelledby="x".
+			 *
+			 * @divi-module  Tab
+			 */
+			$('.et_pb_tab').each(function (e) {
+				$(this).attr({
+					id: 'et_pb_tab_panel_' + e,
+					'aria-labelledby': 'et_pb_tab_control_' + e
+				});
+			});
+
+			/**
+			 * Set initial inactive tab panels to aria-hidden="false".
+			 *
+			 * @divi-module  Tab
+			 */
+			$('.et_pb_tab.et_pb_active_content').each(function () {
+				$(this).attr('aria-hidden', 'false');
+			});
+
+			/**
+			 * Set initial inactive tab panels to aria-hidden="true".
+			 *
+			 * @divi-module  Tab
+			 */
+			$('.et_pb_tab:not(.et_pb_active_content)').each(function () {
+				$(this).attr('aria-hidden', 'true');
+			});
+
+			/**
+			 * Add unique ID to tab module.
+			 * Need to use data attribute because a regular ID somehow interferes with Divi.
+			 *
+			 * @divi-module  Tab
+			 */
+			$('.et_pb_tabs').each(function (e) {
+				$(this).attr('data-da11y-id', 'et_pb_tab_module_' + e);
+			});
+
+			/**
+			 * Update aria-selected attribute when tab is clicked or when hitting enter while focused.
+			 *
+			 * @divi-module  Tab
+			 */
+			$('.et_pb_tabs_controls a').on('click', function () {
+				const id = $(this).attr('id');
+				const namespace = $(this).closest('.et_pb_tabs').attr('data-da11y-id'); // Used as a selector to scope changes to current module.
+				// Reset all tab controls to be aria-selected="false" & aria-expanded="false".
+				$('[data-da11y-id="' + namespace + '"] .et_pb_tabs_controls a').attr({
+					'aria-selected': 'false',
+					'aria-expanded': 'false',
+					tabindex: -1
+				});
+				// Make active tab control aria-selected="true" & aria-expanded="true".
+				$(this).attr({
+					'aria-selected': 'true',
+					'aria-expanded': 'true',
+					tabindex: 0
+				});
+				// Reset all tabs to be aria-hidden="true".
+				$('#' + namespace + ' .et_pb_tab').attr('aria-hidden', 'true');
+				// Label active tab panel as aria-hidden="false".
+				$('[aria-labelledby="' + id + '"]').attr('aria-hidden', 'false');
+			});
+
+			// Arrow navigation for tab modules
+			$('.et_pb_tabs_controls a').keyup(function (e) {
+				const namespace = $(this).closest('.et_pb_tabs').attr('data-da11y-id');
+				const module = $('[data-da11y-id="' + namespace + '"]');
+				if (e.which === 39) { // Right.
+					const next = module.find('li.et_pb_tab_active').next();
+					if (next.length > 0) {
+						next.find('a').trigger('click');
+					} else {
+						module.find('li:first a').trigger('click');
+					}
+				} else if (e.which === 37) { // Left.
+					const next = module.find('li.et_pb_tab_active').prev();
+					if (next.length > 0) {
+						next.find('a').trigger('click');
+					} else {
+						module.find('li:last a').trigger('click');
+					}
+				}
+				$('.et_pb_tabs_controls a').removeClass('keyboard-outline');
+				module.find('li.et_pb_tab_active a').addClass('keyboard-outline');
+			});
+
+			/**
+			 * Add unique ID to search module.
+			 * Need to use data attribute because a regular ID somehow interferes with Divi.
+			 *
+			 * @divi-module  Search
+			 */
+			$('.et_pb_search').each(function (e) {
+				$(this).attr('data-da11y-id', 'et_pb_search_module_' + e);
+			});
+
+			/**
+			 * Add aria-required="true" to inputs.
+			 *
+			 * @divi-module  Contact Form
+			 */
+			$('[data-required_mark="required"]').each(function () {
+				$(this).attr('aria-required', 'true');
+			});
+
+			/**
+			 * Hide hidden error field on contact form.
+			 *
+			 * @divi-module  Contact Form
+			 */
+			$('.et_pb_contactform_validate_field').attr('type', 'hidden');
+
+			/**
+			 * Add alert role to error or success contact form message
+			 *
+			 * @divi-module  Contact Form
+			 */
+			$('.et-pb-contact-message').attr('role', 'alert');
+
+			/**
+			* Add main role to main-content
+			*/
+			$('#main-content').attr('role', 'main');
+
+			/**
+			 * Add aria-label="x".
+			 *
+			 * @divi-module  Fullwidth header, comment-wrap
+			 */
+			$('.et_pb_fullwidth_header').each(function (e) {
+				$(this).attr('aria-label', 'Wide Header' + e);
+			});
+			$('#comment-wrap').attr('aria-label', 'Comments');
+
+		});
+	</script>
+
+
+	<script type="text/javascript">
+		jQuery(document).ready(function($) {
+
+			/**
+			 * Add aria-hidden="true" to all icons
+			 */
+			$('#et_top_search, .et_close_search_field, .et_pb_main_blurb_image').attr('aria-hidden', 'true');
+
+		});
+	</script>
+
+<!-- Footer -->
+<footer role="contentinfo">
+  <section class="footer-primary">
+  <div>
+      <img src="http://www.gov.ca.gov/wp-content/plugins/design-system-wordpress/build/fonts/gov-seal.svg" alt="Governor's Seal" />
+  </div>
+  		<div>
+				<nav role="navigation" aria-labelledby="nav-utility-link-0">
+			<h3 id="nav-utility-link-0">About</h3>
+			<ul>
+				<li>
+			<a 
+				href="https://www.gov.ca.gov/contact/" 
+												>Contact us</a>
+			</li>
+					<li>
+			<a 
+				href="/newsroom/#updates" 
+												>Sign up for news updates</a>
+			</li>
+					<li>
+			<a 
+				href="https://www.gov.ca.gov/join-the-administration/" 
+												>Join the Administration</a>
+			</li>
+					<li>
+			<a 
+				href="https://www.gov.ca.gov/about/orgchart/" 
+												>Organizational chart</a>
+			</li>
+					</ul>
+		</nav>
+				<nav role="navigation" aria-labelledby="nav-utility-link-5">
+			<h3 id="nav-utility-link-5">Initiatives</h3>
+			<ul>
+				<li>
+			<a 
+				href="https://abortion.ca.gov/" 
+												>Abortion access</a>
+			</li>
+					<li>
+			<a 
+				href="https://build.ca.gov/" 
+												>Building California&#039;s future</a>
+			</li>
+					<li>
+			<a 
+				href="https://climateaction.ca.gov/" 
+												>Climate action</a>
+			</li>
+					<li>
+			<a 
+				href="https://www.caloes.ca.gov/gunsafety/" 
+												>Gun safety</a>
+			</li>
+					<li>
+			<a 
+				href="https://mentalhealth.ca.gov/" 
+												>Mental health for all</a>
+			</li>
+					</ul>
+		</nav>
+				<nav role="navigation" aria-labelledby="nav-utility-link-11">
+			<h3 id="nav-utility-link-11">Awareness campaigns</h3>
+			<ul>
+				<li>
+			<a 
+				href="https://heatreadyca.com/" 
+												>Heat Ready</a>
+			</li>
+					<li>
+			<a 
+				href="https://readyforwildfire.org/" 
+												>Ready for Wildfire</a>
+			</li>
+					<li>
+			<a 
+				href="https://registertovote.ca.gov/" 
+												>Register to Vote</a>
+			</li>
+					<li>
+			<a 
+				href="https://saveourwater.com/" 
+												>Save Our Water</a>
+			</li>
+					</ul>
+		</nav>
+				<nav role="navigation" aria-labelledby="nav-utility-link-16">
+			<h3 id="nav-utility-link-16">Clemency &amp; Parole</h3>
+			<ul>
+				<li>
+			<a 
+				href="https://www.gov.ca.gov/clemency/" 
+												>Clemency</a>
+			</li>
+					<li>
+			<a 
+				href="https://www.gov.ca.gov/clemency/parole/" 
+												>Parole</a>
+			</li>
+					<li>
+			<a 
+				href="https://www.gov.ca.gov/clemency/rewards-for-unsolved-crimes/" 
+												>Rewards for unsolved cases</a>
+			</li>
+				</div>
+		  </section>
+  <section>
+  <!-- Footer navigation -->
+<nav role="navigation" aria-labelledby="utility-links">
+	<h3 id="utility-links" class="sr-only">Footer Utility Links</h3>
+	<ul>
+												<li>
+								<a 
+											href="https://www.gov.ca.gov/conditions-of-use/" 
+																														>Conditions of Use</a>
+							</li>
+														<li>
+								<a 
+											href="https://www.gov.ca.gov/privacy-policy/" 
+																														>Privacy Policy</a>
+							</li>
+														<li>
+								<a 
+											href="https://www.gov.ca.gov/accessibility/" 
+																														>Accessibility</a>
+							</li>
+														<li>
+								<a 
+											href="https://www.gov.ca.gov/wp-content/uploads/2023/06/SIMM-25B-GOV40-2023.pdf" 
+																														>Website Certification</a>
+							</li>
+														<li>
+								<a 
+											href="/sitemap/" 
+																														>Sitemap</a>
+							</li>
+								</ul>
+</nav><nav role="navigation" aria-labelledby="footer-social-media-links">
+	<h3 id="footer-social-media-links" class="sr-only">Footer Social Media Links</h3>
+	<ul class="flex">
+			<li>
+			<a 
+				href="https://www.facebook.com/CAgovernor/" 
+				title="Visit Facebook"
+				target="_blank"
+			>
+									<img src="http://www.gov.ca.gov/wp-content/plugins/design-system-wordpress//build/fonts/share-facebook.svg" alt="Facebook"/>
+							</a>
+			</li>
+						<li>
+			<a 
+				href="https://www.instagram.com/cagovernor/" 
+				title="Visit Instagram"
+				target="_blank"
+			>
+									<img src="http://www.gov.ca.gov/wp-content/plugins/design-system-wordpress//build/fonts/share-instagram.svg" alt="Instagram"/>
+							</a>
+			</li>
+					<li>
+			<a 
+				href="https://www.tiktok.com/@cagovernor" 
+				title="Visit TikTok"
+				target="_blank"
+			>
+									<img src="http://www.gov.ca.gov/wp-content/plugins/design-system-wordpress//build/fonts/share-tiktok.svg" alt="TikTok"/>
+							</a>
+			</li>
+				<li>
+			<a 
+				href="https://twitter.com/cagovernor" 
+				title="Visit Twitter"
+				target="_blank"
+			>
+									<img src="http://www.gov.ca.gov/wp-content/plugins/design-system-wordpress//build/fonts/share-twitter-X.svg" alt="X"/>
+							</a>
+			</li>
+				<li>
+			<a 
+				href="http://youtube.com/cagovernor" 
+				title="Visit YouTube"
+				target="_blank"
+			>
+									<img src="http://www.gov.ca.gov/wp-content/plugins/design-system-wordpress//build/fonts/share-youtube.svg" alt="YouTube"/>
+							</a>
+			</li>
+			</ul>
+</nav>
+  </section>
+  <section id="publishing" aria-labelledby="website-publishing-information">
+	<h3 id="website-publishing-information" class="sr-only">Website Publishing Information</h3>
+              <p>Powered by: CAWeb Publishing Service</p>
+            <p>&#169; Copyright <script>document.write(new Date().getFullYear())</script></p>
+  </section>
+</footer><script type="text/javascript" id="thickbox-js-extra">
+/* <![CDATA[ */
+var thickboxL10n = {"next":"Next >","prev":"< Prev","image":"Image","of":"of","close":"Close","noiframes":"This feature requires inline frames. You have iframes disabled or your browser does not support them.","loadingAnimation":"http:\/\/www.gov.ca.gov\/wp-includes\/js\/thickbox\/loadingAnimation.gif"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-includes/js/thickbox/thickbox.js?ver=3.1-20121105" id="thickbox-js"></script>
+<script type="text/javascript" id="toc-front-js-extra">
+/* <![CDATA[ */
+var tocplus = {"smooth_scroll":"1"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/plugins/table-of-contents-plus/front.min.js?ver=2411.1" id="toc-front-js"></script>
+<script type="text/javascript" id="divi-custom-script-js-extra">
+/* <![CDATA[ */
+var DIVI = {"item_count":"%d Item","items_count":"%d Items"};
+var et_builder_utils_params = {"condition":{"diviTheme":true,"extraTheme":false},"scrollLocations":["app","top"],"builderScrollLocations":{"desktop":"app","tablet":"app","phone":"app"},"onloadScrollLocation":"app","builderType":"fe"};
+var et_frontend_scripts = {"builderCssContainerPrefix":"#et-boc","builderCssLayoutPrefix":"#et-boc .et-l"};
+var et_pb_custom = {"ajaxurl":"http:\/\/www.gov.ca.gov\/wp-admin\/admin-ajax.php","images_uri":"http:\/\/www.gov.ca.gov\/wp-content\/themes\/Divi\/images","builder_images_uri":"http:\/\/www.gov.ca.gov\/wp-content\/themes\/Divi\/includes\/builder\/images","et_frontend_nonce":"48da64452d","subscription_failed":"Please, check the fields below to make sure you entered the correct information.","et_ab_log_nonce":"7190c8add2","fill_message":"Please, fill in the following fields:","contact_error_message":"Please, fix the following errors:","invalid":"Invalid email","captcha":"Captcha","prev":"Prev","previous":"Previous","next":"Next","wrong_captcha":"You entered the wrong number in captcha.","wrong_checkbox":"Checkbox","ignore_waypoints":"no","is_divi_theme_used":"1","widget_search_selector":".widget_search","ab_tests":[],"is_ab_testing_active":"","page_id":"15576","unique_test_id":"","ab_bounce_rate":"5","is_cache_plugin_active":"yes","is_shortcode_tracking":"","tinymce_uri":"http:\/\/www.gov.ca.gov\/wp-content\/themes\/Divi\/includes\/builder\/frontend-builder\/assets\/vendors","accent_color":"#7EBEC5","waypoints_options":[]};
+var et_pb_box_shadow_elements = [];
+/* ]]> */
+</script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/themes/Divi/js/scripts.min.js?ver=4.27.4" id="divi-custom-script-js"></script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/jquery.fitvids.js?ver=4.27.4" id="fitvids-js"></script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/jquery.mobile.js?ver=4.27.4" id="jquery-mobile-js"></script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/magnific-popup.js?ver=4.27.4" id="magnific-popup-js"></script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/easypiechart.js?ver=4.27.4" id="easypiechart-js"></script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/salvattore.js?ver=4.27.4" id="salvattore-js"></script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/themes/CAWeb/divi/extension/scripts/frontend-bundle.min.js?ver=1.0.0" id="caweb-module-extension-frontend-bundle-js"></script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/themes/CAWeb/divi/extension/includes/modules/github//github.js?ver=1.13.1" id="caweb-github-script-js"></script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/themes/CAWeb/divi/extension/includes/modules/service-tiles-fullwidth//service-tiles.js?ver=1.13.1" id="caweb-service-tiles-script-js"></script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/themes/Divi/core/admin/js/common.js?ver=4.27.4" id="et-core-common-js"></script>
+<script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=UA-3419582-47&amp;ver=1.13.1" id="google-analytics-caweb-js"></script>
+<script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-Y7T2KCM7P1&amp;ver=1.13.1" id="google-analytics4-caweb-js"></script>
+<script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=UA-3419582-28&amp;ver=1.13.1" id="google-analytics-agency-js"></script>
+<script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-2G5GML7PQ6&amp;ver=1.13.1" id="google-analytics4-agency-js"></script>
+<script type="text/javascript" src="https://www.googletagmanager.com/gtm.js?id=GTM-TP25MN7&amp;ver=1.13.1" id="google-tag-manager-agency-js"></script>
+<script type="text/javascript" src="https://cse.google.com/cse.js?cx=001779225245372747843%3A5n03hfyjgga&amp;ver=1.13.1" id="google-cse-js"></script>
+<script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=UA-3419582-2&amp;ver=1.13.1" id="google-analytics-statewide-js"></script>
+<script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-69TD0KNT0F&amp;ver=1.13.1" id="google-analytics4-statewide-js"></script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit&amp;ver=1.13.1" id="google-translate-caweb-js"></script>
+<script type="text/javascript" id="google-translate-caweb-js-after">
+/* <![CDATA[ */
+function googleTranslateElementInit() {
+			new google.translate.TranslateElement({pageLanguage: "en", gaTrack: true, autoDisplay: false,  
+			layout: google.translate.TranslateElement.InlineLayout.VERTICAL},"google_translate_element");
+		}
+/* ]]> */
+</script>
+<script type="text/javascript" id="caweb-core-script-js-extra">
+/* <![CDATA[ */
+var args = {"caweb_multi_ga":"UA-3419582-47","caweb_multi_ga4":"G-Y7T2KCM7P1","ca_google_analytic_id":"UA-3419582-28","ca_google_analytic4_id":"G-2G5GML7PQ6","ca_google_tag_manager_id":"GTM-TP25MN7"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/themes/CAWeb/build/caweb-core.min.js?ver=1.13.1" id="caweb-core-script-js"></script>
+<script type="text/javascript" src="https://www.gov.ca.gov/wp-content/uploads/caweb-ext/js/siteimprove.js?ver=1.13.1" id="caweb-external-custom-1-scripts-js"></script>
+<script type="text/javascript" src="https://www.gov.ca.gov/wp-content/uploads/caweb-ext/js/gov-manual.js?ver=1.13.1" id="caweb-external-custom-2-scripts-js"></script>
+<script type="text/javascript" src="https://www.gov.ca.gov/wp-content/uploads/caweb-ext/js/gov-category-archives.js?ver=1.13.1" id="caweb-external-custom-3-scripts-js"></script>
+<script type="text/javascript" src="https://www.gov.ca.gov/wp-content/uploads/caweb-ext/js/progress-page-side-accordion-12.js?ver=1.13.1" id="caweb-external-custom-4-scripts-js"></script>
+<script type="text/javascript" src="https://www.gov.ca.gov/wp-content/uploads/caweb-ext/js/a11y-fixes.js?ver=1.13.1" id="caweb-external-custom-5-scripts-js"></script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/plugins/design-system-wordpress/build/campaign.js?ver=1.2.6" id="cagov-design-system-js"></script>
+<script type="text/javascript" id="et-builder-modules-script-motion-js-extra">
+/* <![CDATA[ */
+var et_pb_motion_elements = {"desktop":[],"tablet":[],"phone":[]};
+/* ]]> */
+</script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/motion-effects.js?ver=4.27.4" id="et-builder-modules-script-motion-js"></script>
+<script type="text/javascript" id="et-builder-modules-script-sticky-js-extra">
+/* <![CDATA[ */
+var et_pb_sticky_elements = [];
+/* ]]> */
+</script>
+<script type="text/javascript" src="http://www.gov.ca.gov/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/sticky-elements.js?ver=4.27.4" id="et-builder-modules-script-sticky-js"></script>
+	</body>
+</html>
+

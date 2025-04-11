@@ -17,6 +17,7 @@ async function createPackage(documentPath, attachments, zipPath, documentType, o
   try {
     console.log(`Creating package at ${zipPath} with main document from ${documentPath}`);
     console.log(`Document format: ${outputFormat}`);
+    console.log(`Attachments to include: ${attachments.length}`);
     
     // Create ZIP archive
     const zip = new AdmZip();
@@ -55,9 +56,18 @@ async function createPackage(documentPath, attachments, zipPath, documentType, o
     const stats = fs.statSync(documentPath);
     console.log(`Adding document to package: ${documentPath} (${stats.size} bytes)`);
     
+    // Create main directory for clarity
+    const mainDocumentName = path.basename(documentPath);
+    
     // Now add the document to the ZIP
     zip.addLocalFile(documentPath);
-    console.log(`Added main document to package: ${path.basename(documentPath)}`);
+    console.log(`Added main document to package: ${mainDocumentName}`);
+    
+    // Create attachments directory in the ZIP if there are attachments
+    if (attachments && attachments.length > 0) {
+      console.log('Creating "attachments" directory in the ZIP');
+      zip.addFile('attachments/', Buffer.alloc(0));
+    }
     
     // Add all attachment PDFs with verification
     let addedAttachments = 0;
@@ -73,13 +83,24 @@ async function createPackage(documentPath, attachments, zipPath, documentType, o
       }
       
       try {
-        zip.addLocalFile(attachment.path);
-        console.log(`Added attachment to package: ${attachment.filename}`);
+        // Get file stats for logging
+        const attachStats = fs.statSync(attachment.path);
+        if (attachStats.size === 0) {
+          console.log(`Attachment file is empty, skipping: ${attachment.path}`);
+          continue;
+        }
+        
+        console.log(`Adding attachment to package: ${attachment.filename} (${attachStats.size} bytes)`);
+        
+        // Add the attachment to the "attachments" directory
+        const zipPath = `attachments/${attachment.filename}`;
+        zip.addLocalFile(attachment.path, 'attachments');
         addedAttachments++;
       } catch (attachError) {
         console.log(`Error adding attachment ${attachment.filename}: ${attachError.message}`);
       }
     }
+    console.log(`Successfully added ${addedAttachments} attachments to package`);
     
     // Create README content based on document type and format
     const docFileName = path.basename(documentPath);
@@ -108,9 +129,34 @@ Generated on: ${new Date().toISOString()}`;
     zip.addFile('README.txt', Buffer.from(readmeContent));
     console.log('Added README.txt to package');
     
+    // Create a manifest listing all contents
+    const manifestContent = `PACKAGE MANIFEST:
+
+1. Main Document:
+   - ${docFileName}
+
+2. Attachments (${addedAttachments} files in /attachments directory):
+${attachments.map((a, i) => `   ${i+1}. ${a.filename}`).join('\n')}
+
+3. Documentation:
+   - README.txt
+
+Generated: ${new Date().toISOString()}`;
+
+    zip.addFile('MANIFEST.txt', Buffer.from(manifestContent));
+    console.log('Added MANIFEST.txt to package');
+    
     // Write the ZIP file
+    console.log(`Writing ZIP package to: ${zipPath}`);
     zip.writeZip(zipPath);
-    console.log(`ZIP package created at: ${zipPath}`);
+    
+    // Verify the ZIP was created and has content
+    if (fs.existsSync(zipPath)) {
+      const zipStats = fs.statSync(zipPath);
+      console.log(`ZIP package created successfully: ${zipPath} (${zipStats.size} bytes)`);
+    } else {
+      throw new Error(`Failed to create ZIP package at ${zipPath}`);
+    }
     
     return zipPath;
   } catch (error) {

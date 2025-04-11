@@ -523,6 +523,78 @@ function processQualificationApproaches(businessInfo) {
 }
 
 /**
+ * Ensure the SOURCES section is properly formatted for URL extraction
+ * @param {string} document - The generated document text
+ * @returns {string} - Document with properly formatted SOURCES section
+ */
+function ensureProperSourcesFormat(document) {
+  // Check if SOURCES section exists
+  const sourcesRegex = /SOURCES:\s*\n([\s\S]+?)(?=\n\n|$)/i;
+  const match = document.match(sourcesRegex);
+  
+  if (!match) {
+    console.log('No SOURCES section found, no formatting needed');
+    return document;
+  }
+  
+  // Extract the content of the sources section
+  const sourceContent = match[1];
+  const sourceLines = sourceContent.split('\n').filter(line => line.trim());
+  
+  // Properly format each line
+  let formattedSources = '';
+  for (let i = 0; i < sourceLines.length; i++) {
+    let line = sourceLines[i].trim();
+    
+    // Extract URL and description
+    const urlMatch = line.match(/(?:\d+\.|\•|\-|\*)\s*(https?:\/\/[^\s]+)(?:\s*[\-\–]\s*(.+))?/) || 
+                     line.match(/(https?:\/\/[^\s]+)(?:\s*[\-\–]\s*(.+))?/);
+    
+    if (urlMatch && urlMatch[1]) {
+      const url = urlMatch[1].trim();
+      // Clean up URL if it has trailing punctuation
+      const cleanUrl = url.replace(/[.,;:]+$/, '');
+      const description = urlMatch[2] ? urlMatch[2].trim() : 'No description provided';
+      
+      // Format the line properly
+      formattedSources += `${i+1}. ${cleanUrl} - ${description}\n`;
+    } else {
+      // If no URL found, preserve the line but with numbering
+      formattedSources += `${i+1}. ${line}\n`;
+    }
+  }
+  
+  // Replace the original sources section with the formatted one
+  return document.replace(sourcesRegex, `SOURCES:\n${formattedSources}\n\n`);
+}
+
+// Updated source section prompt with clearer instructions
+const sourcesSectionPrompt = `
+SOURCES SECTION REQUIREMENT (CRITICAL):
+At the end of your document, you MUST include a "SOURCES" section with EXACTLY this format:
+
+SOURCES:
+1. https://full-url-to-source.gov - Brief description of source
+2. https://another-source-url.gov - Another description
+...etc
+
+Requirements for your SOURCES section:
+1. ONLY include primary sources (government websites)
+2. Include the FULL URL to each source (not just the domain)
+3. Number each source sequentially starting from 1
+4. Include EXACTLY the URLs you're referencing in your document
+5. Each source MUST be on its own line with its number, URL, and description
+6. DO NOT link to search pages or homepages - link to the SPECIFIC document pages
+7. Include ALL government orders you've referenced in your document
+8. Format as shown above with no additional text or explanations
+9. Make sure each URL is separated from its description with a space, dash, and space (" - ")
+10. DO NOT abbreviate or shorten URLs - include the complete URL
+
+The URLs in your SOURCES section will be automatically converted to PDF attachments.
+If you don't include a source URL, we cannot include that evidence in the final package.
+`;
+
+/**
  * Generate an ERC document (protest letter or Form 886-A)
  * @param {Object} businessInfo - Business information
  * @param {string} covidData - Sanitized ChatGPT conversation containing COVID research
@@ -652,30 +724,6 @@ IMPORTANT: Include information about how government orders caused full or partia
     // Determine which template to use based on the document type
     let promptTemplate;
     let systemPrompt;
-    
-    // Source section format - same for both document types
-    const sourcesSectionPrompt = `
-SOURCES SECTION REQUIREMENT (CRITICAL):
-At the end of your document, you MUST include a "SOURCES" section with EXACTLY this format:
-
-SOURCES:
-1. https://full-url-to-source.gov - Brief description of source
-2. https://another-source-url.gov - Another description
-...etc
-
-Requirements for your SOURCES section:
-1. ONLY include primary sources (government websites)
-2. Include the FULL URL to each source (not just the domain)
-3. Number each source sequentially starting from 1
-4. Include EXACTLY the URLs you're referencing in your document
-5. Each source MUST be on its own line with its number, URL, and description
-6. DO NOT link to search pages or homepages - link to the SPECIFIC document pages
-7. Include ALL government orders you've referenced in your document
-8. Format as shown above with no additional text or explanations
-
-The URLs in your SOURCES section will be automatically converted to PDF attachments.
-If you don't include a source URL, we cannot include that evidence in the final package.
-`;
     
     if (businessInfo.documentType === 'form886A') {
       // For Form 886-A document - improved system prompt
@@ -967,6 +1015,9 @@ FINAL CRITICAL INSTRUCTION:
     // Apply post-processing to ensure consistent formatting
     let processedDocument = ensureConsistentFormatting(generatedDocument, businessInfo.documentType);
     
+    // Ensure proper SOURCES section formatting for URL extraction
+    processedDocument = ensureProperSourcesFormat(processedDocument);
+    
     console.log('Document successfully generated');
     
     return processedDocument;
@@ -987,5 +1038,6 @@ module.exports = {
   createRevenueTable,
   ensureConsistentFormatting,
   processQualificationApproaches,
-  improveImpactStatements
+  improveImpactStatements,
+  ensureProperSourcesFormat
 };

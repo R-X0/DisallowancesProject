@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const documentGenerator = require('../services/documentGenerator');
 const pdfGenerator = require('../services/pdfGenerator');
@@ -243,6 +244,7 @@ async function processContentJobAsync(jobId, requestData) {
         approachFocus: requestData.approachFocus || 'governmentOrders',
         // Include new parameters
         includeRevenueSection: requestData.includeRevenueSection !== false,
+        includeSupplyChainDisruption: requestData.includeSupplyChainDisruption || false,
         disallowanceReason: requestData.disallowanceReason || 'no_orders',
         customDisallowanceReason: requestData.customDisallowanceReason || '',
         outputFormat: requestData.outputFormat || 'pdf'
@@ -255,11 +257,15 @@ async function processContentJobAsync(jobId, requestData) {
         message: 'Generating document'
       });
       
-      const document = await documentGenerator.generateERCDocument(
+      // Generate the initial document
+      let document = await documentGenerator.generateERCDocument(
         businessInfo,
         conversationContent,
         templateContent
       );
+      
+      // Ensure proper SOURCES section formatting
+      document = documentGenerator.ensureProperSourcesFormat(document);
       
       // Save the generated document in text format
       const documentFileName = requestData.documentType === 'form886A' ? 'form_886a.txt' : 'protest_letter.txt';
@@ -276,10 +282,16 @@ async function processContentJobAsync(jobId, requestData) {
         message: 'Extracting and downloading URLs'
       });
       
+      console.log('Starting URL extraction and download process...');
       const { letter: updatedDocument, attachments } = await urlProcessor.extractAndDownloadUrls(
         document, 
         outputDir
       );
+      
+      console.log(`URL processing complete. Downloaded ${attachments.length} attachments.`);
+      for (const attachment of attachments) {
+        console.log(`- ${attachment.filename} (from ${attachment.originalUrl})`);
+      }
       
       // Save the updated document with attachment references
       const updatedFileName = requestData.documentType === 'form886A' ? 'form_886a_with_attachments.txt' : 'protest_letter_with_attachments.txt';
@@ -324,6 +336,7 @@ async function processContentJobAsync(jobId, requestData) {
       const packageName = requestData.documentType === 'form886A' ? 'form_886a_package.zip' : 'complete_protest_package.zip';
       const zipPath = path.join(outputDir, packageName);
       
+      console.log(`Creating package with ${attachments.length} attachments`);
       // Use the correct format when creating the package
       await packageCreator.createPackage(
         requestData.outputFormat === 'docx' ? docxPath : pdfPath, 
