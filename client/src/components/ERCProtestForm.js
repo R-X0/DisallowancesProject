@@ -3,7 +3,8 @@ import {
   Container, Box, TextField, MenuItem, Button, 
   Typography, Paper, Grid, Divider, CircularProgress,
   Stepper, Step, StepLabel, StepContent, 
-  Select, FormControl, InputLabel, OutlinedInput, Checkbox, ListItemText
+  Select, FormControl, InputLabel, OutlinedInput, Checkbox, ListItemText,
+  FormControlLabel // Added missing import
 } from '@mui/material';
 import { 
   FileUpload, 
@@ -190,6 +191,7 @@ const ERCProtestForm = () => {
   }, [protestLetterData]);
   
   // Function to parse locations 
+  // eslint-disable-next-line no-unused-vars
   function parseLocations(locationString) {
     if (!locationString) return [];
     
