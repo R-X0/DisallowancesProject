@@ -12,6 +12,91 @@ const openai = new OpenAI({
 });
 
 /**
+ * Extract IRS address from PDF files associated with a tracking ID
+ * @param {string} trackingId - The tracking ID to look for PDFs
+ * @returns {Promise<string|null>} - Extracted IRS address or null if not found
+ */
+async function extractIrsAddressFromPdf(trackingId) {
+  try {
+    if (!trackingId) {
+      console.log('No tracking ID provided for address extraction');
+      return null;
+    }
+    
+    // Try multiple possible paths for the submission directory
+    const possiblePaths = [
+      path.join(__dirname, `../data/ERC_Disallowances/${trackingId}`),
+      path.join(__dirname, `../data/ERC_Disallowances/ERC-${trackingId.replace(/^ERC-/, '')}`),
+      path.join(__dirname, `../data/ERC_Disallowances/${trackingId.replace(/^ERC-/, '')}`)
+    ];
+    
+    let submissionDir = null;
+    for (const testPath of possiblePaths) {
+      if (fsSync.existsSync(testPath)) {
+        submissionDir = testPath;
+        console.log(`Found submission directory at: ${submissionDir}`);
+        break;
+      }
+    }
+    
+    if (!submissionDir) {
+      console.log(`No submission directory found for tracking ID: ${trackingId}`);
+      return null;
+    }
+    
+    // Find all PDF files in the directory
+    const files = fsSync.readdirSync(submissionDir);
+    const pdfFiles = files.filter(file => file.toLowerCase().endsWith('.pdf'));
+    
+    if (pdfFiles.length === 0) {
+      console.log(`No PDF files found in directory: ${submissionDir}`);
+      return null;
+    }
+    
+    console.log(`Found ${pdfFiles.length} PDF files, using the first one: ${pdfFiles[0]}`);
+    
+    // Use the first PDF file
+    const pdfPath = path.join(submissionDir, pdfFiles[0]);
+    
+    // Extract text from the PDF using pdf-parse
+    const pdf = require('pdf-parse');
+    const dataBuffer = fsSync.readFileSync(pdfPath);
+    const data = await pdf(dataBuffer);
+    
+    console.log(`Extracted ${data.text.length} characters of text from PDF`);
+    
+    // Use OpenAI to extract the address from the text
+    const response = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || 'o1',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an expert at extracting IRS mailing addresses from tax disallowance letters.
+          Your task is to identify and extract the complete IRS mailing address.
+          Return ONLY the address in a clean format (exactly as it appears) with no other information or explanation.`
+        },
+        {
+          role: 'user',
+          content: `Here is text content extracted from an IRS disallowance letter. 
+          Extract the exact IRS mailing address from it. The address is typically at the top portion of the letter.
+          Return ONLY the address with no other text.
+          
+          Text content:
+          ${data.text.substring(0, 2000)}`  // Send just the first 2000 chars where address likely appears
+        }
+      ],
+    });
+    
+    const address = response.choices[0].message.content.trim();
+    console.log(`Extracted IRS address: ${address}`);
+    return address;
+  } catch (error) {
+    console.error('Error extracting IRS address from PDF:', error);
+    return null;
+  }
+}
+
+/**
  * Generate a customized COVID research prompt
  * @param {string} basePrompt - The base prompt template
  * @param {Object} businessInfo - Business information for customization
@@ -605,6 +690,21 @@ async function generateERCDocument(businessInfo, covidData, templateContent) {
   try {
     console.log('Generating document using GPT...');
     
+    // NEW: Extract IRS address from PDF if possible and not already provided
+    let irsAddress = businessInfo.irsAddress || '';
+    
+    if (!irsAddress && businessInfo.trackingId) {
+      console.log(`Attempting to extract IRS address from PDF for tracking ID: ${businessInfo.trackingId}`);
+      const extractedAddress = await extractIrsAddressFromPdf(businessInfo.trackingId);
+      
+      if (extractedAddress) {
+        irsAddress = extractedAddress;
+        console.log(`Successfully extracted IRS address: ${irsAddress}`);
+      } else {
+        console.log('No IRS address could be extracted from PDF');
+      }
+    }
+    
     // Enhanced check for meaningful revenue data
     const hasValidRevenueData = 
       (businessInfo.q1_2019 && parseFloat(businessInfo.q1_2019) > 0) || 
@@ -782,7 +882,17 @@ This should be followed by:
 "${qualificationApproaches.approachExplanation}"
 
 COVID-19 RESEARCH DATA:
-${covidData}
+${covidData}`;
+
+      // NEW: Add IRS address to the prompt if available
+      if (irsAddress) {
+        promptTemplate += `
+
+IMPORTANT: Use this exact IRS address at the top of the Form 886-A document:
+${irsAddress}`;
+      }
+
+      promptTemplate += `
 
 BUSINESS RESEARCH INSTRUCTIONS:
 1. First, use the provided business information to create a detailed Facts section.
@@ -893,7 +1003,17 @@ The ERC claim was disallowed because ${disallowanceReasonText}. Address this spe
 ${evidenceContent}
 
 COVID-19 RESEARCH DATA FROM CHATGPT:
-${covidData}
+${covidData}`;
+
+      // NEW: Add IRS address to the prompt if available
+      if (irsAddress) {
+        promptTemplate += `
+
+IMPORTANT: Use this exact IRS address at the top of the letter:
+${irsAddress}`;
+      }
+
+      promptTemplate += `
 
 IMPORTANT FORMATTING INSTRUCTIONS:
 1. DO NOT include direct links or URLs in the letter body - they will be processed separately and added as attachments
@@ -1039,5 +1159,6 @@ module.exports = {
   ensureConsistentFormatting,
   processQualificationApproaches,
   improveImpactStatements,
-  ensureProperSourcesFormat
+  ensureProperSourcesFormat,
+  extractIrsAddressFromPdf
 };
