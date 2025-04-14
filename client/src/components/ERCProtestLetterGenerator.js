@@ -204,7 +204,7 @@ const disallowanceReasons = [
   { value: 'other', label: 'Other reason' }
 ];
 
-const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
+const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
   const [generating, setGenerating] = useState(false);
   const [protestLetter, setProtestLetter] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -226,6 +226,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
   const [customDisallowanceReason, setCustomDisallowanceReason] = useState('');
   const [timeoutWarning, setTimeoutWarning] = useState(false);
   const [includeSupplyChainDisruption, setIncludeSupplyChainDisruption] = useState(false);
+  const [extractedIrsAddress, setExtractedIrsAddress] = useState(''); // Add state for extracted address
 
   // Initialize selected time period when form data changes
   useEffect(() => {
@@ -254,6 +255,43 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
       }
     };
   }, [pollInterval]);
+
+  // Function to extract IRS address from PDFs
+  const extractIrsAddress = async () => {
+    if (!pdfFiles || pdfFiles.length === 0) {
+      console.log("No PDF files available for IRS address extraction");
+      return null;
+    }
+
+    try {
+      setProcessingMessage("Extracting IRS address from disallowance notice...");
+      
+      // Create FormData to send the PDFs to the server
+      const formData = new FormData();
+      pdfFiles.forEach((file, index) => {
+        formData.append('pdfFiles', file);
+      });
+
+      // Send the PDFs to the server for address extraction
+      const response = await axios.post('/api/erc-protest/chatgpt/extract-irs-address', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success && response.data.address) {
+        console.log('Successfully extracted IRS address:', response.data.address);
+        setExtractedIrsAddress(response.data.address);
+        return response.data.address;
+      } else {
+        console.log('No IRS address found in PDF');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error extracting IRS address:', error);
+      return null;
+    }
+  };
 
   // Function to poll for job status
   const pollJobStatus = useCallback(async (jobId) => {
@@ -383,6 +421,20 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
     setProcessingMessage("Initializing document generation...");
     
     try {
+      // First, extract IRS address from PDF if we have PDFs
+      let irsAddress = extractedIrsAddress;
+      if (!irsAddress && pdfFiles && pdfFiles.length > 0) {
+        setProcessingMessage("Extracting IRS address from disallowance notice...");
+        setProcessingStep(0.5);
+        irsAddress = await extractIrsAddress();
+        
+        if (irsAddress) {
+          console.log(`Successfully extracted IRS address: ${irsAddress}`);
+        } else {
+          console.log('No IRS address could be extracted from PDFs');
+        }
+      }
+      
       // Get business type based on NAICS code
       const businessType = getNaicsDescription(formData.naicsCode);
       
@@ -418,6 +470,8 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated }) => {
         businessType: businessType,
         trackingId: formData.trackingId || '',
         documentType: documentType,
+        // Add the extracted IRS address
+        irsAddress: irsAddress,
         // Add revenue data
         q1_2019: formData.q1_2019 || '',
         q2_2019: formData.q2_2019 || '',

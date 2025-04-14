@@ -97,6 +97,96 @@ async function extractIrsAddressFromPdf(trackingId) {
 }
 
 /**
+ * Extract IRS address from a specific PDF file
+ * @param {string} pdfPath - Path to the PDF file
+ * @returns {Promise<string|null>} - Extracted IRS address or null if not found
+ */
+async function extractIrsAddressFromFile(pdfPath) {
+  try {
+    if (!pdfPath) {
+      console.log('No PDF path provided for address extraction');
+      return null;
+    }
+    
+    console.log(`Attempting to extract IRS address from PDF: ${pdfPath}`);
+    
+    // Check if file exists
+    try {
+      await fs.access(pdfPath);
+    } catch (error) {
+      console.error(`PDF file not found at ${pdfPath}:`, error);
+      return null;
+    }
+    
+    // Extract text from the PDF using pdf-parse
+    const pdf = require('pdf-parse');
+    const dataBuffer = fsSync.readFileSync(pdfPath);
+    const data = await pdf(dataBuffer);
+    
+    console.log(`Extracted ${data.text.length} characters of text from PDF`);
+    
+    // Log first 500 characters for debugging
+    console.log(`First 500 characters of PDF text: ${data.text.substring(0, 500)}`);
+    
+    // Use OpenAI to extract the address from the text with improved prompt
+    const response = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || 'o1',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an expert at extracting IRS mailing addresses from tax disallowance letters.
+          Your task is to identify and extract the complete IRS mailing address from the text.
+          
+          EXAMPLES OF IRS ADDRESS FORMATS:
+          1. Department of the Treasury
+             Internal Revenue Service
+             Cincinnati, OH 45999
+             
+          2. Internal Revenue Service
+             Austin, TX 73301-0025
+             
+          3. Department of the Treasury
+             Internal Revenue Service
+             1234 Market Street
+             Philadelphia, PA 19104
+             
+          Return ONLY the address exactly as it appears with correct line breaks. Include "Department of the Treasury" and "Internal Revenue Service" if present.
+          DO NOT include any other information, explanations, or prefixes like "Address:". Just return the raw address.`
+        },
+        {
+          role: 'user',
+          content: `Here is text content extracted from an IRS disallowance letter. 
+          Extract the exact IRS mailing address from it. The address is typically at the top portion of the letter.
+          
+          Text content:
+          ${data.text.substring(0, 3000)}`  // Send more text to ensure we capture the address
+        }
+      ],
+    });
+    
+    const address = response.choices[0].message.content.trim();
+    console.log(`Extracted IRS address: ${address}`);
+    
+    // Only return if we got something that looks like an address
+    if (
+      address && 
+      (address.includes("IRS") || 
+       address.includes("Internal Revenue") || 
+       address.includes("Treasury") ||
+       address.includes("Department"))
+    ) {
+      return address;
+    } else {
+      console.log("Extracted text doesn't appear to be a valid IRS address");
+      return null;
+    }
+  } catch (error) {
+    console.error('Error extracting IRS address from PDF file:', error);
+    return null;
+  }
+}
+
+/**
  * Generate a customized COVID research prompt
  * @param {string} basePrompt - The base prompt template
  * @param {Object} businessInfo - Business information for customization
@@ -653,32 +743,6 @@ function ensureProperSourcesFormat(document) {
   return document.replace(sourcesRegex, `SOURCES:\n${formattedSources}\n\n`);
 }
 
-// Updated source section prompt with clearer instructions
-const sourcesSectionPrompt = `
-SOURCES SECTION REQUIREMENT (CRITICAL):
-At the end of your document, you MUST include a "SOURCES" section with EXACTLY this format:
-
-SOURCES:
-1. https://full-url-to-source.gov - Brief description of source
-2. https://another-source-url.gov - Another description
-...etc
-
-Requirements for your SOURCES section:
-1. ONLY include primary sources (government websites)
-2. Include the FULL URL to each source (not just the domain)
-3. Number each source sequentially starting from 1
-4. Include EXACTLY the URLs you're referencing in your document
-5. Each source MUST be on its own line with its number, URL, and description
-6. DO NOT link to search pages or homepages - link to the SPECIFIC document pages
-7. Include ALL government orders you've referenced in your document
-8. Format as shown above with no additional text or explanations
-9. Make sure each URL is separated from its description with a space, dash, and space (" - ")
-10. DO NOT abbreviate or shorten URLs - include the complete URL
-
-The URLs in your SOURCES section will be automatically converted to PDF attachments.
-If you don't include a source URL, we cannot include that evidence in the final package.
-`;
-
 /**
  * Generate an ERC document (protest letter or Form 886-A)
  * @param {Object} businessInfo - Business information
@@ -967,7 +1031,30 @@ IMPORTANT FORMATTING RULES:
 5. DO NOT include an attestation statement in the Form 886-A`;
 
       // Add sources section requirement
-      promptTemplate += sourcesSectionPrompt;
+      promptTemplate += `
+
+SOURCES SECTION REQUIREMENT (CRITICAL):
+At the end of your document, you MUST include a "SOURCES" section with EXACTLY this format:
+
+SOURCES:
+1. https://full-url-to-source.gov - Brief description of source
+2. https://another-source-url.gov - Another description
+...etc
+
+Requirements for your SOURCES section:
+1. ONLY include primary sources (government websites)
+2. Include the FULL URL to each source (not just the domain)
+3. Number each source sequentially starting from 1
+4. Include EXACTLY the URLs you're referencing in your document
+5. Each source MUST be on its own line with its number, URL, and description
+6. DO NOT link to search pages or homepages - link to the SPECIFIC document pages
+7. Include ALL government orders you've referenced in your document
+8. Format as shown above with no additional text or explanations
+9. Make sure each URL is separated from its description with a space, dash, and space (" - ")
+10. DO NOT abbreviate or shorten URLs - include the complete URL
+
+The URLs in your SOURCES section will be automatically converted to PDF attachments.
+If you don't include a source URL, we cannot include that evidence in the final package.`;
 
     } else {
       // For protest letter
@@ -1112,7 +1199,30 @@ FINAL CRITICAL INSTRUCTION:
 8. Directly address the disallowance reason: ${disallowanceReasonText}`;
 
       // Add source section requirement
-      promptTemplate += sourcesSectionPrompt;
+      promptTemplate += `
+
+SOURCES SECTION REQUIREMENT (CRITICAL):
+At the end of your document, you MUST include a "SOURCES" section with EXACTLY this format:
+
+SOURCES:
+1. https://full-url-to-source.gov - Brief description of source
+2. https://another-source-url.gov - Another description
+...etc
+
+Requirements for your SOURCES section:
+1. ONLY include primary sources (government websites)
+2. Include the FULL URL to each source (not just the domain)
+3. Number each source sequentially starting from 1
+4. Include EXACTLY the URLs you're referencing in your document
+5. Each source MUST be on its own line with its number, URL, and description
+6. DO NOT link to search pages or homepages - link to the SPECIFIC document pages
+7. Include ALL government orders you've referenced in your document
+8. Format as shown above with no additional text or explanations
+9. Make sure each URL is separated from its description with a space, dash, and space (" - ")
+10. DO NOT abbreviate or shorten URLs - include the complete URL
+
+The URLs in your SOURCES section will be automatically converted to PDF attachments.
+If you don't include a source URL, we cannot include that evidence in the final package.`;
     }
     
     // Submit the refined prompt to OpenAI
@@ -1160,5 +1270,6 @@ module.exports = {
   processQualificationApproaches,
   improveImpactStatements,
   ensureProperSourcesFormat,
-  extractIrsAddressFromPdf
+  extractIrsAddressFromPdf,
+  extractIrsAddressFromFile
 };

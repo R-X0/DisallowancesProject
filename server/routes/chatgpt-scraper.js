@@ -12,6 +12,19 @@ const urlProcessor = require('../services/urlProcessor');
 const packageCreator = require('../services/packageCreator');
 const protestDriveUploader = require('../services/protestDriveUploader');
 const jobQueue = require('../services/jobQueue');
+const multer = require('multer');
+
+// Configure multer for PDF uploads
+const pdfStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../uploads/temp'));
+  },
+  filename: (req, file, cb) => {
+    cb(null, `address-extract-${Date.now()}-${file.originalname}`);
+  }
+});
+
+const pdfUpload = multer({ storage: pdfStorage });
 
 // Generate customized COVID prompt through OpenAI
 router.post('/generate-prompt', async (req, res) => {
@@ -37,6 +50,67 @@ router.post('/generate-prompt', async (req, res) => {
     res.status(500).json({
       success: false,
       message: `Error generating prompt: ${error.message}`
+    });
+  }
+});
+
+// New endpoint to extract IRS address from PDF files
+router.post('/extract-irs-address', pdfUpload.array('pdfFiles', 5), async (req, res) => {
+  try {
+    const files = req.files;
+    
+    if (!files || files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No PDF files provided'
+      });
+    }
+    
+    console.log(`Received ${files.length} PDFs for IRS address extraction`);
+    
+    // Try to extract address from each file until we find one
+    let extractedAddress = null;
+    
+    for (const file of files) {
+      try {
+        const pdfPath = file.path;
+        console.log(`Attempting to extract IRS address from: ${pdfPath}`);
+        
+        // Use the documentGenerator function to extract the address
+        const address = await documentGenerator.extractIrsAddressFromFile(pdfPath);
+        
+        if (address) {
+          extractedAddress = address;
+          console.log(`Successfully extracted IRS address: ${address}`);
+          break;
+        }
+      } catch (extractError) {
+        console.error(`Error extracting from ${file.originalname}:`, extractError);
+        // Continue to next file
+      }
+    }
+    
+    res.status(200).json({
+      success: true,
+      address: extractedAddress
+    });
+    
+    // Clean up temporary files after response is sent
+    try {
+      for (const file of files) {
+        fs.unlink(file.path, (err) => {
+          if (err) console.error(`Error deleting temp file ${file.path}:`, err);
+        });
+      }
+    } catch (cleanupError) {
+      console.error('Error cleaning up temp files:', cleanupError);
+    }
+    
+  } catch (error) {
+    console.error('Error extracting IRS address from PDFs:', error);
+    res.status(500).json({
+      success: false,
+      message: `Error extracting IRS address: ${error.message}`
     });
   }
 });
@@ -222,6 +296,8 @@ async function processContentJobAsync(jobId, requestData) {
         allTimePeriods: requestData.allTimePeriods || [requestData.timePeriod],
         businessType: requestData.businessType || 'business',
         documentType: requestData.documentType || 'protestLetter',
+        // Add IRS address if provided
+        irsAddress: requestData.irsAddress || '',
         // Include all quarterly revenue data
         q1_2019: requestData.q1_2019, 
         q2_2019: requestData.q2_2019, 

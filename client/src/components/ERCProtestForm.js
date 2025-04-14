@@ -616,13 +616,14 @@ const ERCProtestForm = () => {
                   to generate a formal protest letter that you can download and submit to the IRS.
                 </Typography>
                 
-                {/* Add the Protest Letter Generator component */}
+                {/* Add the Protest Letter Generator component - UPDATED TO PASS PDF FILES */}
                 <ERCProtestLetterGenerator 
                   formData={{
                     ...formData,
                     trackingId: submissionStatus?.data?.trackingId || formData.trackingId
                   }}
                   onGenerated={onProtestLetterGenerated}
+                  pdfFiles={pdfFiles} // Pass the PDF files for address extraction
                 />
               </Box>
               

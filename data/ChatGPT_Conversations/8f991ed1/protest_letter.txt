@@ -1,0 +1,136 @@
+4/14/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 23-145125  
+Taxpayer Name: Eldenism  
+RE: Formal Protest to Letter 105 – ERC Disallowance for Q2  
+Tax Period: 2nd Quarter 2020 (202006)  
+
+Dear Appeals Officer:
+
+We respectfully submit this formal protest in response to the IRS notice disallowing Eldenism’s Employee Retention Credit (ERC) claim for the second quarter of 2020. The stated basis for disallowance was that “no government orders were in effect” from April 1 through June 30, 2020 that caused a suspension of our operations. We disagree with this conclusion. Multiple governmental orders—federal, state, county, and city—remained active during Q2 2020, imposing restrictions on businesses in Camarillo, California. These orders caused Eldenism to experience a partial suspension of our normal operations, thereby qualifying us for the ERC under the “government orders” approach.
+
+Below, we provide details on each relevant order in effect during Q2 2020, followed by an explanation of how these mandates partially suspended our operations.
+
+────────────────────────────────────────────────────────
+TIMELINE OF COVID-19 GOVERNMENT ORDERS ACTIVE IN Q2 2020
+────────────────────────────────────────────────────────
+
+• Order Name: Proclamation 9994 – National Emergency Concerning COVID-19  
+  • Order Number: Proclamation 9994  
+  • Date Enacted: 03/13/2020  
+  • Date Rescinded: Still in effect for Q2 2020  
+  • Order Summary: This proclamation declared a nationwide emergency due to the COVID-19 outbreak. It empowered federal agencies to coordinate responses and enabled subsequent state and local restrictions. While it did not itself require business closures, it activated federal emergency powers that underpinned stricter directives at lower levels of government.  
+  • Impact on Quarter: Throughout Q2 2020, Eldenism operated in an environment shaped by the ongoing national emergency. The national emergency status indirectly supported California’s and Ventura County’s orders restricting non-essential business operations and imposing health mandates, causing a partial suspension of our usual activities.
+
+• Order Name: California COVID-19 State of Emergency  
+  • Order Number: N/A (Governor’s Proclamation)  
+  • Date Enacted: 03/04/2020  
+  • Date Rescinded: Still in effect for Q2 2020  
+  • Order Summary: Governor Gavin Newsom proclaimed a state of emergency in California, allowing for prompt issuance of executive and public health officer orders affecting all business sectors. This emergency status authorized statewide lockdowns, fast-changing health directives, and local enforcement.  
+  • Impact on Quarter: During Q2 2020, Eldenism was subject to statewide directives that derived from this emergency authority. We had to observe strict rules—such as limiting non-essential in-person interactions and implementing distancing measures—that partially curtailed our normal day-to-day business operations.
+
+• Order Name: Executive Order N-33-20 – Statewide “Stay-at-Home” Order  
+  • Order Number: N-33-20  
+  • Date Enacted: 03/19/2020  
+  • Date Rescinded: 06/15/2021 (remained fully in effect during Q2 2020)  
+  • Order Summary: This sweeping order required all California residents to stay at home except for essential work and essential needs. Non-essential businesses were ordered to close or operate at minimal basic levels, while essential businesses could remain open with restrictions.  
+  • Impact on Quarter: In Q2 2020, Eldenism faced mandatory operational limitations, moving or reducing certain activities to comply with the stay-at-home framework. Even as some state allowances for essential services existed, most of our regular operations were either halted or shifted to minimal staffing and socially distanced procedures.
+
+• Order Name: State Public Health Officer Order (Stage 2 Reopening)  
+  • Order Number: Issued 05/07/2020 under Executive Order N-60-20  
+  • Date Enacted: 05/07/2020  
+  • Date Rescinded: 06/15/2021 (but partially superseded before full rescission)  
+  • Order Summary: California began limited reopenings for lower-risk sectors, permitting some retail operations (curbside pickup) and certain manufacturing/logistics to resume under strict safety rules. Higher-risk operations, such as restaurants offering indoor dining at normal capacity, remained constrained.  
+  • Impact on Quarter: Although Stage 2 allowed incremental reopening during May and June, Eldenism could not return to full capacity. Government-mandated social distancing protocols, occupancy limits, and phased timelines severely restricted our pre-pandemic business activities during much of Q2 2020.
+
+• Order Name: Ventura County Local Health Emergency  
+  • Order Number: Ventura County Declaration of Local Health Emergency (03/12/2020)  
+  • Date Enacted: 03/12/2020  
+  • Date Rescinded: Still in effect for Q2 2020  
+  • Order Summary: Ventura County’s Public Health Officer declared a countywide health emergency, aligning local measures with state orders. This allowed swift enforcement of closures, social distancing mandates, and emergency rules.  
+  • Impact on Quarter: Eldenism was directed to comply with local health orders requiring strict safety protocols. Our ability to operate normally was impaired by capacity constraints, employee distancing mandates, and local inspection or enforcement actions authorized by the county emergency.
+
+• Order Name: Ventura County “Stay Well at Home” Order  
+  • Order Number: Issued 03/20/2020  
+  • Date Enacted: 03/20/2020  
+  • Date Rescinded: 06/15/2021 (still in effect during Q2 2020 in evolving forms)  
+  • Order Summary: Ventura County’s companion stipulation to the statewide stay-at-home order required residents to remain at their residences, closed non-essential businesses, and limited gatherings. It set county-specific definitions of essential businesses and established local enforcement measures.  
+  • Impact on Quarter: From April through June 2020, Eldenism faced local closure mandates unless activities were deemed essential. Even if portions of our services could operate, the order forced us to curb typical business functions, reduce staff on-site, and suspend certain lines of work that did not qualify as essential.
+
+• Order Name: Ventura County Public Health Order Updates (March–April 2020)  
+  • Order Number: Multiple updates (03/31/2020, 04/09/2020, 04/20/2020)  
+  • Date Enacted: Staggered from 03/31/2020 through 04/20/2020  
+  • Date Rescinded: Superseded by later May 2020 reopening orders (but effects persisted into Q2)  
+  • Order Summary: These orders extended the local stay-at-home requirements, expanded gathering bans, and mandated social distancing protocols for essential businesses. Businesses remaining open had to post and implement COVID-19 safety plans, limit occupancy, and enforce six-foot distancing.  
+  • Impact on Quarter: During Q2 2020, Eldenism was compelled to maintain minimal in-person operations, implement social distancing across work areas, and observe strict hygiene protocols. The prohibitions on gatherings and mandatory distancing severely reduced our normal capacity to serve customers in person.
+
+• Order Name: “Safely Reopening Ventura County” Order (Stage 2 County Reopening)  
+  • Order Number: Issued 05/07/2020 (amended 05/20/2020)  
+  • Date Enacted: 05/07/2020  
+  • Date Rescinded: 08/31/2020 (superseded by the state Blueprint), but operative for Q2 2020  
+  • Order Summary: Aligned Ventura County with California’s Stage 2 roadmap, allowing curbside retail, manufacturing, and limited dine-in services with safety protocols. Businesses had to file local COVID-prevention forms, enforce social distancing, and adhere to capacity restraints.  
+  • Impact on Quarter: While this order permitted Eldenism to resume some activities after an initial total shutdown, the continuing occupancy limits, required social distancing, and extensive safety procedures meant that normal operations remained partially suspended through the end of June 2020.
+
+• Order Name: Ventura County Eviction Moratorium  
+  • Order Number: Urgency Ordinance No. 4563 (and subsequent extensions)  
+  • Date Enacted: 04/22/2020 (retroactive to March)  
+  • Date Rescinded: Extended repeatedly; still in place through Q2 2020 for commercial tenants  
+  • Order Summary: This county ordinance temporarily halted evictions of both residential and certain commercial tenants who could not pay rent because of COVID-19 financial hardship. The intent was to prevent a surge in homelessness and business closures while stay-at-home orders were in force.  
+  • Impact on Quarter: Although this did not mandate a business closure, Eldenism and other businesses navigating limited revenue flows could not be evicted for nonpayment of rent during Q2. This underscores the fact that the county recognized COVID-induced restrictions on normal business functioning, proving that, practically, our operations were disrupted.
+
+• Order Name: City of Camarillo Local Emergency Proclamation  
+  • Order Number: EOC Director Order No. 20-1  
+  • Date Enacted: 03/13/2020  
+  • Date Rescinded: Still in effect for Q2 2020  
+  • Order Summary: The City of Camarillo declared a local emergency, closing city buildings and canceling public events. This proclamation activated emergency powers at the city level and enabled local enforcement of county and state health orders.  
+  • Impact on Quarter: Eldenism’s core city services and permitting processes were curtailed or delayed, further disrupting normal activities. With many city facilities closed and staff working limited on-site hours, we found it difficult to conduct routine operations or licensing tasks in Q2 2020.
+
+• Order Name: Camarillo Eviction Moratorium Orders  
+  • Order Number: EOC Director Order No. 20-2 (03/18/2020) & Amendment (04/23/2020)  
+  • Date Enacted: 03/18/2020 (amended 04/23/2020)  
+  • Date Rescinded: Superseded by state law in September 2020, but active in Q2 2020  
+  • Order Summary: These city-level emergency orders prohibited landlords from evicting commercial or residential tenants unable to pay rent due to COVID-19-related income loss. Similar to the county moratorium, it aimed to prevent mass evictions in the crisis period.  
+  • Impact on Quarter: Although this order primarily addressed rental protections, it confirmed that city authorities acknowledged extensive economic disruptions on local businesses—disruptions rooted in the mandatory shutdown orders. Eldenism’s operations suffered partial suspension with reduced capacity until restrictions were eased.
+
+• Order Name: Camarillo Resolution No. 2020-63 – Temporary Outdoor Dining Program  
+  • Order Number: 2020-63  
+  • Date Enacted: 06/10/2020  
+  • Date Rescinded: Eventually ended with statewide reopening, but was active late in Q2 2020  
+  • Order Summary: To help restaurants survive under reduced indoor capacity, the city waived certain zoning rules and fees, allowing establishments to serve customers outdoors in parking lots and patios.  
+  • Impact on Quarter: While this measure eased some burdens for Camarillo restaurants specifically, it also illustrates that normal indoor business operations were still restricted in June. Eldenism did not operate a restaurant, but the city’s decision to allow outdoor expansions for food-service providers underscores the fact that indoor capacity was government-limited. These ongoing limitations reflect the partial shutdown conditions that persisted well into Q2 2020.
+
+────────────────────────────────────────────────────────
+PARTIAL SUSPENSION OF OPERATIONS UNDER THE ERC PROVISIONS
+────────────────────────────────────────────────────────
+Even though certain government orders allowed minimal essential operations or partial reopening by late Q2, Eldenism remained under serious operational constraints from April 1 to June 30, 2020. We could not conduct our typical activities freely due to:
+
+• Mandatory closures and stay-at-home directives that limited on-site staffing.  
+• Social distancing rules and capacity restrictions preventing normal customer interactions.  
+• Frequent compliance measures (COVID-prevention plans, posted protocols, cleaning, and screening) that reduced our feasible throughput and effectively suspended significant portions of our usual business model.
+
+The IRS’s ERC guidance (e.g., Notice 2021-20 for 2020 periods) states that a partial suspension occurs when a governmental order limits an employer’s operations more than nominally. Here, Eldenism experienced exactly that: local and state orders directly restricted our ability to operate in Q2 2020, forcing us to reduce or cease multiple lines of standard business activity. Despite our best efforts to adapt, these orders collectively imposed a partial suspension—qualifying Eldenism for the ERC during this quarter.
+
+────────────────────────────────────────────────────────
+CONCLUSION AND REQUEST
+────────────────────────────────────────────────────────
+Contrary to the assertion that no relevant government orders existed in Q2 2020, Eldenism was indeed subject to numerous, overlapping emergency orders detailed above. These mandates forced us to curtail or modify operations substantially from April 1 to June 30, 2020. Under these conditions, we respectfully assert that we qualify for the ERC based on a “partial suspension of operations” due to orders from an appropriate governmental authority.
+
+We respectfully request that the IRS reverse the disallowance of our Q2 2020 ERC claim. Should you need additional information, please contact us directly at your convenience. We appreciate your consideration and look forward to resolving this matter promptly.
+
+Under penalties of perjury, I declare that I have examined this protest (including accompanying documents) and, to the best of my knowledge and belief, it is true, correct, and complete.
+
+Sincerely,
+
+[Signature]
+John Doe
+Owner/Manager, Eldenism
+
+────────────────────────────────────────────────────────
+SOURCES
+────────────────────────────────────────────────────────
+1. https://bidenwhitehouse.archives.gov/briefing-room/presidential-actions/2021/02/24/notice-on-the-continuation-of-the-national-emergency-concerning-the-coronavirus-disease-2019-covid-19-pandemic/#:~:text=On%20March%2013%2C%202020%2C%20by,and%20safety%20of%20the%20Nation - Federal Proclamation 9994 – National Emergency  
+2. https://www.gov.ca.gov/2020/03/04/governor-newsom-declares-state-of-emergency-to-help-state-prepare-for-broader-spread-of-covid-19/#:~:text=SACRAMENTO%20%E2%80%93%20As%20part%20of,19%20death - California State of Emergency Proclamation  
+3. https://www.gov.ca.gov/wp-content/uploads/2020/03/3.19.20-attested-EO-N-33-20-COVID-19-HEALTH-ORDER.pdf#:~:text=March%2019%2C%202020%20To%20protect,may%20designate%20additional%20sectors%20as - Executive Order N-33-20 (Statewide Stay-at-Home)  
+4. https://www.cdph.ca.gov/Programs/CID/DCDC/CDPH%20Document%20Library/COVID-19/8-28-20_Order-Plan-Reducing-COVID19-Adjusting-Permitted-Sectors-Signed.pdf#:~:text=with%20Executive%20Order%20N,finally%20an%20easing%20of%20final - State Public Health Officer Order (Stage 2 Reopening)
