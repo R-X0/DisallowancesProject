@@ -73,7 +73,8 @@ async function extractIrsAddressFromPdf(trackingId) {
           role: 'system',
           content: `You are an expert at extracting IRS mailing addresses from tax disallowance letters.
           Your task is to identify and extract the complete IRS mailing address.
-          Return ONLY the address in a clean format (exactly as it appears) with no other information or explanation.`
+          Return ONLY the address in a clean format (exactly as it appears) with no other information or explanation.
+          IMPORTANT: REMOVE any technical artifacts like numbers in parentheses, pdf markers, or other non-address text (e.g., ")0 0 556").`
         },
         {
           role: 'user',
@@ -88,8 +89,24 @@ async function extractIrsAddressFromPdf(trackingId) {
     });
     
     const address = response.choices[0].message.content.trim();
-    console.log(`Extracted IRS address: ${address}`);
-    return address;
+    
+    // Clean the address to remove PDF artifacts
+    const cleanedAddress = address
+      .replace(/\)\d+\s+\d+\s+\d+/g, '') // Remove patterns like ")0 0 556"
+      .replace(/\(\d+\s+\d+\s+\d+\)/g, '') // Remove patterns like "(0 0 556)"
+      .replace(/\s{2,}/g, ' ') // Replace multiple spaces with single space
+      .split('\n')
+      .map(line => line.trim()) // Trim each line
+      .filter(line => {
+        // Keep only lines that look like address parts
+        return line && 
+          !line.match(/^\d+\s+\d+\s+\d+$/) && // Filter out lines that are just numbers
+          !line.match(/^[^a-zA-Z]*$/); // Filter out lines without any letters
+      })
+      .join('\n');
+    
+    console.log(`Extracted IRS address: ${cleanedAddress}`);
+    return cleanedAddress;
   } catch (error) {
     console.error('Error extracting IRS address from PDF:', error);
     return null;
@@ -151,7 +168,8 @@ async function extractIrsAddressFromFile(pdfPath) {
              Philadelphia, PA 19104
              
           Return ONLY the address exactly as it appears with correct line breaks. Include "Department of the Treasury" and "Internal Revenue Service" if present.
-          DO NOT include any other information, explanations, or prefixes like "Address:". Just return the raw address.`
+          IMPORTANT: REMOVE any technical artifacts like numbers in parentheses, pdf markers, or other non-address text (e.g., ")0 0 556").
+          DO NOT include any other information, explanations, or prefixes like "Address:". Just return the cleaned raw address.`
         },
         {
           role: 'user',
@@ -167,15 +185,32 @@ async function extractIrsAddressFromFile(pdfPath) {
     const address = response.choices[0].message.content.trim();
     console.log(`Extracted IRS address: ${address}`);
     
+    // Clean the address to remove PDF artifacts
+    const cleanedAddress = address
+      .replace(/\)\d+\s+\d+\s+\d+/g, '') // Remove patterns like ")0 0 556"
+      .replace(/\(\d+\s+\d+\s+\d+\)/g, '') // Remove patterns like "(0 0 556)"
+      .replace(/\s{2,}/g, ' ') // Replace multiple spaces with single space
+      .split('\n')
+      .map(line => line.trim()) // Trim each line
+      .filter(line => {
+        // Keep only lines that look like address parts
+        return line && 
+          !line.match(/^\d+\s+\d+\s+\d+$/) && // Filter out lines that are just numbers
+          !line.match(/^[^a-zA-Z]*$/); // Filter out lines without any letters
+      })
+      .join('\n');
+    
+    console.log(`Cleaned IRS address: ${cleanedAddress}`);
+    
     // Only return if we got something that looks like an address
     if (
-      address && 
-      (address.includes("IRS") || 
-       address.includes("Internal Revenue") || 
-       address.includes("Treasury") ||
-       address.includes("Department"))
+      cleanedAddress && 
+      (cleanedAddress.includes("IRS") || 
+       cleanedAddress.includes("Internal Revenue") || 
+       cleanedAddress.includes("Treasury") ||
+       cleanedAddress.includes("Department"))
     ) {
-      return address;
+      return cleanedAddress;
     } else {
       console.log("Extracted text doesn't appear to be a valid IRS address");
       return null;
