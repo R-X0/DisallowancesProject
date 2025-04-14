@@ -1,13 +1,14 @@
-// server/services/urlProcessor.js
+// urlProcessor.js - Improved URL handling and PDF generation
 
 const puppeteer = require('puppeteer');
 const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
 const axios = require('axios');
+const { PDFDocument } = require('pdf-lib'); // Add this dependency if not already included
 
 /**
- * Extract URLs from the document and download them as PDFs
+ * Extract URLs from the document and download them as PDFs with enhanced error handling
  * @param {string} letter - The generated letter text
  * @param {string} outputDir - Directory to save the PDFs
  * @returns {Object} - Object containing updated letter text and attachment information
@@ -20,7 +21,6 @@ async function extractAndDownloadUrls(letter, outputDir) {
   const sourceDescriptions = {};
   
   // Look for the Sources section which should be structured in a numbered list format
-  // More flexible regex to catch different variations of the SOURCES section
   const sourcesRegex = /(?:SOURCES|REFERENCES|ATTACHMENTS):\s*([\s\S]+?)(?:\n\n|$)/i;
   const sourcesMatch = letter.match(sourcesRegex);
   
@@ -94,7 +94,11 @@ async function extractAndDownloadUrls(letter, outputDir) {
   // Launch browser for processing URLs
   const browser = await puppeteer.launch({
     headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',
+          // Add these arguments to help with government websites
+          '--disable-features=IsolateOrigins,site-per-process',
+          '--disable-web-security',
+          '--disable-features=BlockInsecurePrivateNetworkRequests']
   });
   
   try {
@@ -118,72 +122,142 @@ async function extractAndDownloadUrls(letter, outputDir) {
       console.log(`Processing source #${sourceNum}: ${url}`);
       
       let success = false;
-      let retries = 2; // Number of retries for each URL
+      let retries = 3; // Increased number of retries for each URL
       
       while (retries > 0 && !success) {
         // Determine if URL is a PDF or other supported document type
         const isPdf = url.toLowerCase().endsWith('.pdf');
         const isDoc = url.toLowerCase().match(/\.(doc|docx|xls|xlsx|ppt|pptx|txt)$/);
         
-        // Try direct download first (works for PDFs and some documents)
+        // Try direct download with different methods
         try {
-          console.log(`Attempting direct download for ${url}`);
+          console.log(`Attempt #${4-retries}: Direct download for ${url}`);
+          
+          // IMPROVED: Try fetch with different user agents
+          const userAgents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15'
+          ];
+          
           const response = await axios({
             method: 'get',
             url: url,
             responseType: 'arraybuffer',
-            timeout: 30000,
+            timeout: 45000, // Longer timeout
             headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+              'User-Agent': userAgents[retries % userAgents.length],
+              'Accept': 'text/html,application/xhtml+xml,application/xml,application/pdf;q=0.9,image/webp,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.5',
+              'Connection': 'keep-alive',
+              'Upgrade-Insecure-Requests': '1',
+              'Cache-Control': 'max-age=0'
             }
           });
           
-          await fs.writeFile(pdfPath, response.data);
-          console.log(`Successfully downloaded content from ${url}`);
-          success = true;
+          // IMPROVED: Validate response before saving
+          if (response.status === 200 && response.data && response.data.byteLength > 500) {
+            // Check if it's actually a PDF (if it claims to be)
+            const contentType = response.headers['content-type'] || '';
+            if (isPdf || contentType.includes('pdf')) {
+              try {
+                // Validate PDF structure before saving
+                await validatePdfContent(response.data);
+                await fs.writeFile(pdfPath, response.data);
+                console.log(`Successfully downloaded and validated PDF from ${url}`);
+                success = true;
+              } catch (pdfError) {
+                console.log(`Downloaded content is not a valid PDF (${pdfError.message}). Will try Puppeteer fallback.`);
+              }
+            } else {
+              // Not a PDF - write the file and we'll convert it with Puppeteer
+              const tempFilePath = path.join(pdfDir, `temp_${sourceNum}_${urlDomain}.html`);
+              await fs.writeFile(tempFilePath, response.data);
+              console.log(`Downloaded HTML content for subsequent PDF conversion: ${tempFilePath}`);
+              
+              // NEW: Convert directly from downloaded HTML file to avoid network issues
+              try {
+                const page = await browser.newPage();
+                await page.setDefaultNavigationTimeout(60000);
+                
+                // Load from local file
+                await page.goto(`file://${tempFilePath}`, { waitUntil: 'domcontentloaded' });
+                
+                // Wait for content to render
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                // Generate PDF
+                await page.pdf({ 
+                  path: pdfPath, 
+                  format: 'Letter',
+                  margin: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' },
+                  printBackground: true
+                });
+                
+                await page.close();
+                
+                // Validate the created PDF
+                if (await validatePdfFile(pdfPath)) {
+                  console.log(`Successfully converted downloaded HTML to PDF from ${url}`);
+                  success = true;
+                } else {
+                  console.log(`PDF conversion from downloaded HTML failed validation`);
+                }
+                
+                // Clean up temp file
+                try { await fs.unlink(tempFilePath); } catch (e) {}
+              } catch (conversionError) {
+                console.log(`Error converting downloaded HTML: ${conversionError.message}`);
+              }
+            }
+          } else {
+            console.log(`Downloaded content too small or empty (${response.data?.byteLength || 0} bytes)`);
+          }
         } catch (error) {
           console.log(`Direct download failed: ${error.message}`);
-          if (isPdf || isDoc) {
-            // If it's a document type that should be directly downloadable, wait and retry
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            retries--;
-            continue;
-          }
         }
         
-        // If direct download failed and it's not a direct document, use Puppeteer
+        // If direct download and conversion failed, try Puppeteer to render the page
         if (!success) {
           try {
             console.log(`Attempting to capture webpage with Puppeteer: ${url}`);
             const page = await browser.newPage();
             await page.setDefaultNavigationTimeout(60000);
             
-            // Set up request interception to block unnecessary resources
-            await page.setRequestInterception(true);
-            page.on('request', (req) => {
-              const resourceType = req.resourceType();
-              // Block unnecessary resources to speed up loading
-              if (['image', 'font', 'media', 'stylesheet'].includes(resourceType)) {
-                req.abort();
-              } else {
-                req.continue();
-              }
+            // IMPROVED: Set more realistic viewport and user agent
+            await page.setViewport({ width: 1200, height: 1500 });
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+            
+            // IMPROVED: Set extra HTTP headers that might help with government sites
+            await page.setExtraHTTPHeaders({
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.5',
+              'Upgrade-Insecure-Requests': '1'
             });
             
             // Try to navigate to the page with retry logic
             let loaded = false;
             try {
-              await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+              await page.goto(url, { 
+                waitUntil: 'networkidle2', 
+                timeout: 30000 
+              });
               loaded = true;
             } catch (navError) {
               console.log(`Navigation error with networkidle2: ${navError.message}`);
               try {
-                await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+                await page.goto(url, { 
+                  waitUntil: 'domcontentloaded', 
+                  timeout: 30000 
+                });
                 loaded = true;
               } catch (navError2) {
                 console.log(`Navigation error with domcontentloaded: ${navError2.message}`);
                 try {
-                  await page.goto(url, { waitUntil: 'load', timeout: 45000 });
+                  await page.goto(url, { 
+                    waitUntil: 'load', 
+                    timeout: 45000 
+                  });
                   loaded = true;
                 } catch (navError3) {
                   console.log(`Final navigation error: ${navError3.message}`);
@@ -192,73 +266,191 @@ async function extractAndDownloadUrls(letter, outputDir) {
             }
             
             if (loaded) {
-              // Wait for content to be more fully loaded
-              await new Promise(resolve => setTimeout(resolve, 3000));
-              
-              // Remove cookie banners and other overlays that might obstruct content
+              // NEW: Try to bypass paywalls, cookie banners, etc.
               await page.evaluate(() => {
-                // Find and remove common cookie banner selectors
+                // Remove overlay elements
                 const selectors = [
-                  '.cookie-banner', '#cookie-banner', '.cookie-notice', '#cookie-notice',
-                  '.consent-banner', '#consent-banner', '.gdpr', '#gdpr',
-                  '.modal', '.popup', '.overlay', '[class*="cookie"]', '[class*="consent"]',
-                  '[id*="cookie"]', '[id*="consent"]'
+                  // General overlays
+                  '.overlay', '.modal', '.popup', '.dialog', '.cookie-banner', '.consent-banner',
+                  // Access denied and login walls
+                  '.paywall', '#paywall', '[class*="paywall"]', '[id*="paywall"]',
+                  '.login-wall', '#login-wall', '[class*="login"]',
+                  // Cookie notices
+                  '[class*="cookie"]', '[id*="cookie"]', '.gdpr', '#gdpr', '[class*="consent"]',
+                  // Any fixed position elements that might block content
+                  'div[style*="position: fixed"]', 'div[style*="position:fixed"]'
                 ];
+                
                 selectors.forEach(selector => {
                   document.querySelectorAll(selector).forEach(el => {
-                    el.remove();
+                    try { el.remove(); } catch (e) {}
                   });
                 });
+                
+                // Add special handling for common government websites
+                if (window.location.hostname.includes('.gov')) {
+                  // Some gov sites hide content before accepting terms
+                  const acceptButtons = Array.from(document.querySelectorAll('button, a, input[type="button"], input[type="submit"]'))
+                    .filter(el => {
+                      const text = el.innerText?.toLowerCase() || '';
+                      return text.includes('accept') || text.includes('agree') || text.includes('continue');
+                    });
+                  
+                  acceptButtons.forEach(button => {
+                    try { button.click(); } catch (e) {}
+                  });
+                }
+                
+                // Try to make content visible if hidden
+                document.body.style.overflow = 'visible';
+                document.documentElement.style.overflow = 'visible';
               });
               
-              // Generate PDF from the page
-              await page.pdf({ 
-                path: pdfPath, 
-                format: 'Letter',
-                margin: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' },
-                printBackground: true
+              // Wait a bit longer for content to be more fully loaded
+              await new Promise(resolve => setTimeout(resolve, 5000));
+              
+              // Try to find "Access Denied" text that indicates the page is blocked
+              const isAccessDenied = await page.evaluate(() => {
+                const pageText = document.body.innerText.toLowerCase();
+                return pageText.includes('access denied') || 
+                       pageText.includes('access forbidden') || 
+                       pageText.includes('403 forbidden') ||
+                       pageText.includes('not authorized');
               });
               
-              console.log(`Successfully created PDF from ${url}`);
-              success = true;
+              if (isAccessDenied) {
+                console.log('Detected "Access Denied" on page, trying special handling...');
+                // Special handling for access denied pages - create custom PDF later
+                await page.close();
+              } else {
+                // Generate PDF from the page
+                await page.pdf({ 
+                  path: pdfPath, 
+                  format: 'Letter',
+                  margin: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' },
+                  printBackground: true
+                });
+                
+                await page.close();
+                
+                // Validate the created PDF
+                if (await validatePdfFile(pdfPath)) {
+                  console.log(`Successfully created and validated PDF from ${url}`);
+                  success = true;
+                } else {
+                  console.log(`Created PDF failed validation`);
+                }
+              }
+            } else {
+              await page.close();
             }
-            
-            await page.close();
           } catch (puppeteerError) {
             console.error(`Error capturing with Puppeteer: ${puppeteerError.message}`);
           }
         }
         
         retries--;
+        
+        // Wait between retries
+        if (!success && retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
       }
       
-      // If still not successful, create a placeholder PDF
+      // If still not successful, create a better placeholder PDF
       if (!success) {
         try {
-          console.log(`Creating placeholder PDF for failed URL: ${url}`);
+          console.log(`Creating enhanced placeholder PDF for failed URL: ${url}`);
           const placeholderPage = await browser.newPage();
+          
+          // Create a more comprehensive placeholder with styling and details
           await placeholderPage.setContent(`
+            <!DOCTYPE html>
             <html>
               <head>
-                <title>Source ${sourceNum} - Unable to Download</title>
+                <meta charset="UTF-8">
+                <title>Source ${sourceNum} - Reference Document</title>
                 <style>
-                  body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-                  h1 { color: #d9534f; }
-                  .url { word-break: break-all; color: #0275d8; }
-                  .box { border: 1px solid #ddd; padding: 20px; margin-top: 20px; background-color: #f9f9f9; }
+                  body {
+                    font-family: Arial, sans-serif;
+                    margin: 40px;
+                    line-height: 1.6;
+                    color: #333;
+                  }
+                  h1 {
+                    color: #2c3e50;
+                    border-bottom: 1px solid #eee;
+                    padding-bottom: 10px;
+                  }
+                  h2 {
+                    color: #3498db;
+                    margin-top: 25px;
+                  }
+                  .url-box {
+                    border: 1px solid #ddd;
+                    padding: 15px;
+                    margin: 20px 0;
+                    background-color: #f9f9f9;
+                    border-radius: 5px;
+                  }
+                  .url {
+                    word-break: break-all;
+                    color: #2980b9;
+                    font-family: monospace;
+                    font-size: 14px;
+                  }
+                  .note {
+                    background-color: #fef9e7;
+                    border-left: 4px solid #f1c40f;
+                    padding: 15px;
+                    margin: 20px 0;
+                  }
+                  .footer {
+                    margin-top: 40px;
+                    border-top: 1px solid #eee;
+                    padding-top: 10px;
+                    font-size: 12px;
+                    color: #7f8c8d;
+                  }
                 </style>
               </head>
               <body>
-                <h1>Source ${sourceNum} - Unable to Download</h1>
-                <p>The system attempted to download the following URL but was unsuccessful:</p>
-                <div class="box">
+                <h1>Source ${sourceNum}: Government Order Reference</h1>
+                
+                <div class="url-box">
+                  <h2>Source Information</h2>
+                  <p><strong>URL:</strong></p>
                   <p class="url">${url}</p>
-                  <p><strong>Description:</strong> ${description || 'No description provided'}</p>
+                  <p><strong>Description:</strong> ${description || 'Government order or directive referenced in protest letter'}</p>
                 </div>
-                <p>This placeholder document has been generated to maintain the document reference order.</p>
-                <p>Please manually visit the URL above to view the source content.</p>
-                <hr>
-                <p>Generated on: ${new Date().toISOString()}</p>
+                
+                <div class="note">
+                  <h2>Important Note</h2>
+                  <p>This document serves as a reference to the government order cited in the protest letter. The source URL could not be automatically converted to PDF due to one of the following reasons:</p>
+                  <ul>
+                    <li>The page requires authentication or has access restrictions</li>
+                    <li>The website uses security measures that prevent automated access</li>
+                    <li>The content may have been modified or moved since it was originally cited</li>
+                    <li>Technical limitations in capturing certain types of web content</li>
+                  </ul>
+                </div>
+                
+                <h2>Manual Access Instructions</h2>
+                <p>To view the original content, please:</p>
+                <ol>
+                  <li>Copy the URL above into your web browser</li>
+                  <li>If prompted for credentials or blocked by security measures, you may need to:</li>
+                  <ul>
+                    <li>Access from a government network if it's a restricted government resource</li>
+                    <li>Contact the website administrator for appropriate access</li>
+                    <li>Use an Internet Archive service like the Wayback Machine to find an archived version</li>
+                  </ul>
+                </ol>
+                
+                <div class="footer">
+                  <p>Reference document created: ${new Date().toISOString()}</p>
+                  <p>This placeholder document maintains the citation order referenced in the protest letter.</p>
+                </div>
               </body>
             </html>
           `);
@@ -266,21 +458,32 @@ async function extractAndDownloadUrls(letter, outputDir) {
           await placeholderPage.pdf({ 
             path: pdfPath, 
             format: 'Letter',
-            margin: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' }
+            margin: { top: '0.5in', right: '0.5in', bottom: '0.5in', left: '0.5in' },
+            printBackground: true
           });
           
           await placeholderPage.close();
-          console.log(`Created placeholder PDF for ${url}`);
-          success = true;
+          
+          // Validate the created PDF placeholder
+          if (await validatePdfFile(pdfPath)) {
+            console.log(`Created enhanced placeholder PDF for ${url}`);
+            success = true;
+          } else {
+            // Last resort - create a minimal PDF directly using pdf-lib
+            await createMinimalPlaceholderPdf(pdfPath, url, sourceNum, description);
+            success = true;
+          }
         } catch (placeholderError) {
           console.error(`Error creating placeholder PDF: ${placeholderError.message}`);
+          // Last resort - create a minimal PDF directly using pdf-lib
+          await createMinimalPlaceholderPdf(pdfPath, url, sourceNum, description);
+          success = true;
         }
       }
       
       // Verify the PDF exists and has content before adding to attachments
       try {
-        const stats = fsSync.statSync(pdfPath);
-        if (stats.size > 0) {
+        if (await validatePdfFile(pdfPath)) {
           attachments.push({
             originalUrl: url,
             filename: filename,
@@ -298,12 +501,28 @@ async function extractAndDownloadUrls(letter, outputDir) {
           
           console.log(`Added attachment ${sourceNum}: ${filename}`);
         } else {
-          console.log(`PDF file is empty, skipping attachment: ${pdfPath}`);
-          // Delete empty file
-          await fs.unlink(pdfPath);
+          console.log(`PDF file failed validation, creating minimal fallback: ${pdfPath}`);
+          // Final fallback - create a minimal PDF
+          await createMinimalPlaceholderPdf(pdfPath, url, sourceNum, description);
+          
+          // Add it only if it exists
+          if (fsSync.existsSync(pdfPath) && fsSync.statSync(pdfPath).size > 0) {
+            attachments.push({
+              originalUrl: url,
+              filename: filename,
+              path: pdfPath,
+              description: description
+            });
+            
+            // Update letter text
+            letter = letter.replace(new RegExp(`\\b${escapeRegExp(url)}\\b`, 'g'), 
+              `[See Attachment ${sourceNum}: ${filename}]`);
+              
+            console.log(`Added minimal fallback attachment ${sourceNum}: ${filename}`);
+          }
         }
-      } catch (statError) {
-        console.error(`Error verifying PDF file: ${statError.message}`);
+      } catch (finalError) {
+        console.error(`Fatal error processing attachment ${sourceNum}: ${finalError.message}`);
       }
     }
   } finally {
@@ -326,6 +545,139 @@ async function extractAndDownloadUrls(letter, outputDir) {
   
   console.log(`Successfully processed ${attachments.length} attachments`);
   return { letter, attachments };
+}
+
+/**
+ * Validate PDF content from a buffer
+ * @param {Buffer} buffer - PDF content as buffer
+ * @returns {Promise<boolean>} - True if valid PDF
+ */
+async function validatePdfContent(buffer) {
+  try {
+    const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+    const pageCount = pdfDoc.getPageCount();
+    // Only valid if it has at least one page
+    return pageCount > 0;
+  } catch (error) {
+    console.log(`PDF validation error: ${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * Validate an existing PDF file
+ * @param {string} filePath - Path to PDF file
+ * @returns {Promise<boolean>} - True if valid PDF
+ */
+async function validatePdfFile(filePath) {
+  try {
+    // First check if file exists and has minimum size
+    const stats = fsSync.statSync(filePath);
+    if (stats.size < 100) {
+      return false;
+    }
+    
+    // Then check PDF structure
+    const buffer = await fs.readFile(filePath);
+    return await validatePdfContent(buffer);
+  } catch (error) {
+    console.log(`PDF file validation error: ${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * Create a minimal placeholder PDF using pdf-lib as final fallback
+ * @param {string} outputPath - Where to save the PDF
+ * @param {string} url - URL that failed
+ * @param {number} sourceNum - Source number
+ * @param {string} description - Source description
+ */
+async function createMinimalPlaceholderPdf(outputPath, url, sourceNum, description) {
+  try {
+    console.log(`Creating minimal fallback PDF for ${url} using pdf-lib`);
+    
+    // Create a new PDF document
+    const pdfDoc = await PDFDocument.create();
+    
+    // Add a page
+    const page = pdfDoc.addPage([612, 792]); // Letter size
+    
+    // Add text content
+    const { width, height } = page.getSize();
+    
+    // Title
+    page.drawText(`Source ${sourceNum}: Reference Document`, {
+      x: 50,
+      y: height - 50,
+      size: 18
+    });
+    
+    // URL (broken into multiple lines if needed)
+    page.drawText('URL:', {
+      x: 50,
+      y: height - 100,
+      size: 12
+    });
+    
+    // Wrap long URLs
+    const maxWidth = width - 100;
+    let urlText = url;
+    let urlY = height - 120;
+    
+    while (urlText.length > 0 && urlY > 100) {
+      // Take a chunk of the URL that fits
+      let chunk = urlText;
+      if (urlText.length > 80) { // Simple estimate, proper text measuring would be better
+        chunk = urlText.substring(0, 80);
+      }
+      
+      page.drawText(chunk, {
+        x: 50,
+        y: urlY,
+        size: 10
+      });
+      
+      urlText = urlText.substring(chunk.length);
+      urlY -= 20;
+    }
+    
+    // Description
+    page.drawText('Description:', {
+      x: 50,
+      y: urlY - 20,
+      size: 12
+    });
+    
+    page.drawText(description || 'Government order or directive referenced in protest letter', {
+      x: 50,
+      y: urlY - 40,
+      size: 10
+    });
+    
+    // Note
+    page.drawText('Note: This source could not be automatically downloaded.', {
+      x: 50,
+      y: urlY - 80,
+      size: 12
+    });
+    
+    page.drawText('Please access the URL manually to view the referenced content.', {
+      x: 50,
+      y: urlY - 100,
+      size: 10
+    });
+    
+    // Save the PDF
+    const pdfBytes = await pdfDoc.save();
+    await fs.writeFile(outputPath, pdfBytes);
+    
+    console.log(`Successfully created minimal fallback PDF at ${outputPath}`);
+    return true;
+  } catch (error) {
+    console.error(`Error creating minimal fallback PDF: ${error.message}`);
+    return false;
+  }
 }
 
 // Helper function to escape special characters for regex
