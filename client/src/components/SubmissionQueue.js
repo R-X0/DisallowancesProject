@@ -6,7 +6,7 @@ import {
   Alert
 } from '@mui/material';
 import { 
-  Refresh, Delete, PlayArrow, 
+  Refresh, Delete, PlayArrow, Edit,
   AccessTime as TimeIcon
 } from '@mui/icons-material';
 import axios from 'axios';
@@ -49,7 +49,7 @@ const SubmissionQueue = ({ onLoadSubmission }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Handle loading a submission
+  // Handle loading a submission for viewing/continuing
   const handleLoadSubmission = async (submissionId) => {
     try {
       const response = await axios.get(`/api/erc-protest/queue/submission/${submissionId}`);
@@ -63,6 +63,23 @@ const SubmissionQueue = ({ onLoadSubmission }) => {
     } catch (err) {
       console.error('Error loading submission details:', err);
       setError('Error loading submission details. Please try again.');
+    }
+  };
+
+  // Handle editing a submission (go to first step)
+  const handleEditSubmission = async (submissionId) => {
+    try {
+      const response = await axios.get(`/api/erc-protest/queue/submission/${submissionId}`);
+      
+      if (response.data && response.data.success) {
+        // Call the parent component's handler with the submission data and edit flag
+        onLoadSubmission(response.data.submission, true);
+      } else {
+        setError('Failed to load submission for editing');
+      }
+    } catch (err) {
+      console.error('Error loading submission for editing:', err);
+      setError('Error loading submission for editing. Please try again.');
     }
   };
 
@@ -239,12 +256,24 @@ const SubmissionQueue = ({ onLoadSubmission }) => {
                   }
                 />
                 <ListItemSecondaryAction>
+                  <Tooltip title="Edit submission (go to first step)">
+                    <IconButton 
+                      edge="end" 
+                      aria-label="edit" 
+                      size="small"
+                      onClick={() => handleEditSubmission(submission.submissionId)}
+                      sx={{ mr: 1 }}
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                   <Tooltip title="Load submission">
                     <IconButton 
                       edge="end" 
                       aria-label="load" 
                       size="small"
                       onClick={() => handleLoadSubmission(submission.submissionId)}
+                      sx={{ mr: 1 }}
                     >
                       <PlayArrow fontSize="small" />
                     </IconButton>
@@ -255,7 +284,6 @@ const SubmissionQueue = ({ onLoadSubmission }) => {
                       aria-label="delete" 
                       size="small"
                       onClick={() => handleDeleteSubmission(submission.submissionId)}
-                      sx={{ ml: 1 }}
                     >
                       <Delete fontSize="small" />
                     </IconButton>

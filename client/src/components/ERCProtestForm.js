@@ -451,7 +451,7 @@ const ERCProtestForm = () => {
   };
   
   // Load a submission from the queue
-  const handleLoadSubmission = (submission) => {
+  const handleLoadSubmission = (submission, editMode = false) => {
     // Extract the form data from the submission
     const {
       businessName,
@@ -508,8 +508,11 @@ const ERCProtestForm = () => {
       setProtestLetterData(submissionData.protestLetterData);
     }
     
-    // Reset step to start, or to step 1 if adequate data is provided
-    if (businessName && (timePeriods?.length > 0 || location)) {
+    // If editMode is true, always go to step 0 (form)
+    // Otherwise, go to step 1 if there's enough data to proceed
+    if (editMode) {
+      setActiveStep(0);
+    } else if (businessName && (timePeriods?.length > 0 || location)) {
       setActiveStep(1);
     } else {
       setActiveStep(0);
