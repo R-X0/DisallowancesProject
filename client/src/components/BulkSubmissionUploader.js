@@ -18,7 +18,6 @@ import {
   TableHead, 
   TableRow,
   Alert, 
-  Tooltip,
   IconButton,
   Chip,
   LinearProgress
@@ -26,7 +25,6 @@ import {
 import { 
   Upload as UploadIcon, 
   CloudUpload as CloudUploadIcon, 
-  Check as CheckIcon, 
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
   Close as CloseIcon,
