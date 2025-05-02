@@ -80,7 +80,7 @@ const ERCProtestForm = () => {
     'Q1 2021', 'Q2 2021', 'Q3 2021'
   ];
   
-  // Effect to check for prefill data - simplified without queue dependencies
+  // Effect to check for prefill data - FIXED VERSION
   useEffect(() => {
     const loadPrefillData = () => {
       // Check both sessionStorage and localStorage
@@ -105,6 +105,10 @@ const ERCProtestForm = () => {
           }
           
           console.log('Processing fresh prefill data...');
+          
+          // IMPORTANT: Clear storage immediately to prevent multiple processing
+          localStorage.removeItem('prefillData');
+          sessionStorage.removeItem('prefillData');
           
           // More robust form data update
           setFormData(prevData => {
@@ -161,11 +165,6 @@ const ERCProtestForm = () => {
           setTimeout(() => {
             console.log('Automatically advancing to step 1 (prompt generator)');
             setActiveStep(1);
-            
-            // Clear out the storage after advancing
-            localStorage.removeItem('prefillData');
-            sessionStorage.removeItem('prefillData');
-            console.log('Removed prefill data from storage after successful update');
           }, 500); // Short delay to ensure form data is fully updated
           
         } catch (error) {
@@ -177,22 +176,11 @@ const ERCProtestForm = () => {
       }
     };
     
-    // Load data immediately on mount
+    // Load data once on mount - NO INTERVAL
     loadPrefillData();
     
-    // Also set up an interval to check again in case the navigation happens before data is saved
-    const interval = setInterval(loadPrefillData, 500); // Check every half second
-    
-    // Clean up interval after 5 seconds
-    const cleanup = setTimeout(() => {
-      clearInterval(interval);
-    }, 5000);
-    
-    return () => {
-      clearInterval(interval);
-      clearTimeout(cleanup);
-    };
-  }, []); // Empty dependency array means this runs once on component mount
+    // No interval needed - just a one-time check
+  }, []);
   
   // Debug effect - log whenever protestLetterData changes
   useEffect(() => {
@@ -384,8 +372,13 @@ const ERCProtestForm = () => {
   
   // Handle next step
   const handleNext = () => {
-    // Save to queue before advancing
-    saveToQueue();
+    // Only save if going from step 0 to step 1
+    // This prevents multiple saves when navigating around later steps
+    if (activeStep === 0) {
+      saveToQueue();
+    } else {
+      console.log('Skipping save on step transition since not at step 0');
+    }
     setActiveStep(prevActiveStep => prevActiveStep + 1);
   };
   
@@ -401,6 +394,12 @@ const ERCProtestForm = () => {
       setSaveMessage('Business name is required to save');
       setSaveSuccess(false);
       setSaveSnackbarOpen(true);
+      return;
+    }
+    
+    // Don't save if already saving
+    if (isSaving) {
+      console.log('Already saving, skipping duplicate save request');
       return;
     }
     
@@ -440,6 +439,9 @@ const ERCProtestForm = () => {
       // Add timestamp
       submissionData.submissionData.lastSaved = new Date().toISOString();
       
+      // IMPORTANT: Log the submission ID we're using for debugging
+      console.log(`Saving to queue with ID: ${formData.trackingId || 'NEW SUBMISSION'}`);
+      
       // Make API call to save
       const response = await axios.post('/api/erc-protest/queue/save', submissionData);
       
@@ -450,6 +452,7 @@ const ERCProtestForm = () => {
             ...prev,
             trackingId: response.data.submissionId
           }));
+          console.log(`Received and saved new tracking ID: ${response.data.submissionId}`);
         }
         
         setSaveMessage('Submission saved to queue');
