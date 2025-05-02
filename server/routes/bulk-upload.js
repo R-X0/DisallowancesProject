@@ -1,4 +1,6 @@
 // server/routes/bulk-upload.js
+// UPDATED CODE WITH FIX FOR REVENUE DATA
+
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
@@ -196,11 +198,16 @@ router.post('/process', upload.single('file'), async (req, res) => {
           submissionData.governmentOrdersInfo = approachInfo;
         }
         
+        // FIX: Add revenue data fields DIRECTLY to the submission, not just inside submissionData
+        for (const [field, value] of Object.entries(revenueData)) {
+          submissionData[field] = value;
+        }
+        
         // Create submission record in database
         const submission = new Submission({
           ...submissionData,
           submissionData: {
-            ...revenueData,
+            ...revenueData, // Keep copy in submissionData for consistency
             qualificationReasons,
             lastSaved: new Date().toISOString()
           }
