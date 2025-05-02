@@ -8,7 +8,7 @@ import {
   ButtonGroup, Tooltip,
   Select, MenuItem, FormControl, InputLabel,
   FormControlLabel, Checkbox, RadioGroup, Radio,
-  Grid, CircularProgress, Snackbar, GlobalStyles
+  Grid, CircularProgress, GlobalStyles
 } from '@mui/material';
 import { ContentCopy, CheckCircle, Description, FileDownload, SwapHoriz } from '@mui/icons-material';
 import axios from 'axios';
@@ -224,7 +224,6 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
   const [disallowanceReason, setDisallowanceReason] = useState('no_orders');
   const [outputFormat, setOutputFormat] = useState('pdf');
   const [customDisallowanceReason, setCustomDisallowanceReason] = useState('');
-  const [timeoutWarning, setTimeoutWarning] = useState(false);
   const [includeSupplyChainDisruption, setIncludeSupplyChainDisruption] = useState(false);
   const [extractedIrsAddress, setExtractedIrsAddress] = useState(''); // Add state for extracted address
 
@@ -293,7 +292,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
     }
   };
 
-  // FIXED Function to poll for job status
+  // Function to poll for job status
   const pollJobStatus = useCallback(async (jobId) => {
     if (!jobId) return;
     
@@ -302,12 +301,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
     
     // Check if we've exceeded the max polling time
     if (pollingStartTime && (currentTime - pollingStartTime > maxPollingTime)) {
-      // Don't clear the interval here, we still want to keep polling
-      // Just show the warning if it's not already shown
-      if (!timeoutWarning) {
-        setTimeoutWarning(true);
-        console.log("Showing timeout warning but continuing to poll in background");
-      }
+      console.log("Exceeded max polling time but continuing to poll in background");
     }
     
     try {
@@ -339,9 +333,6 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
       } else if (job.status === 'completed') {
         // Job completed successfully
         console.log('Job completed successfully:', job.result);
-        
-        // CRITICAL FIX: Always clear the timeout warning, even if it was shown before
-        setTimeoutWarning(false);
         
         // Clear polling interval
         if (pollInterval) {
@@ -391,7 +382,6 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
         console.error(`Job failed: ${job.error}`);
         setProcessing(false);
         setGenerating(false);
-        setTimeoutWarning(false); // Clear timeout warning on failure too
         setError(`Failed to generate document: ${job.error}`);
       }
     } catch (error) {
@@ -399,18 +389,13 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
       
       // Don't stop polling on network errors - just skip this attempt
       console.log("Will retry polling on next interval");
-      
-      // Don't clear timeout warnings here either - keep them visible
-      // But don't show new ones for network errors to avoid confusion
-      // Only the main setTimeout above should trigger the timeout warning
     }
-  }, [documentType, onGenerated, outputFormat, pollInterval, pollingStartTime, selectedTimePeriod, timeoutWarning]);
+  }, [documentType, onGenerated, outputFormat, pollInterval, pollingStartTime, selectedTimePeriod]);
 
   // Function to generate protest letter using our LLM API
   const generateProtestLetter = async () => {
     // Clear any previous error
     setError(null);
-    setTimeoutWarning(false);
     
     // Disable button and show loading state immediately
     setGenerating(true);
@@ -538,10 +523,8 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
     } catch (error) {
       console.error('Error generating document:', error);
       
-      // FIXED: Continue polling even on timeout errors, but show a user-friendly message
       if (error.message.includes('timeout') || error.message.includes('exceeded')) {
         console.log("Document generation taking longer than expected, continuing in background");
-        setTimeoutWarning(true);
         // Don't reset processing state so user knows it's still working
         // Don't clear poll interval - let it continue
       } else {
@@ -839,16 +822,6 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
               : `Make sure your pasted ChatGPT conversation includes comprehensive information about government orders affecting your business across all ERC quarters: ${hasTimePeriods ? formData.timePeriods.join(', ') : 'the selected time periods'}.`}
           </Alert>
           
-          {timeoutWarning && (
-            <Alert severity="warning" sx={{ mb: 2 }}>
-              <Typography variant="subtitle2">Package generation is taking longer than expected</Typography>
-              <Typography variant="body2">
-                The document generation is still in progress but is taking longer than the usual 5-minute timeframe. This can happen with complex documents or when processing many sources. 
-                You can continue waiting, and we'll notify you when it's complete. The generation will continue in the background even if you navigate away from this page.
-              </Typography>
-            </Alert>
-          )}
-          
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
@@ -1035,16 +1008,6 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
           </Dialog>
         </Paper>
       </Box>
-      
-      {/* Notification for background processing */}
-      <Snackbar
-        open={timeoutWarning}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert severity="info" sx={{ width: '100%' }}>
-          Processing continues in the background. Please wait...
-        </Alert>
-      </Snackbar>
     </>
   );
 };
