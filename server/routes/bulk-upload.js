@@ -1,5 +1,5 @@
 // server/routes/bulk-upload.js
-// UPDATED CODE WITH FIX FOR REVENUE DATA
+// UPDATED CODE WITH ROBUST REVENUE DATA HANDLING
 
 const express = require('express');
 const router = express.Router();
@@ -181,14 +181,14 @@ router.post('/process', upload.single('file'), async (req, res) => {
         // Generate a new ID for the submission
         const submissionId = `ERC-${uuidv4().substring(0, 8).toUpperCase()}`;
         
-        // Create the submission data
+        // Create the submission data - include revenue fields both at top level and in submissionData for backward compatibility
         const submissionData = {
           submissionId,
           businessName: row['Client Name'],
           ein: row['EIN'],
           location: 'Unknown', // Set default location
           timePeriods: qualifyingQuarters,
-          status: 'Gathering data'
+          status: 'Gathering data',
         };
         
         // Add approach specific fields
@@ -198,22 +198,41 @@ router.post('/process', upload.single('file'), async (req, res) => {
           submissionData.governmentOrdersInfo = approachInfo;
         }
         
-        // FIX: Add revenue data fields DIRECTLY to the submission, not just inside submissionData
+        // ADD REVENUE DATA AT TOP LEVEL - THIS IS CRITICAL
         for (const [field, value] of Object.entries(revenueData)) {
           submissionData[field] = value;
         }
         
-        // Create submission record in database
+        // For backward compatibility, also include revenue data in submissionData object
+        const submissionDataObj = {
+          qualificationReasons,
+          lastSaved: new Date().toISOString()
+        };
+        
+        // Also add revenue data inside submissionData for backward compatibility
+        for (const [field, value] of Object.entries(revenueData)) {
+          submissionDataObj[field] = value;
+        }
+        
+        // Create the document with both data locations
         const submission = new Submission({
           ...submissionData,
-          submissionData: {
-            ...revenueData, // Keep copy in submissionData for consistency
-            qualificationReasons,
-            lastSaved: new Date().toISOString()
-          }
+          submissionData: submissionDataObj
         });
         
-        await submission.save();
+        // Log the full data structure before saving for debugging
+        console.log(`Saving submission for ${row['Client Name']} with ID ${submissionId}`);
+        console.log('Revenue data at top level:', Object.keys(revenueData).length, 'fields');
+        console.log('Revenue data in submissionData:', Object.keys(submissionDataObj).filter(k => k.startsWith('q')).length, 'fields');
+        
+        // Save with explicit handling of any schema issues
+        try {
+          await submission.save({ strict: false });
+          console.log(`Successfully saved submission ${submissionId}`);
+        } catch (saveError) {
+          console.error(`Error saving submission: ${saveError.message}`);
+          throw saveError;
+        }
         
         // Store result
         results.push({

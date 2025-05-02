@@ -1,4 +1,6 @@
 // server/routes/queue.js
+// UPDATED WITH IMPROVED REVENUE DATA HANDLING
+
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
@@ -51,7 +53,7 @@ router.get('/submission/:id', async (req, res) => {
   }
 });
 
-// Save or update a submission
+// Save or update a submission - ENHANCED FOR REVENUE DATA
 router.post('/save', async (req, res) => {
   try {
     const { submissionId, ...submissionData } = req.body;
@@ -59,19 +61,62 @@ router.post('/save', async (req, res) => {
     // Generate a new ID if not provided
     const id = submissionId || `ERC-${uuidv4().substring(0, 8).toUpperCase()}`;
     
+    // Extract all revenue fields
+    const revenueFields = [
+      'q1_2019', 'q2_2019', 'q3_2019', 'q4_2019',
+      'q1_2020', 'q2_2020', 'q3_2020', 'q4_2020',
+      'q1_2021', 'q2_2021', 'q3_2021'
+    ];
+    
+    // Extract revenue data from submissionData
+    const revenueData = {};
+    for (const field of revenueFields) {
+      if (submissionData[field] !== undefined) {
+        revenueData[field] = submissionData[field];
+      }
+    }
+    
+    // Log what we're about to do
+    console.log(`Saving submission ${id} with ${Object.keys(revenueData).length} revenue fields`);
+    
     // Try to find existing submission
     let submission = await Submission.findOne({ submissionId: id });
     
     if (submission) {
-      // Update existing submission
+      console.log(`Updating existing submission: ${id}`);
+      // Update existing submission - with revenue fields preserved at top level
       submission = await Submission.findOneAndUpdate(
         { submissionId: id },
         { 
           ...submissionData,
+          // Ensure revenue data is explicitly updated at the top level
+          ...revenueData,
           lastUpdated: new Date()
         },
-        { new: true }
+        { 
+          new: true,
+          // Disable strict mode for this operation to allow fields not in schema
+          strict: false 
+        }
       );
+      
+      // Also ensure revenue data is in submissionData for backward compatibility
+      if (submission.submissionData) {
+        // Add revenue data to submissionData for backward compatibility
+        const existingSubmissionData = submission.submissionData || {};
+        const updatedSubmissionData = {
+          ...existingSubmissionData,
+          ...revenueData,
+          lastUpdated: new Date().toISOString()
+        };
+        
+        // Update submissionData separately
+        await Submission.findOneAndUpdate(
+          { submissionId: id },
+          { submissionData: updatedSubmissionData },
+          { strict: false }
+        );
+      }
       
       res.status(200).json({
         success: true,
@@ -79,13 +124,31 @@ router.post('/save', async (req, res) => {
         submissionId: id
       });
     } else {
-      // Create new submission
+      console.log(`Creating new submission: ${id}`);
+      // Prepare submissionData with revenue in both places
+      const submissionDataObj = {
+        ...(submissionData.submissionData || {}),
+        lastSaved: new Date().toISOString()
+      };
+      
+      // Add revenue to submissionData object too for backward compatibility
+      for (const [field, value] of Object.entries(revenueData)) {
+        submissionDataObj[field] = value;
+      }
+      
+      // Create new submission with revenue data at both levels
       submission = new Submission({
         submissionId: id,
-        ...submissionData
+        ...submissionData,
+        ...revenueData, // Add revenue data at top level
+        submissionData: submissionDataObj // Also in submissionData
       });
       
-      await submission.save();
+      // Explicitly log what we're saving
+      console.log(`Creating submission with fields: ${Object.keys(submission.toObject()).join(', ')}`);
+      
+      // Save with strict mode disabled
+      await submission.save({ strict: false });
       
       res.status(201).json({
         success: true,
