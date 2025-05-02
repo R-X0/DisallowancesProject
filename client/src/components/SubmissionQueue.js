@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Box, Typography, List, ListItem, ListItemText, 
-  Paper, Divider, Button, Chip, IconButton,
+  Paper, Divider, Chip, IconButton,
   ListItemSecondaryAction, Tooltip, CircularProgress,
   Alert
 } from '@mui/material';
 import { 
-  Refresh, Delete, CloudDownload, PlayArrow, 
+  Refresh, Delete, PlayArrow, 
   AccessTime as TimeIcon
 } from '@mui/icons-material';
 import axios from 'axios';
@@ -119,7 +119,16 @@ const SubmissionQueue = ({ onLoadSubmission }) => {
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Paper 
+      elevation={3} 
+      sx={{ 
+        p: 2, 
+        display: 'flex', 
+        flexDirection: 'column',
+        height: '100%',
+        minHeight: { xs: '400px', md: '600px' }
+      }}
+    >
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
         <Typography variant="h6">Submission Queue</Typography>
         <Tooltip title="Refresh queue">
@@ -152,7 +161,14 @@ const SubmissionQueue = ({ onLoadSubmission }) => {
           </Typography>
         </Box>
       ) : (
-        <List dense sx={{ overflow: 'auto', flexGrow: 1, maxHeight: 'calc(100vh - 300px)' }}>
+        <List 
+          dense 
+          sx={{ 
+            overflowY: 'auto',
+            flexGrow: 1,
+            maxHeight: { xs: '300px', md: 'calc(100vh - 280px)' }
+          }}
+        >
           {submissions.map((submission) => (
             <React.Fragment key={submission.submissionId}>
               <ListItem 
@@ -162,7 +178,16 @@ const SubmissionQueue = ({ onLoadSubmission }) => {
                 <ListItemText
                   primary={
                     <Box display="flex" alignItems="center">
-                      <Typography variant="subtitle2" noWrap sx={{ mr: 1, maxWidth: '150px' }}>
+                      <Typography 
+                        variant="subtitle2" 
+                        noWrap 
+                        sx={{ 
+                          mr: 1, 
+                          maxWidth: { xs: '120px', md: '150px' },
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}
+                      >
                         {submission.businessName}
                       </Typography>
                       <Chip 
@@ -179,17 +204,33 @@ const SubmissionQueue = ({ onLoadSubmission }) => {
                         component="span"
                         variant="body2"
                         color="text.primary"
-                        sx={{ display: 'block' }}
+                        sx={{ 
+                          display: 'block',
+                          fontSize: '0.75rem',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}
                       >
                         {submission.submissionId}
                       </Typography>
                       <Box display="flex" alignItems="center" mt={0.5}>
-                        <TimeIcon fontSize="small" sx={{ mr: 0.5, fontSize: '0.875rem', color: 'text.secondary' }} />
+                        <TimeIcon fontSize="small" sx={{ mr: 0.5, fontSize: '0.75rem', color: 'text.secondary' }} />
                         <Typography variant="caption" color="text.secondary">
                           {formatDate(submission.lastUpdated)}
                         </Typography>
                         {submission.timePeriods && submission.timePeriods.length > 0 && (
-                          <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                          <Typography 
+                            variant="caption" 
+                            color="text.secondary" 
+                            sx={{ 
+                              ml: 1,
+                              maxWidth: '100px',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
                             • {submission.timePeriods.join(', ')}
                           </Typography>
                         )}

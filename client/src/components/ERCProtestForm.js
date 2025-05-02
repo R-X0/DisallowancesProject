@@ -522,11 +522,11 @@ const ERCProtestForm = () => {
   };
   
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 8 }}>
       <Grid container spacing={3}>
         {/* Main form area */}
         <Grid item xs={12} md={8}>
-          <Paper elevation={3} sx={{ p: 4 }}>
+          <Paper elevation={3} sx={{ p: { xs: 2, md: 4 }, minHeight: '600px' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h4" gutterBottom>
                 ERC Disallowance Protest Generator
@@ -542,7 +542,7 @@ const ERCProtestForm = () => {
             </Box>
             <Divider sx={{ mb: 3 }} />
             
-            <Stepper activeStep={activeStep} orientation="vertical">
+            <Stepper activeStep={activeStep} orientation="vertical" sx={{ mb: 4 }}>
               {/* Step 1: Business Information */}
               <Step>
                 <StepLabel>Enter Business Information</StepLabel>
