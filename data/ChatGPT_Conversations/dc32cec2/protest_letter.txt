@@ -1,0 +1,195 @@
+5/2/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 34123  
+Taxpayer Name: 34213421  
+RE: Formal Protest to IRS Disallowance of ERC for Q3 2020  
+Tax Period: 3rd Quarter 2020  
+
+Dear Appeals Officer:
+
+We submit this formal protest on behalf of 34213421 (“the Taxpayer”) in response to the disallowance of our Employee Retention Credit (ERC) claim for the third quarter of 2020. The determination stated that “no government orders were in effect” during Q3 2020 causing a suspension of operations. We respectfully disagree. Multiple government orders—federal, state, county, and city—were active between July 1 and September 30, 2020, and those orders did cause a partial suspension of our business operations within that quarter. Additionally, our revenue data supports the eligibility for certain quarters based on significant declines. We hereby provide a detailed account of the relevant government orders, explain their direct impact on our business, and present our revenue comparison table for your consideration.
+
+────────────────────────────────────────────────────────────────────
+1. Government Orders in Effect During Q3 2020
+────────────────────────────────────────────────────────────────────
+
+Below is a detailed list of the primary orders that remained in force or continued to affect businesses during Q3 2020. Each order is presented with the required fields: Order Name, Order Number, Date Enacted, Date Rescinded, Order Summary, and Impact on Quarter.
+
+• Order Name: Proclamation 9994 – National Emergency Concerning COVID-19
+• Order Number: Proclamation 9994
+• Date Enacted: 03/13/2020
+• Date Rescinded: Remained in effect throughout 2020 (terminated in 2023, beyond Q3 2020)
+• Order Summary: This federal proclamation declared a nationwide emergency due to the COVID-19 outbreak, activating federal emergency powers and funding. While it did not itself mandate business closures, it enabled subsequent state and local restrictions and supported the continuation of emergency public health measures.
+• Impact on Quarter: In Q3 2020, our business was subject to the ongoing national emergency environment. Although the federal government did not impose a direct mandate to close, the national emergency status allowed state and local authorities to impose strict business limitations, leading to a partial suspension of our normal operations.
+
+• Order Name: California COVID-19 State of Emergency
+• Order Number: Governor’s Proclamation dated March 4, 2020
+• Date Enacted: 03/04/2020
+• Date Rescinded: Not rescinded during 2020–2021 (ended in 2023)
+• Order Summary: Governor Gavin Newsom proclaimed a state of emergency in California due to COVID-19, authorizing sweeping measures to address the pandemic. Under this state of emergency, the Governor’s Office and public health officers could impose lockdowns, capacity limits, and other restrictions.
+• Impact on Quarter: During Q3 2020, the ongoing California state of emergency underpinned the authority for other state orders to limit our business activities, contributing to capacity constraints, prohibitions on normal indoor activities, and operational disruptions.
+
+• Order Name: Executive Order N-33-20 – Statewide “Stay-at-Home” Order
+• Order Number: N-33-20
+• Date Enacted: 03/19/2020
+• Date Rescinded: 06/15/2021
+• Order Summary: This order instructed all California residents to stay home except for essential needs or to operate in critical infrastructure sectors. Non-essential businesses were generally closed or severely restricted, while essential operations were permitted with modifications.
+• Impact on Quarter: Although first issued in March 2020, the stay-at-home mandate remained in place “until further notice” and was modified by iterative reopening and rollback orders. In Q3 2020, our business still faced reduced capacity, social distancing rules, and other burdens derived from this order’s foundational authority, resulting in a partial suspension of normal operations.
+
+• Order Name: State Public Health Officer Order – Stage 2 Reopening
+• Order Number: May 7, 2020 Order per EO N-60-20
+• Date Enacted: 05/07/2020
+• Date Rescinded: 06/15/2021
+• Order Summary: California began easing the original March lockdown via “Stage 2,” allowing certain lower-risk businesses to reopen with modifications (e.g., curbside retail, limited manufacturing). Higher-risk sectors remained closed.
+• Impact on Quarter: By Q3 2020, our organization operated under the partial freedoms of Stage 2 but with ongoing restrictions that limited full indoor operations. These constraints, including capacity limits and safety protocols, significantly affected our business output during July through September 2020.
+
+• Order Name: State Public Health Officer Order – Statewide Rollback (July 13, 2020)
+• Order Number: Issued July 13, 2020
+• Date Enacted: 07/13/2020
+• Date Rescinded: 08/31/2020 (superseded by the Blueprint for a Safer Economy; fully rescinded on 06/15/2021)
+• Order Summary: In response to a summer surge in COVID-19 cases, the State Health Officer rolled back prior reopenings by closing many indoor operations (e.g., indoor dining, bars, gyms) statewide. Counties on the state’s monitoring list, including Ventura County (where our location is affected), had to close additional indoor operations such as personal care services and places of worship.
+• Impact on Quarter: This mid-July rollback severely impacted our Q3 by forcing a partial or complete halt of indoor services. Even businesses initially allowed to reopen in June had to either suspend indoor operations again or shift entirely outdoors, leading to a material reduction in activity throughout the remainder of Q3 2020.
+
+• Order Name: Blueprint for a Safer Economy
+• Order Number: State Health Officer Order August 28, 2020
+• Date Enacted: 08/28/2020 (became effective 08/31/2020)
+• Date Rescinded: 06/15/2021
+• Order Summary: California introduced a color-coded tier system (Purple, Red, Orange, Yellow) that set capacity and operational rules based on local COVID-19 metrics. Ventura County began in the Purple (most restrictive) tier on August 31, 2020, limiting many indoor business activities.
+• Impact on Quarter: Though enacted right at the end of August, the Blueprint framework governed our operations for the tail end of Q3 2020. Being initially placed in the Purple tier meant that many of our usual indoor activities were off-limits or significantly limited in capacity.
+
+• Order Name: Ventura County Local Health Emergency
+• Order Number: Declared March 12, 2020
+• Date Enacted: 03/12/2020
+• Date Rescinded: Not rescinded during 2020–2021
+• Order Summary: Ventura County’s local health emergency declaration provided the legal basis for county-level health orders and coordinated emergency measures. It aligned with the state’s proclamation, allowing local authorities to enforce closures and capacity restrictions.
+• Impact on Quarter: In Q3 2020, the county used its local emergency powers to issue additional directives consistent with the statewide rollback orders. This meant our location faced tighter local rules (including potential enforcement actions) that partially suspended our normal business operations.
+
+• Order Name: “Stay Well at Home” – Ventura Countywide Stay-Home Order
+• Order Number: Issued March 20, 2020
+• Date Enacted: 03/20/2020
+• Date Rescinded: 06/15/2021 (aligned with state reopening)
+• Order Summary: Ventura County’s companion stay-home order closed non-essential businesses and mandated residents to remain at home except for essential reasons. Over time, it was updated to allow partial reopening under strict guidelines.
+• Impact on Quarter: During Q3 2020, we operated under various amendments to this order. Although certain sectors reopened in limited form, ongoing capacity constraints, mask requirements, distancing, and risk of sudden rollback undermined our normal operations.
+
+• Order Name: “Safely Reopening Ventura County” Order
+• Order Number: Issued May 7, 2020
+• Date Enacted: 05/07/2020
+• Date Rescinded: 08/31/2020 (subsequently superseded by the Blueprint)
+• Order Summary: As part of Stage 2, Ventura County aligned with the state to allow curbside retail, limited in-store shopping, and restricted dine-in operations. Businesses had to implement social distancing and hygiene protocols.
+• Impact on Quarter: Going into Q3, we were cautiously resuming some on-site activity under these county guidelines. However, after the statewide rollback on July 13, many of these reopenings were reversed or scaled back, leaving our business again partially suspended.
+
+• Order Name: Ventura County 4th of July Closure Order
+• Order Number: Issued June 30, 2020
+• Date Enacted: 06/30/2020
+• Date Rescinded: 07/06/2020 (expired after July 5)
+• Order Summary: To prevent large holiday gatherings, Ventura County ordered beaches and parking lots closed during Independence Day weekend. This measure targeted potential hotspots for crowds to curb virus spread.
+• Impact on Quarter: While brief, it foreshadowed the county’s willingness to impose sudden targeted shutdowns. This heightened instability in Q3 2020, as our business had to prepare for abrupt operational changes and faced reduced consumer traffic during a key holiday weekend.
+
+• Order Name: Ventura County July 2020 Order – Local Implementation of State Rollback
+• Order Number: Issued July 13, 2020
+• Date Enacted: 07/13/2020
+• Date Rescinded: 10/06/2020 (parts rescinded when Ventura County moved to a less restrictive tier)
+• Order Summary: This order enforced the governor’s July 13 statewide closures at the county level, ensuring that indoor operations for restaurants, bars, gyms, personal care services, and other specified sectors remained shut or significantly curtailed.
+• Impact on Quarter: For our operations, this was a direct and immediate cause of partial suspension throughout most of Q3, preventing normal indoor services and restricting foot traffic. The order remained in effect well into September, deepening our revenue losses and limiting our workforce utilization.
+
+• Order Name: Ventura County Eviction Moratorium – Commercial Tenants
+• Order Number: Urgency Ordinance No. 4563 (and subsequent extensions)
+• Date Enacted: 03/31/2020 (retroactive coverage); extended through 09/30/2020
+• Date Rescinded: Expired 09/30/2020 for commercial evictions
+• Order Summary: This county ordinance prevented landlords from evicting commercial tenants who could not pay rent due to COVID-19 related financial hardship.
+• Impact on Quarter: During Q3 2020, although we benefited from rent deferral protections if facing revenue shortfalls, our partial suspension reduced our ability to generate normal revenue. We avoided eviction but remained under severe operating constraints while debts accumulated.
+
+• Order Name: City of Camarillo Local Emergency Proclamation
+• Order Number: EOC Director Order No. 20-1 (ratified by City Council Res. 20-36)
+• Date Enacted: 03/13/2020
+• Date Rescinded: Not rescinded during 2020–2021
+• Order Summary: This proclaimed a local emergency within Camarillo, enabling city officials to respond rapidly to COVID-19, close facilities, and enact local rules that aligned with county and state directives.
+• Impact on Quarter: Throughout Q3 2020, the city emergency status supported ongoing restrictions on business activities. For example, city-sponsored events or large gatherings were canceled, and in-person city services were limited, reducing normal avenues for local commerce.
+
+• Order Name: City of Camarillo Eviction Moratorium Orders
+• Order Number: EOC Director Order No. 20-2 and subsequent amendment
+• Date Enacted: 03/18/2020 (amended 04/23/2020)
+• Date Rescinded: Superseded for residential by state law in Sept. 2020; ended for commercial with local emergency resolution
+• Order Summary: These orders stayed commercial and residential evictions for nonpayment of rent if tenants were financially impacted by COVID-19.
+• Impact on Quarter: Similar to the county ordinance, it prevented commercial evictions within city limits through Q3 2020. However, our capacity to operate remained constrained, which meant we still suffered revenue losses despite avoiding eviction.
+
+• Order Name: Camarillo Resolution No. 2020-63 – Temporary Outdoor Dining Program
+• Order Number: 2020-63
+• Date Enacted: 06/10/2020 (approximately)
+• Date Rescinded: Phased out with full reopening 06/15/2021
+• Order Summary: This resolution allowed local restaurants to convert parking lots and sidewalks into expanded outdoor dining spaces, waiving certain zoning rules and permit fees to help offset indoor closures.
+• Impact on Quarter: Even though this measure provided limited relief, ongoing state and county restrictions on indoor dining meant many services were moved outside. We still experienced a partial suspension overall, as outdoor capacity could not fully replace normal indoor operations, particularly under weather and distancing constraints during Q3 2020.
+
+────────────────────────────────────────────────────────────────────
+2. Quarterly Revenue Data
+────────────────────────────────────────────────────────────────────
+
+In addition to the government orders discussed above, we are submitting quarterly revenue data that demonstrates the revenue comparisons for 34213421. The following table presents each quarter’s revenue amounts and percentage changes:
+
+-------------------------------------------------------------------------------------------------------------------------
+QUARTER       | 2019 REVENUE           | COMPARISON REVENUE     | DOLLAR DECLINE           | % DECLINE   | QUALIFIES
+-------------------------------------------------------------------------------------------------------------------------
+Q1 2019-2020  | $2,341,234.00         | $41,234,213.00         | $38,892,979.00          | -1661.22%   | NO
+Q2 2019-2020  | $412,341,234.00       | $4,123.00              | $412,337,111.00         | 100.00%     | YES
+Q3 2019-2020  | $1,234.00             | $4,123.00              | $2,889.00               | -234.12%    | NO
+Q4 2019-2020  | $12,341,234,123.00    | $412,342.00            | $12,340,821,781.00      | 100.00%     | YES
+Q1 2019-2021  | $2,341,234.00         | $13,423.00             | $2,327,811.00           | 99.43%      | YES
+Q2 2019-2021  | $412,341,234.00       | $234.00                | $412,341,000.00         | 100.00%     | YES
+Q3 2019-2021  | $1,234.00             | $234.00                | $1,000.00               | 81.04%      | YES
+-------------------------------------------------------------------------------------------------------------------------
+
+As shown in the revenue table above, Q2 2019-2020, Q4 2019-2020, Q1 2019-2021, Q2 2019-2021, and Q3 2019-2021 reflected sufficient revenue declines to qualify under ERC guidelines. While the quarter currently under protest (Q3 2020) does not meet the revenue decline threshold on its own, the partial suspension of our operations due to government orders provides an independent basis for ERC qualification under the CARES Act and related guidance.
+
+────────────────────────────────────────────────────────────────────
+3. Basis for Protest – Partial Suspension Due to Government Orders
+────────────────────────────────────────────────────────────────────
+
+Under IRS guidance, a business may qualify for the ERC if it experienced a more-than-nominal suspension of operations due to orders from an appropriate governmental authority. Despite being labeled a “business,” we were nonetheless significantly restricted by the various federal, state, county, and city orders enumerated above. These orders forced us to close or reduce indoor services, adjust staffing, and limit customer interaction in ways that materially affected our ability to operate. Notably:  
+• The July 13, 2020 statewide rollback and Ventura County’s corresponding local order severely restricted indoor operations, cutting off a substantial component of our normal activities for much of Q3.  
+• The city and county emergency declarations authorized further targeted measures (like the July 4th weekend closures), reflecting the ongoing possibility of sudden operational limitations.  
+• Although some rules allowed limited operations outdoors, capacity constraints and ongoing restrictions still reduced our overall output well below normal levels.  
+
+The CARES Act contemplates such situations, where mandated government actions—rather than voluntary or trivial objections—led to a partial suspension that had more than a nominal effect on business. Accordingly, the assertion that “no government orders were in effect” is incorrect. The orders listed herein were active during Q3 2020, limiting normal operations and substantiating our ERC claim.
+
+────────────────────────────────────────────────────────────────────
+Conclusion and Attestation
+────────────────────────────────────────────────────────────────────
+
+We respectfully request that you reverse the disallowance of our ERC for Q3 2020. Substantial government orders during that quarter directly affected our ability to conduct normal business operations, creating a qualifying partial suspension. Furthermore, our quarterly revenue data (though not qualifying in Q3 2020 by the revenue test alone) clearly demonstrates severe volatility in adjacent quarters, underscoring the impact of COVID-19 disruptions.
+
+Under penalties of perjury, I declare that I have examined the facts presented in this protest and accompanying documents, and to the best of my knowledge and belief, they are true, correct, and complete.
+
+Sincerely,
+
+[Signature]  
+Authorized Representative  
+34213421  
+
+────────────────────────────────────────────────────────────────────
+SOURCES:
+1. 1. ────────────────────────────────────────────────────────────────────
+2. https://www.govinfo.gov/content/pkg/FR-2020-03-18/pdf/2020-05794.pdf - Proclamation 9994 (National Emergency)
+3. https://www.gov.ca.gov/wp-content/uploads/2020/03/3.4.20-Coronavirus-SOE-Proclamation.pdf - California State of Emergency Proclamation
+4. https://www.gov.ca.gov/wp-content/uploads/2020/03/EO-N-33-20.pdf - Executive Order N-33-20 (Stay-at-Home)
+5. https://www.cdph.ca.gov/Programs/CID/DCDC/CDPH%20Document%20Library/COVID-19/HealthOfficerOrder-5-7-2020.pdf - State PH Officer Order (Stage 2 Reopening)
+6. https://www.cdph.ca.gov/Programs/CID/DCDC/CDPH%20Document%20Library/COVID-19/7-13-20-Statewide-Public-Health-Order.pdf - July 13, 2020 Statewide Rollback
+7. https://www.cdph.ca.gov/Programs/CID/DCDC/CDPH%20Document%20Library/COVID-19/8.28.20-Blueprint-Plan.pdf - Blueprint for a Safer Economy
+8. https://cdn.ventura.org/wp-content/uploads/2020/03/3.12.20-VC-Local-Health-Emergency.pdf - Ventura County Local Health Emergency
+9. https://cdn.ventura.org/wp-content/uploads/2020/03/3.20.20-VC-Stay-Well-At-Home-Order.pdf - “Stay Well at Home” County Order
+10. https://cdn.ventura.org/wp-content/uploads/2020/05/5.7.20-Ventura-Safely-Reopening-Order.pdf - “Safely Reopening Ventura County” Order
+11. https://cdn.ventura.org/wp-content/uploads/2020/06/6.30.20-4th-of-July-Beach-Closure-Order.pdf - Ventura County 4th of July Closure Order
+12. https://cdn.ventura.org/wp-content/uploads/2020/07/7.13.20-VC-Local-Rollback-Order.pdf - Ventura County July 2020 Order
+13. https://vcportal.ventura.org/boardofsupers/meetings/2020/2020-03-31/Item%206%20Ordinance%204563.pdf - Ventura County Eviction Moratorium (Commercial)
+14. https://www.cityofcamarillo.org/documents/EOC_Order_20-1.pdf - City of Camarillo Local Emergency Proclamation
+15. https://www.cityofcamarillo.org/documents/EOC_Order_20-2.pdf - City of Camarillo Eviction Moratorium Order
+16. https://www.cityofcamarillo.org/documents/Resolution2020-63-OutdoorDining.pdf - Camarillo Resolution 2020-63 (Outdoor Dining)
+
+
+
+
+
+
+
+[End of Document]

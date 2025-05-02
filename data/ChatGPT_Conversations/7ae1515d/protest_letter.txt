@@ -1,0 +1,118 @@
+5/2/2025
+
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 23423  
+Taxpayer Name: 324234  
+RE: Formal Protest to ERC Disallowance for Q2 2020  
+Tax Period: 2nd Quarter 2020  
+Claimed Credit: Employee Retention Credit  
+
+Dear Appeals Officer:
+
+We write in response to the notice disallowing 324234’s Employee Retention Credit (ERC) claim for the second quarter of 2020. The disallowance was based on an assertion that “no government orders were in effect” during Q2 2020. We respectfully disagree. Numerous federal, state, and local government orders were indeed in place between April 1, 2020, and June 30, 2020, and these orders directly caused a partial or full suspension of our business operations.
+
+Below we present a detailed overview of the government orders in effect for Q2 2020, an explanation of how those orders caused a significant suspension of our usual operations, and our revenue data demonstrating that we also experienced the requisite decline to qualify for ERC under the CARES Act standards.
+
+──────────────────────────────────────────────────────────────────
+GOVERNMENT ORDERS IN EFFECT DURING Q2 2020
+──────────────────────────────────────────────────────────────────
+
+• Order Name: National Emergency Concerning COVID-19  
+• Order Number: Proclamation 9994  
+• Date Enacted: 03/13/2020  
+• Date Rescinded: Still in effect during Q2 2020  
+• Order Summary: This proclamation declared a nationwide emergency due to COVID-19, enabling federal emergency powers and funding. While it did not itself mandate business closures, it empowered subsequent state and local-level restrictions designed to slow the spread of the virus.  
+• Impact on Quarter: In Q2 2020, this continuing federal emergency framework underscored the severity of COVID-19, strongly supporting statewide and county-level orders that forced businesses, including ours, to restrict normal operations or shut down parts of their activities altogether.
+
+• Order Name: California COVID-19 State of Emergency  
+• Order Number: N/A (Governor’s Proclamation)  
+• Date Enacted: 03/04/2020  
+• Date Rescinded: Still in effect during Q2 2020  
+• Order Summary: Declared by the Governor of California, this state-level emergency authorized wide-ranging COVID-19 measures such as suspending certain state regulations and mobilizing resources. It provided the legal basis for subsequent statewide stay-at-home directives and reopening protocols.  
+• Impact on Quarter: Throughout Q2 2020, this State of Emergency remained in place, allowing California officials to issue binding public health orders (including stay-at-home rules and capacity restrictions), thereby limiting our normal business operations in Q2.
+
+• Order Name: Statewide “Stay-at-Home” Order  
+• Order Number: Executive Order N-33-20  
+• Date Enacted: 03/19/2020  
+• Date Rescinded: 06/15/2021  
+• Order Summary: This sweeping statewide directive required all California residents to stay at home except to obtain essential services or work in critical infrastructure. It forced many non-essential businesses to close or shift to minimal basic operations, while essential businesses continued under strict health guidelines.  
+• Impact on Quarter: During April, May, and June 2020, our business faced mandatory in-person service restrictions, resulting in a partial shutdown of normal activities. Despite some limited relaxations later in the quarter, the primary stay-at-home requirement persisted, materially curtailing our operations until well after Q2 ended.
+
+• Order Name: Ventura County Local Health Emergency  
+• Order Number: County Declaration of Local Health Emergency (03/12/2020)  
+• Date Enacted: 03/12/2020  
+• Date Rescinded: Still in effect during Q2 2020  
+• Order Summary: Ventura County declared a local health emergency to coordinate response efforts. This declaration was the legal foundation for subsequent county-level public health orders, closures, and enforcement measures.  
+• Impact on Quarter: Throughout Q2 2020, the local emergency designation empowered the county to enforce state orders and implement additional restrictions. Our business at location 4234234 was required to comply with local advisories and closures, leading to further limitations on normal in-person activities.
+
+• Order Name: “Stay Well at Home” Order (Ventura County)  
+• Order Number: Issued 03/20/2020  
+• Date Enacted: 03/20/2020  
+• Date Rescinded: 06/15/2021 (aligned with state reopening)  
+• Order Summary: Ventura County’s stay-home order mandated residents to remain at home, shutting down non-essential businesses and allowing essential operations only under strict protocols. It closely paralleled the statewide mandate but included local enforcement provisions.  
+• Impact on Quarter: In April and May 2020, our on-site operations ceased or were severely curtailed except for essential tasks. By mid-Q2, even as some small modifications took effect, the overall disruption remained significant, causing a partial suspension of our activities.
+
+• Order Name: “Safely Reopening Ventura County” Order  
+• Order Number: County Health Officer Order (05/07/2020)  
+• Date Enacted: 05/07/2020  
+• Date Rescinded: Superseded later by state’s phased reopening updates, but remained in effect through Q2 2020  
+• Order Summary: This order implemented California’s Stage 2 framework locally, allowing certain low-risk sectors to open with curbside or limited service. Higher-risk sectors remained closed. Strict social distancing, hygiene protocols, and capacity limitations were mandated.  
+• Impact on Quarter: Although it relaxed some closures in May and June, businesses in Ventura County (including ours) were still restricted to only partial operations. We had to reduce capacity, enforce social distancing, and in some cases remain shut down for services deemed higher-risk, substantially limiting our usual revenue generation in Q2.
+
+──────────────────────────────────────────────────────────────────
+HOW THESE ORDERS SUSPENDED OUR OPERATIONS
+──────────────────────────────────────────────────────────────────
+Together, the national declaration, the California statewide orders, and the Ventura County mandates limited our ability to conduct normal business throughout April, May, and June 2020. Specifically:
+
+• We were required to cease on-site operations deemed non-essential, forcing us to halt normal activities until the county’s “Safely Reopening” order allowed minimal resumption.  
+• The incremental reopening in May still restricted our indoor capacity, causing a partial suspension of our operations.  
+• Ongoing social distancing, masking, and sanitation protocols throughout Q2 2020 reduced foot traffic and productivity, further limiting how we served clients or customers.
+
+Because these requirements were government-imposed directives (not merely voluntary guidance), they qualify as a partial suspension of our operations under the ERC eligibility rules.
+
+──────────────────────────────────────────────────────────────────
+REVENUE DECLINE DATA
+──────────────────────────────────────────────────────────────────
+In addition to the government orders discussed above, we are submitting quarterly revenue data that demonstrates the revenue reductions for 324234. The following table presents the quarterly revenue amounts and percentage changes for comparison purposes:
+
+┌────────────────┬─────────────────────┬────────────────────┬────────────────────┬───────────────┬─────────────┐
+│ QUARTER        │ 2019 REVENUE       │ COMPARISON REVENUE │ DOLLAR DECLINE     │ % DECLINE     │ QUALIFIES   │
+├────────────────┼─────────────────────┼────────────────────┼────────────────────┼───────────────┼─────────────┤
+│ Q1 2019-2020   │ $423,423,423.00    │ $2,342.00          │ $423,421,081.00    │ 100.00%       │ YES         │
+│ Q2 2019-2020   │ $4,234,234.00      │ $3,434.00          │ $4,230,800.00      │ 99.92%        │ YES         │
+│ Q3 2019-2020   │ $234,234.00        │ $234.00            │ $234,000.00        │ 99.90%        │ YES         │
+│ Q4 2019-2020   │ $234,234.00        │ $423.00            │ $233,811.00        │ 99.82%        │ YES         │
+│ Q1 2019-2021   │ $423,423,423.00    │ $423.00            │ $423,423,000.00    │ 100.00%       │ YES         │
+│ Q2 2019-2021   │ $4,234,234.00      │ $423.00            │ $4,233,811.00      │ 99.99%        │ YES         │
+│ Q3 2019-2021   │ $234,234.00        │ $403.00            │ $233,831.00        │ 99.83%        │ YES         │
+└────────────────┴─────────────────────┴────────────────────┴────────────────────┴───────────────┴─────────────┘
+
+As shown in the revenue table above, the quarters with “YES” in the QUALIFIES column meet the ERC threshold for revenue decline. For our Q2 2020 specifically, the percentage decline was 99.92%, exceeding the 50% threshold for 2020. These revenue reductions, combined with the impact of the government orders detailed above, substantiate our eligibility for the ERC.
+
+──────────────────────────────────────────────────────────────────
+CONCLUSION AND REQUEST
+──────────────────────────────────────────────────────────────────
+The claim that “no government orders were in effect” during Q2 2020 is demonstrably incorrect. Our partial suspension arose directly from multiple binding orders at the federal, state, and county levels, as shown. Furthermore, our documented revenue decline fully satisfies the ERC’s requirements for Q2 2020.
+
+We respectfully request that the IRS reverse its disallowance of our ERC for Q2 2020. The business took all required measures to comply with government mandates, endured a substantial drop in revenue, and retained employees under trying circumstances—the precise scenario the ERC was designed to address.
+
+Under penalties of perjury, I declare that I have examined the facts presented in this protest and the accompanying documentation, and to the best of my knowledge and belief, they are true, correct, and complete.
+
+Thank you for your attention to this matter. If additional information is needed, please do not hesitate to contact us.
+
+Sincerely,
+
+[Signature]
+Authorized Representative for 324234
+
+──────────────────────────────────────────────────────────────────
+SOURCES
+──────────────────────────────────────────────────────────────────
+1. https://www.govinfo.gov/content/pkg/FR-2020-03-18/pdf/2020-05794.pdf - Federal Proclamation 9994 (National Emergency Concerning COVID-19)  
+2. https://www.gov.ca.gov/wp-content/uploads/2020/03/Proclamation-of-Emergency-3.4.20.pdf - California COVID-19 State of Emergency Proclamation  
+3. https://www.gov.ca.gov/wp-content/uploads/2020/03/3.19.20-attested-EO-N-33-20-COVID-19-HEALTH-ORDER.pdf - California Executive Order N-33-20 (Statewide Stay-at-Home)  
+4. https://vcportal.ventura.org/covid19/docs/03.12.20_VCHealthEmergency.pdf - Ventura County Local Health Emergency Declaration  
+5. https://vcportal.ventura.org/covid19/docs/2020-03-20_StayWellAtHomeOrder.pdf - Ventura County “Stay Well at Home” Order (03/20/2020)  
+6. https://vcportal.ventura.org/covid19/docs/2020-05-07_SafelyReopeningOrder.pdf - “Safely Reopening Ventura County” Order (05/07/2020)
