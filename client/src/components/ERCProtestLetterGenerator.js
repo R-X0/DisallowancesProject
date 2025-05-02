@@ -290,15 +290,16 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
         // Job completed successfully
         console.log('Job completed successfully:', job.result);
         
-        // Clear polling interval
+        // CRITICAL FIX: Always clear polling interval when job is completed
         if (pollInterval) {
+          console.log('Clearing poll interval on job completion');
           clearInterval(pollInterval);
           setPollInterval(null);
         }
         
-        // FIX: Only process completion if we haven't done so already
-        // Check if we've already set package data to prevent duplicate calls to onGenerated
+        // Only process completion if we haven't done so already
         if (!packageData) {
+          console.log('Processing job completion for the first time');
           setProtestLetter(job.result.letter);
           
           // Create package data object
@@ -319,11 +320,11 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
           console.log('Setting package data:', newPackageData);
           setPackageData(newPackageData);
           
-          // Finally, clear loading states since we've completed
+          // Clear loading states since we've completed
           setGenerating(false);
           setProcessing(false);
           
-          // Immediately call the onGenerated callback with the package data
+          // Call the onGenerated callback with the package data
           console.log('Calling onGenerated with package data:', newPackageData);
           if (onGenerated) {
             onGenerated(newPackageData);
@@ -332,7 +333,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
           // Open the dialog with the result
           setDialogOpen(true);
         } else {
-          console.log('Job completion already processed, not calling onGenerated again');
+          console.log('Job completion already processed, not processing again');
           // Still make sure loading states are cleared
           setGenerating(false);
           setProcessing(false);
@@ -531,6 +532,13 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
   };
   
   const handleCloseDialog = () => {
+    // Make sure polling has been stopped
+    if (pollInterval) {
+      console.log('Stopping any remaining polling on dialog close');
+      clearInterval(pollInterval);
+      setPollInterval(null);
+    }
+    
     // Make sure we're still calling onGenerated with the package data when closing the dialog
     if (packageData && onGenerated) {
       console.log("Sending package data to parent on dialog close:", packageData);
