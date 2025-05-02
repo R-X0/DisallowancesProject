@@ -36,7 +36,8 @@
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.1",
     "puppeteer": "^24.3.0",
-    "uuid": "*"
+    "uuid": "*",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "concurrently": "*"

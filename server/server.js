@@ -12,6 +12,7 @@ const ercProtestRouter = require('./routes/erc-protest');
 const adminRouter = require('./routes/admin');
 const chatgptScraperRouter = require('./routes/chatgpt-scraper');
 const queueRouter = require('./routes/queue');
+const bulkUploadRouter = require('./routes/bulk-upload');
 const { authenticateUser, adminOnly } = require('./middleware/auth');
 const googleSheetsService = require('./services/googleSheetsService');
 const googleDriveService = require('./services/googleDriveService');
@@ -64,6 +65,7 @@ app.use('/api/erc-protest', ercProtestRouter);
 app.use('/api/erc-protest/admin', authenticateUser, adminOnly, adminRouter);
 app.use('/api/erc-protest/chatgpt', chatgptScraperRouter);
 app.use('/api/erc-protest/queue', queueRouter);
+app.use('/api/erc-protest/bulk-upload', bulkUploadRouter);
 
 // Debug route to check if the server is working
 app.get('/api/debug', (req, res) => {

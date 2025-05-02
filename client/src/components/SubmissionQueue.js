@@ -1,3 +1,5 @@
+// Updated SubmissionQueue.js with Bulk Upload Button
+
 import React, { useState, useEffect } from 'react';
 import { 
   Box, Typography, List, ListItem, ListItemText, 
@@ -10,11 +12,13 @@ import {
   AccessTime as TimeIcon
 } from '@mui/icons-material';
 import axios from 'axios';
+import BulkSubmissionUploader from './BulkSubmissionUploader';
 
 const SubmissionQueue = ({ onLoadSubmission }) => {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [refreshNeeded, setRefreshNeeded] = useState(false);
 
   // Function to fetch submissions for the queue
   const fetchSubmissions = async () => {
@@ -34,6 +38,7 @@ const SubmissionQueue = ({ onLoadSubmission }) => {
       setError('Error loading queue. Please try again.');
     } finally {
       setLoading(false);
+      setRefreshNeeded(false);
     }
   };
 
@@ -48,6 +53,13 @@ const SubmissionQueue = ({ onLoadSubmission }) => {
     
     return () => clearInterval(interval);
   }, []);
+
+  // Also refresh when refreshNeeded is set to true
+  useEffect(() => {
+    if (refreshNeeded) {
+      fetchSubmissions();
+    }
+  }, [refreshNeeded]);
 
   // Handle loading a submission for viewing/continuing
   const handleLoadSubmission = async (submissionId) => {
@@ -135,6 +147,12 @@ const SubmissionQueue = ({ onLoadSubmission }) => {
     }
   };
 
+  // Handle bulk upload completion
+  const handleBulkUploadComplete = (results) => {
+    // Trigger a refresh to show the new submissions
+    setRefreshNeeded(true);
+  };
+
   return (
     <Paper 
       elevation={3} 
@@ -148,18 +166,26 @@ const SubmissionQueue = ({ onLoadSubmission }) => {
     >
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
         <Typography variant="h6">Submission Queue</Typography>
-        <Tooltip title="Refresh queue">
-          <IconButton 
-            size="small" 
-            onClick={fetchSubmissions}
-            disabled={loading}
-          >
-            <Refresh />
-          </IconButton>
-        </Tooltip>
+        <Box>
+          <Tooltip title="Refresh queue">
+            <IconButton 
+              size="small" 
+              onClick={fetchSubmissions}
+              disabled={loading}
+              sx={{ mr: 1 }}
+            >
+              <Refresh />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
       
       <Divider sx={{ mb: 2 }} />
+      
+      {/* Add the Bulk Upload Button here */}
+      <Box mb={2}>
+        <BulkSubmissionUploader onUploadsComplete={handleBulkUploadComplete} />
+      </Box>
       
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
