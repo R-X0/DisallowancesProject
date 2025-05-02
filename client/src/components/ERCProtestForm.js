@@ -71,7 +71,7 @@ const ERCProtestForm = () => {
     'Q1 2021', 'Q2 2021', 'Q3 2021'
   ];
   
-  // Effect to check for prefill data from the queue display - with enhanced reliability
+  // Effect to check for prefill data - simplified without queue dependencies
   useEffect(() => {
     const loadPrefillData = () => {
       // Check both sessionStorage and localStorage
@@ -316,13 +316,6 @@ const ERCProtestForm = () => {
         });
         
         setActiveStep(2); // Move to the final step
-        
-        // Force refresh the queue after a short delay
-        setTimeout(() => {
-          console.log('Refreshing queue after submission');
-          // Dispatch a custom event that QueueDisplay.js can listen for
-          window.dispatchEvent(new CustomEvent('refreshQueue'));
-        }, 2000);
       } else {
         throw new Error(result.message || 'Submission failed');
       }

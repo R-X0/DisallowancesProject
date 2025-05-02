@@ -11,7 +11,6 @@ const pdfGenerator = require('../services/pdfGenerator');
 const urlProcessor = require('../services/urlProcessor');
 const packageCreator = require('../services/packageCreator');
 const protestDriveUploader = require('../services/protestDriveUploader');
-const jobQueue = require('../services/jobQueue');
 const multer = require('multer');
 
 // Configure multer for PDF uploads
@@ -115,7 +114,7 @@ router.post('/extract-irs-address', pdfUpload.array('pdfFiles', 5), async (req, 
   }
 });
 
-// NEW ENDPOINT: Process pasted ChatGPT content directly
+// Process pasted ChatGPT content directly
 router.post('/process-content', async (req, res) => {
   try {
     const {
@@ -144,25 +143,183 @@ router.post('/process-content', async (req, res) => {
     console.log(`Processing ChatGPT content (${chatGptContent.length} chars)`);
     console.log(`Business: ${businessName}, Period: ${timePeriod}`);
     
-    // Create a new job
-    const jobId = await jobQueue.createJob(req.body);
+    // Create unique directory for request
+    const requestId = uuidv4().substring(0, 8);
+    const outputDir = path.join(__dirname, `../../data/ChatGPT_Conversations/${requestId}`);
+    await fs.mkdir(outputDir, { recursive: true });
     
-    // Return the job ID immediately
-    res.status(202).json({
-      success: true,
-      message: 'Document generation started',
-      jobId: jobId
-    });
-    
-    // Process the job asynchronously after sending response
-    setTimeout(() => {
-      processContentJobAsync(jobId, req.body);
-    }, 100);
+    try {
+      // 1. Save the conversation content to a file
+      await fs.writeFile(
+        path.join(outputDir, 'conversation.txt'),
+        chatGptContent,
+        'utf8'
+      );
+      console.log(`Saved conversation content (${chatGptContent.length} chars)`);
+
+      // 2. Get the appropriate template based on document type
+      let templateContent = await documentGenerator.getTemplateContent(req.body.documentType || 'protestLetter');
+
+      // 3. Create business info object
+      const businessInfo = {
+        businessName: req.body.businessName,
+        ein: req.body.ein,
+        location: req.body.location,
+        timePeriod: req.body.timePeriod,
+        allTimePeriods: req.body.allTimePeriods || [req.body.timePeriod],
+        businessType: req.body.businessType || 'business',
+        documentType: req.body.documentType || 'protestLetter',
+        // Add IRS address if provided
+        irsAddress: req.body.irsAddress || '',
+        // Include all quarterly revenue data
+        q1_2019: req.body.q1_2019, 
+        q2_2019: req.body.q2_2019, 
+        q3_2019: req.body.q3_2019, 
+        q4_2019: req.body.q4_2019,
+        q1_2020: req.body.q1_2020, 
+        q2_2020: req.body.q2_2020, 
+        q3_2020: req.body.q3_2020, 
+        q4_2020: req.body.q4_2020,
+        q1_2021: req.body.q1_2021, 
+        q2_2021: req.body.q2_2021, 
+        q3_2021: req.body.q3_2021,
+        // Include additional context
+        revenueReductionInfo: req.body.revenueReductionInfo,
+        governmentOrdersInfo: req.body.governmentOrdersInfo,
+        // Include pre-calculated data if available
+        revenueDeclines: req.body.revenueDeclines,
+        qualifyingQuarters: req.body.qualifyingQuarters,
+        // Include approach focus
+        approachFocus: req.body.approachFocus || 'governmentOrders',
+        // Include new parameters
+        includeRevenueSection: req.body.includeRevenueSection !== false,
+        includeSupplyChainDisruption: req.body.includeSupplyChainDisruption || false,
+        disallowanceReason: req.body.disallowanceReason || 'no_orders',
+        customDisallowanceReason: req.body.customDisallowanceReason || '',
+        outputFormat: req.body.outputFormat || 'pdf'
+      };
+
+      // 4. Generate document using the conversation content and template
+      // Generate the initial document
+      let document = await documentGenerator.generateERCDocument(
+        businessInfo,
+        chatGptContent,
+        templateContent
+      );
+      
+      // Ensure proper SOURCES section formatting
+      document = documentGenerator.ensureProperSourcesFormat(document);
+      
+      // Save the generated document in text format
+      const documentFileName = req.body.documentType === 'form886A' ? 'form_886a.txt' : 'protest_letter.txt';
+      await fs.writeFile(
+        path.join(outputDir, documentFileName),
+        document,
+        'utf8'
+      );
+      
+      // 5. Process URLs in the document and download as PDFs
+      console.log('Starting URL extraction and download process...');
+      const { letter: updatedDocument, attachments } = await urlProcessor.extractAndDownloadUrls(
+        document, 
+        outputDir
+      );
+      
+      console.log(`URL processing complete. Downloaded ${attachments.length} attachments.`);
+      for (const attachment of attachments) {
+        console.log(`- ${attachment.filename} (from ${attachment.originalUrl})`);
+      }
+      
+      // Save the updated document with attachment references
+      const updatedFileName = req.body.documentType === 'form886A' ? 'form_886a_with_attachments.txt' : 'protest_letter_with_attachments.txt';
+      await fs.writeFile(
+        path.join(outputDir, updatedFileName),
+        updatedDocument,
+        'utf8'
+      );
+      
+      // 6. Generate PDF version of the document
+      const pdfFileName = req.body.documentType === 'form886A' ? 'form_886a.pdf' : 'protest_letter.pdf';
+      const pdfPath = path.join(outputDir, pdfFileName);
+      await pdfGenerator.generatePdf(updatedDocument, pdfPath);
+      
+      // 7. Generate DOCX version if requested
+      let docxPath = null;
+      if (req.body.outputFormat === 'docx') {
+        const docxFileName = req.body.documentType === 'form886A' ? 'form_886a.docx' : 'protest_letter.docx';
+        docxPath = path.join(outputDir, docxFileName);
+        await documentGenerator.generateDocx(updatedDocument, docxPath);
+      }
+      
+      // 8. Create a complete package as a ZIP file
+      const packageName = req.body.documentType === 'form886A' ? 'form_886a_package.zip' : 'complete_protest_package.zip';
+      const zipPath = path.join(outputDir, packageName);
+      
+      console.log(`Creating package with ${attachments.length} attachments`);
+      // Use the correct format when creating the package
+      await packageCreator.createPackage(
+        req.body.outputFormat === 'docx' ? docxPath : pdfPath, 
+        attachments, 
+        zipPath, 
+        req.body.documentType,
+        req.body.outputFormat
+      );
+      
+      // 9. Upload to Google Drive if tracking ID is provided
+      let driveUrls = null;
+      if (req.body.trackingId) {
+        try {
+          console.log(`Tracking ID provided: ${req.body.trackingId}, uploading to Google Drive...`);
+          driveUrls = await protestDriveUploader.uploadToGoogleDrive(
+            req.body.trackingId,
+            req.body.businessName,
+            pdfPath,
+            zipPath,
+            docxPath
+          );
+          console.log(`Upload complete. Drive URLs:`, driveUrls);
+        } catch (driveError) {
+          console.error('Error uploading to Google Drive:', driveError);
+          // Continue anyway, this shouldn't fail the whole request
+        }
+      }
+
+      // 10. Send successful result
+      const result = {
+        outputPath: outputDir,
+        letter: updatedDocument,
+        pdfPath: pdfPath,
+        docxPath,
+        attachments,
+        zipPath,
+        packageFilename: path.basename(zipPath)
+      };
+      
+      // Add Google Drive URLs if available
+      if (driveUrls) {
+        result.googleDriveLink = driveUrls.folderLink;
+        result.protestLetterLink = driveUrls.protestLetterLink;
+        result.zipPackageLink = driveUrls.zipPackageLink;
+      }
+      
+      res.status(200).json({
+        success: true,
+        message: 'Document generated successfully',
+        result
+      });
+
+    } catch (processingError) {
+      console.error('Error during document generation:', processingError);
+      res.status(500).json({
+        success: false,
+        message: `Error processing document: ${processingError.message}`
+      });
+    }
   } catch (error) {
-    console.error('Error initiating document generation:', error);
+    console.error('Critical error in document processing:', error);
     res.status(500).json({
       success: false,
-      message: `Error initiating document generation: ${error.message}`
+      message: `Critical error: ${error.message}`
     });
   }
 });
@@ -193,303 +350,5 @@ router.post('/process-chatgpt', async (req, res) => {
     });
   }
 });
-
-// Add a new endpoint to check job status with improved error handling
-router.get('/job-status/:jobId', async (req, res) => {
-  try {
-    const { jobId } = req.params;
-    
-    // Add request timeout handling
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timed out')), 30000);
-    });
-    
-    // Wrap the job fetch in a promise to race with timeout
-    const fetchJobPromise = new Promise(async (resolve) => {
-      try {
-        const job = await jobQueue.getJob(jobId);
-        resolve(job);
-      } catch (err) {
-        console.error(`Error fetching job ${jobId}:`, err);
-        resolve(null); // Return null instead of rejecting to handle in next block
-      }
-    });
-    
-    // Race the job fetch with timeout
-    const job = await Promise.race([fetchJobPromise, timeoutPromise]);
-    
-    if (!job) {
-      return res.status(404).json({
-        success: false,
-        message: 'Job not found or access error'
-      });
-    }
-    
-    // Return job status
-    res.status(200).json({
-      success: true,
-      job: {
-        id: job.id,
-        status: job.status,
-        created: job.created,
-        updated: job.updated,
-        progress: job.progress || 0,
-        result: job.status === 'completed' ? job.result : null,
-        error: job.status === 'failed' ? job.error : null
-      }
-    });
-  } catch (error) {
-    console.error('Error checking job status:', error);
-    
-    // Determine if it's a timeout error
-    const isTimeout = error.message === 'Request timed out';
-    
-    res.status(isTimeout ? 504 : 500).json({
-      success: false,
-      message: isTimeout ? 
-        'Timeout while checking job status. The job is still processing in the background.' :
-        `Error checking job status: ${error.message}`
-    });
-  }
-});
-
-// Helper function to process the job with pasted content asynchronously
-async function processContentJobAsync(jobId, requestData) {
-  try {
-    // Update job status to processing
-    await jobQueue.updateJob(jobId, { 
-      status: 'processing_content',
-      progress: 5,
-      message: 'Processing conversation content'
-    });
-    
-    // Create unique directory for request
-    const requestId = uuidv4().substring(0, 8);
-    const outputDir = path.join(__dirname, `../../data/ChatGPT_Conversations/${requestId}`);
-    await fs.mkdir(outputDir, { recursive: true });
-
-    try {
-      // 1. Save the conversation content to a file
-      const conversationContent = requestData.chatGptContent;
-      await fs.writeFile(
-        path.join(outputDir, 'conversation.txt'),
-        conversationContent,
-        'utf8'
-      );
-      console.log(`Saved conversation content (${conversationContent.length} chars)`);
-
-      await jobQueue.updateJob(jobId, { 
-        status: 'preparing_document',
-        progress: 30,
-        message: 'Preparing document template'
-      });
-      
-      // 2. Get the appropriate template based on document type
-      let templateContent = await documentGenerator.getTemplateContent(requestData.documentType || 'protestLetter');
-
-      // 3. Create business info object
-      const businessInfo = {
-        businessName: requestData.businessName,
-        ein: requestData.ein,
-        location: requestData.location,
-        timePeriod: requestData.timePeriod,
-        allTimePeriods: requestData.allTimePeriods || [requestData.timePeriod],
-        businessType: requestData.businessType || 'business',
-        documentType: requestData.documentType || 'protestLetter',
-        // Add IRS address if provided
-        irsAddress: requestData.irsAddress || '',
-        // Include all quarterly revenue data
-        q1_2019: requestData.q1_2019, 
-        q2_2019: requestData.q2_2019, 
-        q3_2019: requestData.q3_2019, 
-        q4_2019: requestData.q4_2019,
-        q1_2020: requestData.q1_2020, 
-        q2_2020: requestData.q2_2020, 
-        q3_2020: requestData.q3_2020, 
-        q4_2020: requestData.q4_2020,
-        q1_2021: requestData.q1_2021, 
-        q2_2021: requestData.q2_2021, 
-        q3_2021: requestData.q3_2021,
-        // Include additional context
-        revenueReductionInfo: requestData.revenueReductionInfo,
-        governmentOrdersInfo: requestData.governmentOrdersInfo,
-        // Include pre-calculated data if available
-        revenueDeclines: requestData.revenueDeclines,
-        qualifyingQuarters: requestData.qualifyingQuarters,
-        // Include approach focus
-        approachFocus: requestData.approachFocus || 'governmentOrders',
-        // Include new parameters
-        includeRevenueSection: requestData.includeRevenueSection !== false,
-        includeSupplyChainDisruption: requestData.includeSupplyChainDisruption || false,
-        disallowanceReason: requestData.disallowanceReason || 'no_orders',
-        customDisallowanceReason: requestData.customDisallowanceReason || '',
-        outputFormat: requestData.outputFormat || 'pdf'
-      };
-
-      // 4. Generate document using the conversation content and template
-      await jobQueue.updateJob(jobId, { 
-        status: 'generating_document',
-        progress: 40,
-        message: 'Generating document'
-      });
-      
-      // Generate the initial document
-      let document = await documentGenerator.generateERCDocument(
-        businessInfo,
-        conversationContent,
-        templateContent
-      );
-      
-      // Ensure proper SOURCES section formatting
-      document = documentGenerator.ensureProperSourcesFormat(document);
-      
-      // Save the generated document in text format
-      const documentFileName = requestData.documentType === 'form886A' ? 'form_886a.txt' : 'protest_letter.txt';
-      await fs.writeFile(
-        path.join(outputDir, documentFileName),
-        document,
-        'utf8'
-      );
-      
-      // 5. Process URLs in the document and download as PDFs
-      await jobQueue.updateJob(jobId, { 
-        status: 'extracting_urls',
-        progress: 60,
-        message: 'Extracting and downloading URLs'
-      });
-      
-      console.log('Starting URL extraction and download process...');
-      const { letter: updatedDocument, attachments } = await urlProcessor.extractAndDownloadUrls(
-        document, 
-        outputDir
-      );
-      
-      console.log(`URL processing complete. Downloaded ${attachments.length} attachments.`);
-      for (const attachment of attachments) {
-        console.log(`- ${attachment.filename} (from ${attachment.originalUrl})`);
-      }
-      
-      // Save the updated document with attachment references
-      const updatedFileName = requestData.documentType === 'form886A' ? 'form_886a_with_attachments.txt' : 'protest_letter_with_attachments.txt';
-      await fs.writeFile(
-        path.join(outputDir, updatedFileName),
-        updatedDocument,
-        'utf8'
-      );
-      
-      // 6. Generate PDF version of the document
-      await jobQueue.updateJob(jobId, { 
-        status: 'generating_pdf',
-        progress: 75,
-        message: 'Generating PDF'
-      });
-      
-      const pdfFileName = requestData.documentType === 'form886A' ? 'form_886a.pdf' : 'protest_letter.pdf';
-      const pdfPath = path.join(outputDir, pdfFileName);
-      await pdfGenerator.generatePdf(updatedDocument, pdfPath);
-      
-      // 7. Generate DOCX version if requested
-      let docxPath = null;
-      if (requestData.outputFormat === 'docx') {
-        await jobQueue.updateJob(jobId, { 
-          status: 'generating_docx',
-          progress: 80,
-          message: 'Generating DOCX'
-        });
-        
-        const docxFileName = requestData.documentType === 'form886A' ? 'form_886a.docx' : 'protest_letter.docx';
-        docxPath = path.join(outputDir, docxFileName);
-        await documentGenerator.generateDocx(updatedDocument, docxPath);
-      }
-      
-      // 8. Create a complete package as a ZIP file
-      await jobQueue.updateJob(jobId, { 
-        status: 'creating_package',
-        progress: 85,
-        message: 'Creating package'
-      });
-      
-      const packageName = requestData.documentType === 'form886A' ? 'form_886a_package.zip' : 'complete_protest_package.zip';
-      const zipPath = path.join(outputDir, packageName);
-      
-      console.log(`Creating package with ${attachments.length} attachments`);
-      // Use the correct format when creating the package
-      await packageCreator.createPackage(
-        requestData.outputFormat === 'docx' ? docxPath : pdfPath, 
-        attachments, 
-        zipPath, 
-        requestData.documentType,
-        requestData.outputFormat
-      );
-      
-      // 9. Upload to Google Drive if tracking ID is provided
-      let driveUrls = null;
-      if (requestData.trackingId) {
-        await jobQueue.updateJob(jobId, { 
-          status: 'uploading',
-          progress: 90,
-          message: 'Uploading to Google Drive'
-        });
-        
-        try {
-          console.log(`Tracking ID provided: ${requestData.trackingId}, uploading to Google Drive...`);
-          driveUrls = await protestDriveUploader.uploadToGoogleDrive(
-            requestData.trackingId,
-            requestData.businessName,
-            pdfPath,
-            zipPath,
-            docxPath
-          );
-          console.log(`Upload complete. Drive URLs:`, driveUrls);
-        } catch (driveError) {
-          console.error('Error uploading to Google Drive:', driveError);
-          // Continue anyway, this shouldn't fail the whole request
-        }
-      }
-
-      // 10. Update job with successful result
-      const result = {
-        outputPath: outputDir,
-        letter: updatedDocument,
-        pdfPath: pdfPath,
-        docxPath,
-        attachments,
-        zipPath,
-        packageFilename: path.basename(zipPath)
-      };
-      
-      // Add Google Drive URLs if available
-      if (driveUrls) {
-        result.googleDriveLink = driveUrls.folderLink;
-        result.protestLetterLink = driveUrls.protestLetterLink;
-        result.zipPackageLink = driveUrls.zipPackageLink;
-      }
-      
-      await jobQueue.updateJob(jobId, { 
-        status: 'completed',
-        progress: 100,
-        message: 'Document generation complete',
-        result
-      });
-      
-      console.log(`Job ${jobId} completed successfully`);
-
-    } catch (processingError) {
-      console.error('Error during document generation:', processingError);
-      
-      // Update job with error
-      await jobQueue.updateJob(jobId, { 
-        status: 'failed',
-        error: `Error processing document: ${processingError.message}`
-      });
-    }
-  } catch (outerError) {
-    console.error('Critical error in job processing:', outerError);
-    await jobQueue.updateJob(jobId, { 
-      status: 'failed',
-      error: `Critical error: ${outerError.message}`
-    });
-  }
-}
 
 module.exports = router;

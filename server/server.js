@@ -1,4 +1,4 @@
-// server/server.js (updated with job handling improvements)
+// server/server.js
 
 const express = require('express');
 const path = require('path');
@@ -11,12 +11,9 @@ const fsSync = require('fs');
 const ercProtestRouter = require('./routes/erc-protest');
 const adminRouter = require('./routes/admin');
 const chatgptScraperRouter = require('./routes/chatgpt-scraper');
-const mongodbQueueRouter = require('./routes/mongodb-queue'); // MongoDB queue router
 const { authenticateUser, adminOnly } = require('./middleware/auth');
 const googleSheetsService = require('./services/googleSheetsService');
 const googleDriveService = require('./services/googleDriveService');
-const { connectToDatabase } = require('./db-connection'); // Import database connection
-const jobQueue = require('./services/jobQueue');
 
 // Load environment variables
 dotenv.config();
@@ -52,20 +49,11 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// MODIFIED: Completely silent logging for MongoDB queue and frequent endpoints
+// Logging middleware - simplified without queue endpoints
 app.use((req, res, next) => {
-  // Skip logging for MongoDB queue endpoint and other frequent calls
-  if (req.url.startsWith('/api/mongodb-queue') || 
-      req.url.includes('ping') ||
-      req.url.includes('status')) {
-    return next();
-  }
-  
-  // Log only important endpoints
   if (req.method === 'POST' || req.url.includes('admin') || req.url.includes('submit')) {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   }
-  
   next();
 });
 
@@ -73,7 +61,6 @@ app.use((req, res, next) => {
 app.use('/api/erc-protest', ercProtestRouter);
 app.use('/api/erc-protest/admin', authenticateUser, adminOnly, adminRouter);
 app.use('/api/erc-protest/chatgpt', chatgptScraperRouter);
-app.use('/api/mongodb-queue', mongodbQueueRouter); // MongoDB queue router
 
 // Debug route to check if the server is working
 app.get('/api/debug', (req, res) => {
@@ -87,7 +74,6 @@ async function createDirectories() {
       path.join(__dirname, 'uploads/temp'),
       path.join(__dirname, 'data/ERC_Disallowances'),
       path.join(__dirname, 'data/ChatGPT_Conversations'),
-      path.join(__dirname, 'data/jobs'), // Add jobs directory
       path.join(__dirname, 'config')
     ];
     
@@ -103,26 +89,6 @@ async function createDirectories() {
 // Initialize services
 async function initializeServices() {
   try {
-    // Initialize job queue
-    await jobQueue.initializeJobsDirectory();
-    console.log('Job queue initialized');
-    
-    // Run a cleanup of old jobs (older than 24 hours)
-    const cleanedJobs = await jobQueue.cleanupOldJobs(24);
-    if (cleanedJobs > 0) {
-      console.log(`Cleaned up ${cleanedJobs} old jobs`);
-    }
-    
-    // Recover any stalled jobs
-    const recoveredJobs = await jobQueue.recoverStalledJobs(30); // 30 minutes stalled threshold
-    if (recoveredJobs > 0) {
-      console.log(`Recovered ${recoveredJobs} stalled jobs`);
-    }
-
-    // Initialize MongoDB connection
-    console.log('Connecting to MongoDB...');
-    const mongoConnected = await connectToDatabase();
-    
     // Initialize Google Sheets
     await googleSheetsService.initialize();
     
@@ -130,17 +96,6 @@ async function initializeServices() {
     await googleDriveService.initialize();
     
     console.log('All services initialized successfully');
-    
-    // Set up periodic job queue maintenance
-    setInterval(async () => {
-      try {
-        await jobQueue.cleanupOldJobs(24);
-        await jobQueue.recoverStalledJobs(30);
-      } catch (error) {
-        console.error('Error during scheduled job queue maintenance:', error);
-      }
-    }, 30 * 60 * 1000); // Run every 30 minutes
-    
   } catch (error) {
     console.error('Failed to initialize services:', error);
     console.log('The app will continue, but some services may not work');
@@ -170,11 +125,11 @@ if (isProduction) {
   });
 }
 
-// UPDATED: Start the server with increased timeout
+// Start the server with increased timeout
 const server = app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT} in ${isProduction ? 'production' : 'development'} mode`);
   
-  // Set timeout to 30 minutes (30 * 60 * 1000 ms) for long-running connections
+  // Set timeout to 30 minutes for long-running connections
   server.timeout = 1800000;
   
   // Also increase header and body parser timeouts
