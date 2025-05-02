@@ -411,7 +411,25 @@ const ERCProtestForm = () => {
       const submissionData = {
         ...formData,
         status: 'Gathering data',
-        submissionData: {}
+        submissionData: {
+          // Include all the important fields explicitly to ensure they're saved
+          governmentOrdersInfo: formData.governmentOrdersInfo,
+          revenueReductionInfo: formData.revenueReductionInfo,
+          isControlledGroup: formData.isControlledGroup,
+          
+          // Include all revenue data fields
+          q1_2019: formData.q1_2019,
+          q2_2019: formData.q2_2019,
+          q3_2019: formData.q3_2019,
+          q4_2019: formData.q4_2019,
+          q1_2020: formData.q1_2020,
+          q2_2020: formData.q2_2020,
+          q3_2020: formData.q3_2020,
+          q4_2020: formData.q4_2020,
+          q1_2021: formData.q1_2021,
+          q2_2021: formData.q2_2021,
+          q3_2021: formData.q3_2021
+        }
       };
       
       // Add quarter information if available
@@ -486,21 +504,26 @@ const ERCProtestForm = () => {
       businessWebsite: businessWebsite || '',
       naicsCode: naicsCode || '',
       timePeriods: timePeriods || [],
-      governmentOrdersInfo: governmentOrdersInfo || '',
-      revenueReductionInfo: revenueReductionInfo || '',
+      // Check both top-level and submissionData for these fields
+      governmentOrdersInfo: governmentOrdersInfo || 
+                         (submissionData?.governmentOrdersInfo) || '',
+      revenueReductionInfo: revenueReductionInfo || 
+                         (submissionData?.revenueReductionInfo) || '',
       trackingId: submissionId || '',
-      isControlledGroup: isControlledGroup || false,
-      q1_2019: q1_2019 || '',
-      q2_2019: q2_2019 || '',
-      q3_2019: q3_2019 || '',
-      q4_2019: q4_2019 || '',
-      q1_2020: q1_2020 || '',
-      q2_2020: q2_2020 || '',
-      q3_2020: q3_2020 || '',
-      q4_2020: q4_2020 || '',
-      q1_2021: q1_2021 || '',
-      q2_2021: q2_2021 || '',
-      q3_2021: q3_2021 || ''
+      isControlledGroup: isControlledGroup || 
+                      (submissionData?.isControlledGroup) || false,
+      // Check both top-level and submissionData for revenue fields
+      q1_2019: q1_2019 || (submissionData?.q1_2019) || '',
+      q2_2019: q2_2019 || (submissionData?.q2_2019) || '',
+      q3_2019: q3_2019 || (submissionData?.q3_2019) || '',
+      q4_2019: q4_2019 || (submissionData?.q4_2019) || '',
+      q1_2020: q1_2020 || (submissionData?.q1_2020) || '',
+      q2_2020: q2_2020 || (submissionData?.q2_2020) || '',
+      q3_2020: q3_2020 || (submissionData?.q3_2020) || '',
+      q4_2020: q4_2020 || (submissionData?.q4_2020) || '',
+      q1_2021: q1_2021 || (submissionData?.q1_2021) || '',
+      q2_2021: q2_2021 || (submissionData?.q2_2021) || '',
+      q3_2021: q3_2021 || (submissionData?.q3_2021) || ''
     });
     
     // Set protest letter data if available
