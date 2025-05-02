@@ -279,14 +279,6 @@ const ERCProtestForm = () => {
           console.log(`Including processed quarter in submission: ${protestLetterData.quarter}`);
           submitData.append('processedQuarter', protestLetterData.quarter);
         }
-        
-        // Debug log to verify the data was added to FormData
-        console.log('FormData after adding paths:', { 
-          packagePath: submitData.get('protestPackagePath'), 
-          letterPath: submitData.get('protestLetterPath'),
-          trackingId: submitData.get('trackingId'),
-          processedQuarter: submitData.get('processedQuarter')
-        });
       } else {
         console.warn('No protest letter data available for submission');
       }
@@ -642,19 +634,6 @@ const ERCProtestForm = () => {
                 >
                   Back
                 </Button>
-              </Box>
-              
-              {/* Debug section to show current protestLetterData */}
-              <Box mt={3} p={2} bgcolor="grey.100" borderRadius={1}>
-                <Typography variant="subtitle2">Debug - Current Document Data:</Typography>
-                <pre style={{ overflow: 'auto', maxHeight: '100px' }}>
-                  {protestLetterData ? JSON.stringify(protestLetterData, null, 2) : 'No data yet'}
-                </pre>
-                {formData.trackingId && (
-                  <Typography variant="body2" color="primary">
-                    Using tracking ID: {formData.trackingId}
-                  </Typography>
-                )}
               </Box>
             </StepContent>
           </Step>

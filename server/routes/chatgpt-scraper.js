@@ -564,31 +564,4 @@ router.post('/process-content', async (req, res) => {
   }
 });
 
-// Old endpoint for backward compatibility - redirects to new process
-router.post('/process-chatgpt', async (req, res) => {
-  try {
-    const { chatGptLink } = req.body;
-
-    // Validate required inputs
-    if (!chatGptLink) {
-      return res.status(400).json({
-        success: false,
-        message: 'ChatGPT conversation link is required'
-      });
-    }
-    
-    // Return a helpful message suggesting to use the new process
-    res.status(202).json({
-      success: false,
-      message: 'This endpoint is deprecated. Please use /process-content with pasted conversation text instead.',
-    });
-  } catch (error) {
-    console.error('Error in legacy process:', error);
-    res.status(500).json({
-      success: false,
-      message: `Error: ${error.message}`
-    });
-  }
-});
-
 module.exports = router;
