@@ -114,7 +114,7 @@ router.post('/extract-irs-address', pdfUpload.array('pdfFiles', 5), async (req, 
   }
 });
 
-// Job status endpoint - NEW
+// Job status endpoint - UPDATED TO REDUCE LOGGING
 router.get('/job-status/:jobId', async (req, res) => {
   try {
     const { jobId } = req.params;
@@ -126,7 +126,7 @@ router.get('/job-status/:jobId', async (req, res) => {
       });
     }
     
-    console.log(`Checking status for job: ${jobId}`);
+    // Removed console.log for job status checking to reduce console spam
     
     // Get path based on jobId
     const outputDir = path.join(__dirname, `../../data/ChatGPT_Conversations/${jobId}`);
@@ -137,7 +137,7 @@ router.get('/job-status/:jobId', async (req, res) => {
       try {
         const statusData = await fs.readFile(statusFilePath, 'utf8');
         const job = JSON.parse(statusData);
-        console.log(`Job status from file: ${job.status}, progress: ${job.progress}%`);
+        // Removed status logging here to reduce console spam
         return res.status(200).json({
           success: true,
           job
@@ -221,7 +221,7 @@ router.get('/job-status/:jobId', async (req, res) => {
       });
     } else if (fsSync.existsSync(outputDir)) {
       // Job exists but is still in progress
-      console.log(`Job ${jobId} exists but is still processing`);
+      // Removed verbose logging here
       
       // Check which step we're at based on existing files
       let status = 'processing_content';
@@ -269,7 +269,7 @@ router.get('/job-status/:jobId', async (req, res) => {
       });
     } else {
       // Job doesn't exist or ID is invalid
-      console.log(`Job directory not found for ID: ${jobId}`);
+      // Removed verbose logging
       return res.status(404).json({
         success: false,
         message: 'Job not found'

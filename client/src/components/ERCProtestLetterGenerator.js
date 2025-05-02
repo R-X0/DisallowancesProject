@@ -178,6 +178,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
   const [customDisallowanceReason, setCustomDisallowanceReason] = useState('');
   const [includeSupplyChainDisruption, setIncludeSupplyChainDisruption] = useState(false);
   const [extractedIrsAddress, setExtractedIrsAddress] = useState(''); // Add state for extracted address
+  const [previousStatus, setPreviousStatus] = useState(null); // Add state for tracking previous status
 
   // Initialize selected time period when form data changes
   useEffect(() => {
@@ -257,7 +258,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
     }
     
     try {
-      console.log(`Polling job status for jobId: ${jobId}`);
+      // Removed console.log for polling to reduce console output
       const response = await axios.get(`/api/erc-protest/chatgpt/job-status/${jobId}`);
       
       if (!response.data || !response.data.success) {
@@ -266,7 +267,11 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
       }
       
       const job = response.data.job;
-      console.log(`Job status: ${job.status}, Progress: ${job.progress || 0}%`);
+      // Only log status changes, not every poll
+      if (job.status !== previousStatus) {
+        console.log(`Job status changed: ${job.status}, Progress: ${job.progress || 0}%`);
+        setPreviousStatus(job.status);
+      }
       
       // Update UI based on job status
       if (job.status === 'processing_content') {
@@ -288,7 +293,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
         setProcessingStep(Math.max(4.5, job.progress / 20));
       } else if (job.status === 'completed') {
         // Job completed successfully
-        console.log('Job completed successfully:', job.result);
+        console.log('Job completed successfully');
         
         // CRITICAL FIX: Always clear polling interval when job is completed
         if (pollInterval) {
@@ -317,7 +322,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
             zipPackageLink: job.result.zipPackageLink
           };
           
-          console.log('Setting package data:', newPackageData);
+          console.log('Setting package data');
           setPackageData(newPackageData);
           
           // Clear loading states since we've completed
@@ -325,7 +330,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
           setProcessing(false);
           
           // Call the onGenerated callback with the package data
-          console.log('Calling onGenerated with package data:', newPackageData);
+          console.log('Calling onGenerated with package data');
           if (onGenerated) {
             onGenerated(newPackageData);
           }
@@ -351,9 +356,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
         setError(`Failed to generate document: ${job.error}`);
       }
     } catch (error) {
-      console.error('Error checking job status:', error);
-      
-      // Check for specific error types to handle
+      // Don't log every network error during polling - it clutters the console
       if (error.response && error.response.status === 404) {
         console.log("Job not found, may have been removed");
         if (pollInterval) {
@@ -363,12 +366,10 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
           setGenerating(false);
           setError("Job not found or timed out. Please try again.");
         }
-      } else {
-        // Network error or other issue, keep polling
-        console.log("Will retry polling on next interval");
       }
+      // Remove other polling error logs to reduce noise
     }
-  }, [documentType, onGenerated, outputFormat, pollInterval, pollingStartTime, selectedTimePeriod, packageData]); // Added packageData to dependencies
+  }, [documentType, onGenerated, outputFormat, pollInterval, pollingStartTime, selectedTimePeriod, packageData, previousStatus]); // Added dependencies
 
   // Function to generate protest letter using our LLM API
   const generateProtestLetter = async () => {
