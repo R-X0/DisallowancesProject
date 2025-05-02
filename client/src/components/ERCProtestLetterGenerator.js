@@ -293,7 +293,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
     }
   };
 
-  // Function to poll for job status
+  // FIXED Function to poll for job status
   const pollJobStatus = useCallback(async (jobId) => {
     if (!jobId) return;
     
@@ -302,18 +302,12 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
     
     // Check if we've exceeded the max polling time
     if (pollingStartTime && (currentTime - pollingStartTime > maxPollingTime)) {
-      clearInterval(pollInterval);
-      setTimeoutWarning(true);
-      
-      // Continue with reduced frequency polling (every 30 seconds)
-      const newPollInterval = setInterval(() => {
-        console.log("Continuing with background polling after timeout warning...");
-        pollJobStatus(jobId);
-      }, 30000);
-      
-      setPollInterval(newPollInterval);
-      setPollingStartTime(currentTime); // Reset the polling start time
-      return;
+      // Don't clear the interval here, we still want to keep polling
+      // Just show the warning if it's not already shown
+      if (!timeoutWarning) {
+        setTimeoutWarning(true);
+        console.log("Showing timeout warning but continuing to poll in background");
+      }
     }
     
     try {
@@ -346,7 +340,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
         // Job completed successfully
         console.log('Job completed successfully:', job.result);
         
-        // Clear warning if it was shown
+        // CRITICAL FIX: Always clear the timeout warning, even if it was shown before
         setTimeoutWarning(false);
         
         // Clear polling interval
@@ -362,7 +356,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
           pdfPath: job.result.pdfPath,
           docxPath: job.result.docxPath,
           zipPath: job.result.zipPath,
-          attachments: job.result.attachments,
+          attachments: job.result.attachments || [],
           packageFilename: job.result.packageFilename || 'complete_package.zip',
           quarter: selectedTimePeriod,
           outputFormat: outputFormat,
@@ -397,6 +391,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
         console.error(`Job failed: ${job.error}`);
         setProcessing(false);
         setGenerating(false);
+        setTimeoutWarning(false); // Clear timeout warning on failure too
         setError(`Failed to generate document: ${job.error}`);
       }
     } catch (error) {
@@ -404,8 +399,12 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
       
       // Don't stop polling on network errors - just skip this attempt
       console.log("Will retry polling on next interval");
+      
+      // Don't clear timeout warnings here either - keep them visible
+      // But don't show new ones for network errors to avoid confusion
+      // Only the main setTimeout above should trigger the timeout warning
     }
-  }, [documentType, onGenerated, outputFormat, pollInterval, pollingStartTime, selectedTimePeriod]);
+  }, [documentType, onGenerated, outputFormat, pollInterval, pollingStartTime, selectedTimePeriod, timeoutWarning]);
 
   // Function to generate protest letter using our LLM API
   const generateProtestLetter = async () => {
@@ -539,21 +538,22 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
     } catch (error) {
       console.error('Error generating document:', error);
       
-      // MODIFIED HERE: Don't show timeout errors to the user
-      if (!error.message.includes('timeout') && !error.message.includes('exceeded')) {
+      // FIXED: Continue polling even on timeout errors, but show a user-friendly message
+      if (error.message.includes('timeout') || error.message.includes('exceeded')) {
+        console.log("Document generation taking longer than expected, continuing in background");
+        setTimeoutWarning(true);
+        // Don't reset processing state so user knows it's still working
+        // Don't clear poll interval - let it continue
+      } else {
+        // Only stop polling and show error for non-timeout errors
         setProcessing(false);
         setGenerating(false);
         setError(`Failed to generate document: ${error.message}`);
-      } else {
-        // Just log the timeout but don't show error to user
-        console.log("Document generation taking longer than expected, continuing in background");
-        // Don't reset processing state so user knows it's still working
-        setTimeoutWarning(true);
-      }
-      
-      if (pollInterval) {
-        clearInterval(pollInterval);
-        setPollInterval(null);
+        
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          setPollInterval(null);
+        }
       }
     }
   };
