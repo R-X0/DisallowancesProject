@@ -292,12 +292,12 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
     }
   };
 
-  // Function to poll for job status
+  // Function to poll for job status with improved error handling
   const pollJobStatus = useCallback(async (jobId) => {
     if (!jobId) return;
     
     const currentTime = new Date().getTime();
-    const maxPollingTime = 300000; // 5 minutes in milliseconds
+    const maxPollingTime = 600000; // 10 minutes in milliseconds
     
     // Check if we've exceeded the max polling time
     if (pollingStartTime && (currentTime - pollingStartTime > maxPollingTime)) {
@@ -305,10 +305,12 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
     }
     
     try {
+      console.log(`Polling job status for jobId: ${jobId}`);
       const response = await axios.get(`/api/erc-protest/chatgpt/job-status/${jobId}`);
       
-      if (!response.data.success) {
-        throw new Error(response.data.message || 'Failed to check job status');
+      if (!response.data || !response.data.success) {
+        console.log(`Job status poll failed: ${response.data?.message || 'Unknown error'}`);
+        return;
       }
       
       const job = response.data.job;
@@ -317,19 +319,21 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
       // Update UI based on job status
       if (job.status === 'processing_content') {
         setProcessingMessage('Processing ChatGPT conversation content...');
-        setProcessingStep(2);
-      } else if (job.status === 'preparing_document' || job.status === 'generating_document') {
+        setProcessingStep(Math.max(1, job.progress / 20)); // Map 0-100 to 0-5 steps
+      } else if (job.status === 'generating_document') {
         setProcessingMessage(documentType === 'protestLetter' ? 
           'Generating protest letter...' : 
           'Generating Form 886-A document...');
-        setProcessingStep(3);
+        setProcessingStep(Math.max(2, job.progress / 20));
       } else if (job.status === 'extracting_urls') {
         setProcessingMessage('Converting referenced links to PDF attachments...');
-        setProcessingStep(4);
-      } else if (job.status === 'generating_pdf' || job.status === 'generating_docx' || 
-                job.status === 'creating_package' || job.status === 'uploading') {
+        setProcessingStep(Math.max(3, job.progress / 20));
+      } else if (job.status === 'generating_pdf' || job.status === 'generating_docx') {
+        setProcessingMessage(`Creating ${job.status === 'generating_pdf' ? 'PDF' : 'Word document'}...`);
+        setProcessingStep(Math.max(4, job.progress / 20));
+      } else if (job.status === 'creating_package' || job.status === 'uploading') {
         setProcessingMessage('Creating complete package...');
-        setProcessingStep(5);
+        setProcessingStep(Math.max(4.5, job.progress / 20));
       } else if (job.status === 'completed') {
         // Job completed successfully
         console.log('Job completed successfully:', job.result);
@@ -387,8 +391,20 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
     } catch (error) {
       console.error('Error checking job status:', error);
       
-      // Don't stop polling on network errors - just skip this attempt
-      console.log("Will retry polling on next interval");
+      // Check for specific error types to handle
+      if (error.response && error.response.status === 404) {
+        console.log("Job not found, may have been removed");
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          setPollInterval(null);
+          setProcessing(false);
+          setGenerating(false);
+          setError("Job not found or timed out. Please try again.");
+        }
+      } else {
+        // Network error or other issue, keep polling
+        console.log("Will retry polling on next interval");
+      }
     }
   }, [documentType, onGenerated, outputFormat, pollInterval, pollingStartTime, selectedTimePeriod]);
 
@@ -527,6 +543,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
         console.log("Document generation taking longer than expected, continuing in background");
         // Don't reset processing state so user knows it's still working
         // Don't clear poll interval - let it continue
+        setProcessingMessage('Document generation is taking longer than expected. Please be patient as we process your request.');
       } else {
         // Only stop polling and show error for non-timeout errors
         setProcessing(false);
