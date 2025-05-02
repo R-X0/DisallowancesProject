@@ -538,9 +538,18 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
       
     } catch (error) {
       console.error('Error generating document:', error);
-      setProcessing(false);
-      setGenerating(false);
-      setError(`Failed to generate document: ${error.message}`);
+      
+      // MODIFIED HERE: Don't show timeout errors to the user
+      if (!error.message.includes('timeout') && !error.message.includes('exceeded')) {
+        setProcessing(false);
+        setGenerating(false);
+        setError(`Failed to generate document: ${error.message}`);
+      } else {
+        // Just log the timeout but don't show error to user
+        console.log("Document generation taking longer than expected, continuing in background");
+        // Don't reset processing state so user knows it's still working
+        setTimeoutWarning(true);
+      }
       
       if (pollInterval) {
         clearInterval(pollInterval);
