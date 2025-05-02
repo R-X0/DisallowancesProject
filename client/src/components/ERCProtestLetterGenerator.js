@@ -39,115 +39,67 @@ const calculateRevenueDeclines = (formData) => {
   const declines = [];
   console.log("Calculating revenue declines with data:", formData);
   
-  // Calculate 2020 vs 2019 declines
-  if (formData.q1_2020 && formData.q1_2019 && parseFloat(formData.q1_2019) > 0) {
-    const decline = (1 - parseFloat(formData.q1_2020) / parseFloat(formData.q1_2019)) * 100;
-    console.log(`Q1 2020 decline: ${decline.toFixed(2)}% (threshold: 50%)`);
-    if (decline > 0) {
-      declines.push({
-        quarter: 'Q1 2020',
-        baseQuarter: 'Q1 2019',
-        decline: decline.toFixed(2),
-        percentDecline: `${decline.toFixed(2)}%`,
-        qualifies: decline >= 50
+  // Helper function to calculate decline
+  const calculateDecline = (currentQuarter, baseQuarter, thresholdPercent) => {
+    if (formData[currentQuarter] && formData[baseQuarter] && 
+        parseFloat(formData[currentQuarter]) >= 0 && 
+        parseFloat(formData[baseQuarter]) > 0) {
+      const current = parseFloat(formData[currentQuarter]);
+      const base = parseFloat(formData[baseQuarter]);
+      const decline = (1 - current / base) * 100;
+      
+      console.log(`Calculating decline for ${currentQuarter} vs ${baseQuarter}:`, {
+        currentValue: current,
+        baseValue: base,
+        declinePercent: decline,
+        qualifies: decline >= thresholdPercent
       });
+      
+      if (decline > 0) {
+        return {
+          quarter: currentQuarter.toUpperCase().replace('_', ' '),
+          baseQuarter: baseQuarter.toUpperCase().replace('_', ' '),
+          decline: decline.toFixed(2),
+          percentDecline: `${decline.toFixed(2)}%`,
+          qualifies: decline >= thresholdPercent
+        };
+      }
     }
-  }
+    return null;
+  };
   
-  if (formData.q2_2020 && formData.q2_2019 && parseFloat(formData.q2_2019) > 0) {
-    const decline = (1 - parseFloat(formData.q2_2020) / parseFloat(formData.q2_2019)) * 100;
-    console.log(`Q2 2020 decline: ${decline.toFixed(2)}% (threshold: 50%)`);
-    if (decline > 0) {
-      declines.push({
-        quarter: 'Q2 2020',
-        baseQuarter: 'Q2 2019',
-        decline: decline.toFixed(2),
-        percentDecline: `${decline.toFixed(2)}%`,
-        qualifies: decline >= 50
-      });
-    }
-  }
+  // 2020 quarters (50% threshold)
+  const q1_2020_decline = calculateDecline('q1_2020', 'q1_2019', 50);
+  if (q1_2020_decline) declines.push(q1_2020_decline);
   
-  if (formData.q3_2020 && formData.q3_2019 && parseFloat(formData.q3_2019) > 0) {
-    const decline = (1 - parseFloat(formData.q3_2020) / parseFloat(formData.q3_2019)) * 100;
-    console.log(`Q3 2020 decline: ${decline.toFixed(2)}% (threshold: 50%)`);
-    if (decline > 0) {
-      declines.push({
-        quarter: 'Q3 2020',
-        baseQuarter: 'Q3 2019',
-        decline: decline.toFixed(2),
-        percentDecline: `${decline.toFixed(2)}%`,
-        qualifies: decline >= 50
-      });
-    }
-  }
+  const q2_2020_decline = calculateDecline('q2_2020', 'q2_2019', 50);
+  if (q2_2020_decline) declines.push(q2_2020_decline);
   
-  if (formData.q4_2020 && formData.q4_2019 && parseFloat(formData.q4_2019) > 0) {
-    const decline = (1 - parseFloat(formData.q4_2020) / parseFloat(formData.q4_2019)) * 100;
-    console.log(`Q4 2020 decline: ${decline.toFixed(2)}% (threshold: 50%)`);
-    if (decline > 0) {
-      declines.push({
-        quarter: 'Q4 2020',
-        baseQuarter: 'Q4 2019',
-        decline: decline.toFixed(2),
-        percentDecline: `${decline.toFixed(2)}%`,
-        qualifies: decline >= 50
-      });
-    }
-  }
+  const q3_2020_decline = calculateDecline('q3_2020', 'q3_2019', 50);
+  if (q3_2020_decline) declines.push(q3_2020_decline);
   
-  // Calculate 2021 vs 2019 declines
-  if (formData.q1_2021 && formData.q1_2019 && parseFloat(formData.q1_2019) > 0) {
-    const decline = (1 - parseFloat(formData.q1_2021) / parseFloat(formData.q1_2019)) * 100;
-    console.log(`Q1 2021 decline: ${decline.toFixed(2)}% (threshold: 20%)`);
-    if (decline > 0) {
-      declines.push({
-        quarter: 'Q1 2021',
-        baseQuarter: 'Q1 2019',
-        decline: decline.toFixed(2),
-        percentDecline: `${decline.toFixed(2)}%`,
-        qualifies: decline >= 20
-      });
-    }
-  }
+  const q4_2020_decline = calculateDecline('q4_2020', 'q4_2019', 50);
+  if (q4_2020_decline) declines.push(q4_2020_decline);
   
-  if (formData.q2_2021 && formData.q2_2019 && parseFloat(formData.q2_2019) > 0) {
-    const decline = (1 - parseFloat(formData.q2_2021) / parseFloat(formData.q2_2019)) * 100;
-    console.log(`Q2 2021 decline: ${decline.toFixed(2)}% (threshold: 20%)`);
-    if (decline > 0) {
-      declines.push({
-        quarter: 'Q2 2021',
-        baseQuarter: 'Q2 2019',
-        decline: decline.toFixed(2),
-        percentDecline: `${decline.toFixed(2)}%`,
-        qualifies: decline >= 20
-      });
-    }
-  }
+  // 2021 quarters (20% threshold)
+  const q1_2021_decline = calculateDecline('q1_2021', 'q1_2019', 20);
+  if (q1_2021_decline) declines.push(q1_2021_decline);
   
-  if (formData.q3_2021 && formData.q3_2019 && parseFloat(formData.q3_2019) > 0) {
-    const decline = (1 - parseFloat(formData.q3_2021) / parseFloat(formData.q3_2019)) * 100;
-    console.log(`Q3 2021 decline: ${decline.toFixed(2)}% (threshold: 20%)`);
-    if (decline > 0) {
-      declines.push({
-        quarter: 'Q3 2021',
-        baseQuarter: 'Q3 2019',
-        decline: decline.toFixed(2),
-        percentDecline: `${decline.toFixed(2)}%`,
-        qualifies: decline >= 20
-      });
-    }
-  }
+  const q2_2021_decline = calculateDecline('q2_2021', 'q2_2019', 20);
+  if (q2_2021_decline) declines.push(q2_2021_decline);
   
-  console.log("Calculated declines:", declines);
+  const q3_2021_decline = calculateDecline('q3_2021', 'q3_2019', 20);
+  if (q3_2021_decline) declines.push(q3_2021_decline);
+  
+  console.log('Final calculated declines:', declines);
   return declines;
 };
 
 // Determine which quarters qualify for ERC based on revenue decline
 const getQualifyingQuarters = (declines) => {
-  const qualifying = declines.filter(decline => decline.qualifies).map(decline => decline.quarter);
-  console.log("Qualifying quarters:", qualifying);
-  return qualifying;
+  return declines
+    .filter(decline => decline.qualifies)
+    .map(decline => decline.quarter);
 };
 
 // Determine which approach the user is focusing on - government orders or revenue reduction
@@ -292,7 +244,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
     }
   };
 
-  // Function to poll for job status with improved error handling
+  // FIXED: Function to poll for job status with improved error handling and prevention of duplicate submissions
   const pollJobStatus = useCallback(async (jobId) => {
     if (!jobId) return;
     
@@ -344,38 +296,47 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
           setPollInterval(null);
         }
         
-        setProtestLetter(job.result.letter);
-        
-        // Create package data object
-        const newPackageData = {
-          pdfPath: job.result.pdfPath,
-          docxPath: job.result.docxPath,
-          zipPath: job.result.zipPath,
-          attachments: job.result.attachments || [],
-          packageFilename: job.result.packageFilename || 'complete_package.zip',
-          quarter: selectedTimePeriod,
-          outputFormat: outputFormat,
-          // Add Google Drive links if available
-          googleDriveLink: job.result.googleDriveLink,
-          protestLetterLink: job.result.protestLetterLink,
-          zipPackageLink: job.result.zipPackageLink
-        };
-        
-        console.log('Setting package data:', newPackageData);
-        setPackageData(newPackageData);
-        
-        // Finally, clear loading states since we've completed
-        setGenerating(false);
-        setProcessing(false);
-        
-        // Immediately call the onGenerated callback with the package data
-        console.log('Calling onGenerated with package data:', newPackageData);
-        if (onGenerated) {
-          onGenerated(newPackageData);
+        // FIX: Only process completion if we haven't done so already
+        // Check if we've already set package data to prevent duplicate calls to onGenerated
+        if (!packageData) {
+          setProtestLetter(job.result.letter);
+          
+          // Create package data object
+          const newPackageData = {
+            pdfPath: job.result.pdfPath,
+            docxPath: job.result.docxPath,
+            zipPath: job.result.zipPath,
+            attachments: job.result.attachments || [],
+            packageFilename: job.result.packageFilename || 'complete_package.zip',
+            quarter: selectedTimePeriod,
+            outputFormat: outputFormat,
+            // Add Google Drive links if available
+            googleDriveLink: job.result.googleDriveLink,
+            protestLetterLink: job.result.protestLetterLink,
+            zipPackageLink: job.result.zipPackageLink
+          };
+          
+          console.log('Setting package data:', newPackageData);
+          setPackageData(newPackageData);
+          
+          // Finally, clear loading states since we've completed
+          setGenerating(false);
+          setProcessing(false);
+          
+          // Immediately call the onGenerated callback with the package data
+          console.log('Calling onGenerated with package data:', newPackageData);
+          if (onGenerated) {
+            onGenerated(newPackageData);
+          }
+          
+          // Open the dialog with the result
+          setDialogOpen(true);
+        } else {
+          console.log('Job completion already processed, not calling onGenerated again');
+          // Still make sure loading states are cleared
+          setGenerating(false);
+          setProcessing(false);
         }
-        
-        // Open the dialog with the result
-        setDialogOpen(true);
       } else if (job.status === 'failed') {
         // Job failed
         if (pollInterval) {
@@ -406,7 +367,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
         console.log("Will retry polling on next interval");
       }
     }
-  }, [documentType, onGenerated, outputFormat, pollInterval, pollingStartTime, selectedTimePeriod]);
+  }, [documentType, onGenerated, outputFormat, pollInterval, pollingStartTime, selectedTimePeriod, packageData]); // Added packageData to dependencies
 
   // Function to generate protest letter using our LLM API
   const generateProtestLetter = async () => {
@@ -417,7 +378,7 @@ const ERCProtestLetterGenerator = ({ formData, onGenerated, pdfFiles }) => {
     setGenerating(true);
     setProcessing(true);
     setProcessingStep(0);
-    setPackageData(null);
+    setPackageData(null); // Reset packageData to ensure fresh processing
     setProcessingMessage("Initializing document generation...");
     
     try {
