@@ -1,5 +1,5 @@
 // server/routes/queue.js
-// UPDATED WITH IMPROVED REVENUE DATA HANDLING
+// FIXED TO PREVENT DUPLICATE SUBMISSIONS WITH DIFFERENT ID FORMATS
 
 const express = require('express');
 const router = express.Router();
@@ -31,7 +31,24 @@ router.get('/submissions', async (req, res) => {
 // Get a specific submission by ID
 router.get('/submission/:id', async (req, res) => {
   try {
-    const submission = await Submission.findOne({ submissionId: req.params.id });
+    // Try to find submission with flexible ID matching
+    const submissionId = req.params.id;
+    const possibleIds = [
+      submissionId,
+      submissionId.toString(),
+      submissionId.startsWith('ERC-') ? submissionId : `ERC-${submissionId}`,
+      submissionId.startsWith('ERC-') ? submissionId.substring(4) : submissionId
+    ];
+    
+    let submission = null;
+    for (const idVar of possibleIds) {
+      const found = await Submission.findOne({ submissionId: idVar });
+      if (found) {
+        submission = found;
+        console.log(`Found submission with ID variation: ${idVar}`);
+        break;
+      }
+    }
     
     if (!submission) {
       return res.status(404).json({
@@ -53,7 +70,7 @@ router.get('/submission/:id', async (req, res) => {
   }
 });
 
-// Save or update a submission - ENHANCED FOR REVENUE DATA
+// Save or update a submission - ENHANCED FOR REVENUE DATA AND FIXED TO PREVENT DUPLICATES
 router.post('/save', async (req, res) => {
   try {
     const { submissionId, ...submissionData } = req.body;
@@ -76,17 +93,37 @@ router.post('/save', async (req, res) => {
       }
     }
     
-    // Log what we're about to do
-    console.log(`Saving submission ${id} with ${Object.keys(revenueData).length} revenue fields`);
+    // Log the ID format we received 
+    console.log(`Attempting to save/update submission with ID: ${id}`);
     
-    // Try to find existing submission
-    let submission = await Submission.findOne({ submissionId: id });
+    // IMPROVED: Try to find existing submission with more flexible ID matching
+    let submission = null;
+    
+    // Try different formats of the same ID
+    const idVariations = [
+      id,
+      id.toString(),
+      id.startsWith('ERC-') ? id : `ERC-${id}`,
+      id.startsWith('ERC-') ? id.substring(4) : id
+    ];
+    
+    console.log(`Checking for existing submission with ID variations: ${idVariations.join(', ')}`);
+    
+    for (const idVar of idVariations) {
+      const found = await Submission.findOne({ submissionId: idVar });
+      if (found) {
+        submission = found;
+        console.log(`Found existing submission with ID variation: ${idVar}`);
+        break;
+      }
+    }
     
     if (submission) {
-      console.log(`Updating existing submission: ${id}`);
+      console.log(`Updating existing submission with ID: ${submission.submissionId}`);
+      
       // Update existing submission - with revenue fields preserved at top level
       submission = await Submission.findOneAndUpdate(
-        { submissionId: id },
+        { submissionId: submission.submissionId },
         { 
           ...submissionData,
           // Ensure revenue data is explicitly updated at the top level
@@ -112,19 +149,21 @@ router.post('/save', async (req, res) => {
         
         // Update submissionData separately
         await Submission.findOneAndUpdate(
-          { submissionId: id },
+          { submissionId: submission.submissionId },
           { submissionData: updatedSubmissionData },
           { strict: false }
         );
+        
+        console.log(`Updated submissionData with ${Object.keys(revenueData).length} revenue fields`);
       }
       
       res.status(200).json({
         success: true,
         message: 'Submission updated successfully',
-        submissionId: id
+        submissionId: submission.submissionId
       });
     } else {
-      console.log(`Creating new submission: ${id}`);
+      console.log(`Creating new submission with ID: ${id}`);
       // Prepare submissionData with revenue in both places
       const submissionDataObj = {
         ...(submissionData.submissionData || {}),
@@ -168,9 +207,29 @@ router.post('/save', async (req, res) => {
 // Delete a submission
 router.delete('/submission/:id', async (req, res) => {
   try {
-    const result = await Submission.findOneAndDelete({ submissionId: req.params.id });
+    const submissionId = req.params.id;
+    console.log(`Attempting to delete submission: ${submissionId}`);
     
-    if (!result) {
+    // Try different ID formats for deletion too
+    const idVariations = [
+      submissionId,
+      submissionId.toString(),
+      submissionId.startsWith('ERC-') ? submissionId : `ERC-${submissionId}`,
+      submissionId.startsWith('ERC-') ? submissionId.substring(4) : submissionId
+    ];
+    
+    let deleted = false;
+    
+    for (const idVar of idVariations) {
+      const result = await Submission.findOneAndDelete({ submissionId: idVar });
+      if (result) {
+        console.log(`Successfully deleted submission with ID variation: ${idVar}`);
+        deleted = true;
+        break;
+      }
+    }
+    
+    if (!deleted) {
       return res.status(404).json({
         success: false,
         message: 'Submission not found'
