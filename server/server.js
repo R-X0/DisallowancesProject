@@ -11,9 +11,11 @@ const fsSync = require('fs');
 const ercProtestRouter = require('./routes/erc-protest');
 const adminRouter = require('./routes/admin');
 const chatgptScraperRouter = require('./routes/chatgpt-scraper');
+const queueRouter = require('./routes/queue');
 const { authenticateUser, adminOnly } = require('./middleware/auth');
 const googleSheetsService = require('./services/googleSheetsService');
 const googleDriveService = require('./services/googleDriveService');
+const { connectDB } = require('./db-connection');
 
 // Load environment variables
 dotenv.config();
@@ -61,6 +63,7 @@ app.use((req, res, next) => {
 app.use('/api/erc-protest', ercProtestRouter);
 app.use('/api/erc-protest/admin', authenticateUser, adminOnly, adminRouter);
 app.use('/api/erc-protest/chatgpt', chatgptScraperRouter);
+app.use('/api/erc-protest/queue', queueRouter);
 
 // Debug route to check if the server is working
 app.get('/api/debug', (req, res) => {
@@ -89,6 +92,9 @@ async function createDirectories() {
 // Initialize services
 async function initializeServices() {
   try {
+    // Connect to MongoDB
+    await connectDB();
+    
     // Initialize Google Sheets
     await googleSheetsService.initialize();
     

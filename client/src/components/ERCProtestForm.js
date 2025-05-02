@@ -4,15 +4,18 @@ import {
   Typography, Paper, Grid, Divider, CircularProgress,
   Stepper, Step, StepLabel, StepContent, 
   Select, FormControl, InputLabel, OutlinedInput, Checkbox, ListItemText,
-  FormControlLabel // Added missing import
+  FormControlLabel, Alert, Snackbar
 } from '@mui/material';
 import { 
   FileUpload, 
   AddCircleOutline as AddIcon, 
-  ArrowBack as ArrowBackIcon 
+  ArrowBack as ArrowBackIcon,
+  Save as SaveIcon
 } from '@mui/icons-material';
 import COVIDPromptGenerator from './COVIDPromptGenerator';
 import ERCProtestLetterGenerator from './ERCProtestLetterGenerator';
+import SubmissionQueue from './SubmissionQueue';
+import axios from 'axios';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -57,6 +60,12 @@ const ERCProtestForm = () => {
   const [submissionStatus, setSubmissionStatus] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
   const [protestLetterData, setProtestLetterData] = useState(null);
+  
+  // Queue-related state
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSnackbarOpen, setSaveSnackbarOpen] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [saveSuccess, setSaveSuccess] = useState(true);
   
   // Available quarters for selection
   const quarters = [
@@ -225,9 +234,33 @@ const ERCProtestForm = () => {
   };
   
   // This function would be passed to ERCProtestLetterGenerator to get protest letter data
-  const onProtestLetterGenerated = (data) => {
+  const onProtestLetterGenerated = async (data) => {
     console.log("onProtestLetterGenerated called with data:", data);
     setProtestLetterData(data);
+    
+    // Save protest letter data to queue when it's generated
+    if (data) {
+      try {
+        // Update status to reflect progress
+        const updatedStatus = data.zipPath ? 'PDF done' : 'LLM pass #1 complete';
+        
+        // Prepare submission data including the protest letter data
+        const submissionData = {
+          ...formData,
+          status: updatedStatus,
+          submissionData: {
+            protestLetterData: data,
+            lastSaved: new Date().toISOString()
+          }
+        };
+        
+        // Make API call to save
+        await axios.post('/api/erc-protest/queue/save', submissionData);
+        console.log('Saved protest letter data to queue with status:', updatedStatus);
+      } catch (error) {
+        console.error('Error saving protest letter data to queue:', error);
+      }
+    }
   };
   
   // Handle form submission
@@ -307,6 +340,27 @@ const ERCProtestForm = () => {
           data: result
         });
         
+        // Update queue entry with new status after successful submission
+        try {
+          const submissionData = {
+            ...formData,
+            submissionId: result.trackingId || formData.trackingId,
+            status: 'PDF done',
+            submissionData: {
+              protestLetterData: protestLetterData,
+              lastSaved: new Date().toISOString(),
+              submitted: true,
+              submissionTimestamp: new Date().toISOString()
+            }
+          };
+          
+          // Update the queue entry
+          await axios.post('/api/erc-protest/queue/save', submissionData);
+          console.log('Updated queue entry after successful submission');
+        } catch (queueError) {
+          console.error('Error updating queue after submission:', queueError);
+        }
+        
         setActiveStep(2); // Move to the final step
       } else {
         throw new Error(result.message || 'Submission failed');
@@ -330,6 +384,8 @@ const ERCProtestForm = () => {
   
   // Handle next step
   const handleNext = () => {
+    // Save to queue before advancing
+    saveToQueue();
     setActiveStep(prevActiveStep => prevActiveStep + 1);
   };
   
@@ -338,396 +394,559 @@ const ERCProtestForm = () => {
     setActiveStep(prevActiveStep => prevActiveStep - 1);
   };
   
-  return (
-    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          ERC Disallowance Protest Generator
-        </Typography>
-        <Divider sx={{ mb: 3 }} />
+  // Save current form data to queue
+  const saveToQueue = async () => {
+    // Don't save if there's no business name
+    if (!formData.businessName.trim()) {
+      setSaveMessage('Business name is required to save');
+      setSaveSuccess(false);
+      setSaveSnackbarOpen(true);
+      return;
+    }
+    
+    setIsSaving(true);
+    
+    try {
+      // Prepare the data for saving
+      const submissionData = {
+        ...formData,
+        status: 'Gathering data',
+        submissionData: {}
+      };
+      
+      // Add quarter information if available
+      if (formData.timePeriods && formData.timePeriods.length > 0) {
+        submissionData.submissionData.timePeriodDetails = formData.timePeriods;
+      }
+      
+      // Add timestamp
+      submissionData.submissionData.lastSaved = new Date().toISOString();
+      
+      // Make API call to save
+      const response = await axios.post('/api/erc-protest/queue/save', submissionData);
+      
+      if (response.data && response.data.success) {
+        // Update tracking ID if we got one back
+        if (response.data.submissionId && !formData.trackingId) {
+          setFormData(prev => ({
+            ...prev,
+            trackingId: response.data.submissionId
+          }));
+        }
         
-        <Stepper activeStep={activeStep} orientation="vertical">
-          {/* Step 1: Business Information */}
-          <Step>
-            <StepLabel>Enter Business Information</StepLabel>
-            <StepContent>
-              <form>
-                <Grid container spacing={3}>
-                  {/* Business Information */}
-                  <Grid item xs={12}>
-                    <Typography variant="h6" gutterBottom>
-                      Business Information
-                    </Typography>
-                    {formData.trackingId && (
-                      <Typography variant="subtitle2" color="primary">
-                        Tracking ID: {formData.trackingId}
-                      </Typography>
-                    )}
-                  </Grid>
-                  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Business Name"
-                      name="businessName"
-                      value={formData.businessName}
-                      onChange={handleInputChange}
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="EIN"
-                      name="ein"
-                      value={formData.ein}
-                      onChange={handleInputChange}
-                      placeholder="XX-XXXXXXX"
-                      inputProps={{
-                        pattern: "[0-9]{2}-[0-9]{7}",
-                        title: "EIN format: XX-XXXXXXX"
-                      }}
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Business Location(s)"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleInputChange}
-                      placeholder="City, State (use ; for multiple locations: City1, State1; City2, State2)"
-                      helperText={formData.location && formData.location.includes(';') ? 
-                        "Multiple locations detected. Orders will be generated for all jurisdictions." : 
-                        "For multiple locations, separate each with semicolons (;)"}
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} md={6}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={formData.isControlledGroup || false}
-                          onChange={(e) => {
-                            setFormData(prevData => ({
-                              ...prevData,
-                              isControlledGroup: e.target.checked
-                            }));
-                          }}
-                          name="isControlledGroup"
-                        />
-                      }
-                      label="This is a controlled group with multiple entities/locations"
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Business Website"
-                      name="businessWebsite"
-                      value={formData.businessWebsite}
-                      onChange={handleInputChange}
-                      placeholder="https://example.com"
-                      type="url"
-                    />
-                  </Grid>
-                  
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="NAICS Code"
-                      name="naicsCode"
-                      value={formData.naicsCode}
-                      onChange={handleInputChange}
-                      placeholder="6-digit NAICS Code"
-                      inputProps={{
-                        pattern: "[0-9]{6}",
-                        title: "6-digit NAICS code"
-                      }}
-                    />
-                  </Grid>
-                  
-                  {/* Government Orders Section - No longer required */}
-                  <Grid item xs={12}>
-                    <Typography variant="h6" gutterBottom>
-                      Government Orders
-                    </Typography>
-                  </Grid>
-                  
-                  <Grid item xs={12} md={6}>
-                    <FormControl fullWidth>
-                      <InputLabel id="time-periods-label">Time Periods</InputLabel>
-                      <Select
-                        labelId="time-periods-label"
-                        id="time-periods"
-                        multiple
-                        value={formData.timePeriods}
-                        onChange={handleTimePeriodsChange}
-                        input={<OutlinedInput label="Time Periods" />}
-                        renderValue={(selected) => selected.join(', ')}
-                        MenuProps={MenuProps}
-                      >
-                        {quarters.map((quarter) => (
-                          <MenuItem key={quarter} value={quarter}>
-                            <Checkbox checked={formData.timePeriods.indexOf(quarter) > -1} />
-                            <ListItemText primary={quarter} />
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      multiline
-                      rows={3}
-                      label="Additional Information (Government Orders)"
-                      name="governmentOrdersInfo"
-                      value={formData.governmentOrdersInfo}
-                      onChange={handleInputChange}
-                      placeholder="Enter any additional details about government orders affecting your business..."
-                    />
-                  </Grid>
-                  
-                  {/* Revenue Reduction Section */}
-                  <Grid item xs={12}>
-                    <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                      Revenue Reduction
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Enter quarterly revenue amounts (optional)
-                    </Typography>
-                  </Grid>
-                  
-                  {/* Create input fields for each quarter */}
-                  {revenueQuarters.map((quarter) => {
-                    const fieldName = quarter.toLowerCase().replace(' ', '_');
-                    return (
-                      <Grid item xs={6} md={3} key={quarter}>
+        setSaveMessage('Submission saved to queue');
+        setSaveSuccess(true);
+      } else {
+        setSaveMessage('Failed to save submission');
+        setSaveSuccess(false);
+      }
+    } catch (error) {
+      console.error('Error saving to queue:', error);
+      setSaveMessage('Error saving submission: ' + (error.response?.data?.message || error.message));
+      setSaveSuccess(false);
+    } finally {
+      setIsSaving(false);
+      setSaveSnackbarOpen(true);
+    }
+  };
+  
+  // Load a submission from the queue
+  const handleLoadSubmission = (submission) => {
+    // Extract the form data from the submission
+    const {
+      businessName,
+      ein,
+      location,
+      businessWebsite,
+      naicsCode,
+      timePeriods,
+      governmentOrdersInfo,
+      revenueReductionInfo,
+      isControlledGroup,
+      submissionId,
+      q1_2019,
+      q2_2019,
+      q3_2019,
+      q4_2019,
+      q1_2020,
+      q2_2020,
+      q3_2020,
+      q4_2020,
+      q1_2021,
+      q2_2021,
+      q3_2021,
+      submissionData
+    } = submission;
+    
+    // Update form data state
+    setFormData({
+      businessName: businessName || '',
+      ein: ein || '',
+      location: location || '',
+      businessWebsite: businessWebsite || '',
+      naicsCode: naicsCode || '',
+      timePeriods: timePeriods || [],
+      governmentOrdersInfo: governmentOrdersInfo || '',
+      revenueReductionInfo: revenueReductionInfo || '',
+      trackingId: submissionId || '',
+      isControlledGroup: isControlledGroup || false,
+      q1_2019: q1_2019 || '',
+      q2_2019: q2_2019 || '',
+      q3_2019: q3_2019 || '',
+      q4_2019: q4_2019 || '',
+      q1_2020: q1_2020 || '',
+      q2_2020: q2_2020 || '',
+      q3_2020: q3_2020 || '',
+      q4_2020: q4_2020 || '',
+      q1_2021: q1_2021 || '',
+      q2_2021: q2_2021 || '',
+      q3_2021: q3_2021 || ''
+    });
+    
+    // Set protest letter data if available
+    if (submissionData && submissionData.protestLetterData) {
+      setProtestLetterData(submissionData.protestLetterData);
+    }
+    
+    // Reset step to start, or to step 1 if adequate data is provided
+    if (businessName && (timePeriods?.length > 0 || location)) {
+      setActiveStep(1);
+    } else {
+      setActiveStep(0);
+    }
+    
+    // Show success message
+    setSaveMessage(`Loaded submission for ${businessName}`);
+    setSaveSuccess(true);
+    setSaveSnackbarOpen(true);
+  };
+  
+  return (
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Grid container spacing={3}>
+        {/* Main form area */}
+        <Grid item xs={12} md={8}>
+          <Paper elevation={3} sx={{ p: 4 }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="h4" gutterBottom>
+                ERC Disallowance Protest Generator
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<SaveIcon />}
+                onClick={saveToQueue}
+                disabled={isSaving || !formData.businessName}
+              >
+                {isSaving ? 'Saving...' : 'Save to Queue'}
+              </Button>
+            </Box>
+            <Divider sx={{ mb: 3 }} />
+            
+            <Stepper activeStep={activeStep} orientation="vertical">
+              {/* Step 1: Business Information */}
+              <Step>
+                <StepLabel>Enter Business Information</StepLabel>
+                <StepContent>
+                  <form>
+                    <Grid container spacing={3}>
+                      {/* Business Information */}
+                      <Grid item xs={12}>
+                        <Typography variant="h6" gutterBottom>
+                          Business Information
+                        </Typography>
+                        {formData.trackingId && (
+                          <Typography variant="subtitle2" color="primary">
+                            Tracking ID: {formData.trackingId}
+                          </Typography>
+                        )}
+                      </Grid>
+                      
+                      <Grid item xs={12} md={6}>
                         <TextField
                           fullWidth
-                          label={`${quarter} Revenue`}
-                          name={fieldName}
-                          value={formData[fieldName]}
+                          label="Business Name"
+                          name="businessName"
+                          value={formData.businessName}
                           onChange={handleInputChange}
-                          placeholder="0.00"
-                          type="number"
-                          InputProps={{
-                            startAdornment: <span style={{ marginRight: '4px' }}>$</span>,
+                        />
+                      </Grid>
+                      
+                      <Grid item xs={12} md={6}>
+                        <TextField
+                          fullWidth
+                          label="EIN"
+                          name="ein"
+                          value={formData.ein}
+                          onChange={handleInputChange}
+                          placeholder="XX-XXXXXXX"
+                          inputProps={{
+                            pattern: "[0-9]{2}-[0-9]{7}",
+                            title: "EIN format: XX-XXXXXXX"
                           }}
                         />
                       </Grid>
-                    );
-                  })}
+                      
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Business Location(s)"
+                          name="location"
+                          value={formData.location}
+                          onChange={handleInputChange}
+                          placeholder="City, State (use ; for multiple locations: City1, State1; City2, State2)"
+                          helperText={formData.location && formData.location.includes(';') ? 
+                            "Multiple locations detected. Orders will be generated for all jurisdictions." : 
+                            "For multiple locations, separate each with semicolons (;)"}
+                        />
+                      </Grid>
+                      
+                      <Grid item xs={12} md={6}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={formData.isControlledGroup || false}
+                              onChange={(e) => {
+                                setFormData(prevData => ({
+                                  ...prevData,
+                                  isControlledGroup: e.target.checked
+                                }));
+                              }}
+                              name="isControlledGroup"
+                            />
+                          }
+                          label="This is a controlled group with multiple entities/locations"
+                        />
+                      </Grid>
+                      
+                      <Grid item xs={12} md={6}>
+                        <TextField
+                          fullWidth
+                          label="Business Website"
+                          name="businessWebsite"
+                          value={formData.businessWebsite}
+                          onChange={handleInputChange}
+                          placeholder="https://example.com"
+                          type="url"
+                        />
+                      </Grid>
+                      
+                      <Grid item xs={12} md={6}>
+                        <TextField
+                          fullWidth
+                          label="NAICS Code"
+                          name="naicsCode"
+                          value={formData.naicsCode}
+                          onChange={handleInputChange}
+                          placeholder="6-digit NAICS Code"
+                          inputProps={{
+                            pattern: "[0-9]{6}",
+                            title: "6-digit NAICS code"
+                          }}
+                        />
+                      </Grid>
+                      
+                      {/* Government Orders Section - No longer required */}
+                      <Grid item xs={12}>
+                        <Typography variant="h6" gutterBottom>
+                          Government Orders
+                        </Typography>
+                      </Grid>
+                      
+                      <Grid item xs={12} md={6}>
+                        <FormControl fullWidth>
+                          <InputLabel id="time-periods-label">Time Periods</InputLabel>
+                          <Select
+                            labelId="time-periods-label"
+                            id="time-periods"
+                            multiple
+                            value={formData.timePeriods}
+                            onChange={handleTimePeriodsChange}
+                            input={<OutlinedInput label="Time Periods" />}
+                            renderValue={(selected) => selected.join(', ')}
+                            MenuProps={MenuProps}
+                          >
+                            {quarters.map((quarter) => (
+                              <MenuItem key={quarter} value={quarter}>
+                                <Checkbox checked={formData.timePeriods.indexOf(quarter) > -1} />
+                                <ListItemText primary={quarter} />
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          multiline
+                          rows={3}
+                          label="Additional Information (Government Orders)"
+                          name="governmentOrdersInfo"
+                          value={formData.governmentOrdersInfo}
+                          onChange={handleInputChange}
+                          placeholder="Enter any additional details about government orders affecting your business..."
+                        />
+                      </Grid>
+                      
+                      {/* Revenue Reduction Section */}
+                      <Grid item xs={12}>
+                        <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                          Revenue Reduction
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          Enter quarterly revenue amounts (optional)
+                        </Typography>
+                      </Grid>
+                      
+                      {/* Create input fields for each quarter */}
+                      {revenueQuarters.map((quarter) => {
+                        const fieldName = quarter.toLowerCase().replace(' ', '_');
+                        return (
+                          <Grid item xs={6} md={3} key={quarter}>
+                            <TextField
+                              fullWidth
+                              label={`${quarter} Revenue`}
+                              name={fieldName}
+                              value={formData[fieldName]}
+                              onChange={handleInputChange}
+                              placeholder="0.00"
+                              type="number"
+                              InputProps={{
+                                startAdornment: <span style={{ marginRight: '4px' }}>$</span>,
+                              }}
+                            />
+                          </Grid>
+                        );
+                      })}
+                      
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          multiline
+                          rows={3}
+                          label="Additional Information (Revenue Reduction)"
+                          name="revenueReductionInfo"
+                          value={formData.revenueReductionInfo}
+                          onChange={handleInputChange}
+                          placeholder="Enter any additional details about revenue reductions during COVID periods..."
+                        />
+                      </Grid>
+                    </Grid>
+                    
+                    <Box sx={{ mb: 2, mt: 2 }}>
+                      <Button
+                        variant="contained"
+                        onClick={handleNext}
+                        sx={{ mt: 1, mr: 1 }}
+                        disabled={!isFormValid()}
+                      >
+                        Continue to Generate Documents
+                      </Button>
+                    </Box>
+                  </form>
+                </StepContent>
+              </Step>
+              
+              {/* Step 2: Generate COVID Order Prompt and Documents */}
+              <Step>
+                <StepLabel>Generate Required Documents</StepLabel>
+                <StepContent>
+                  {/* COVID Prompt Generator */}
+                  <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                    COVID Orders Research Prompt
+                  </Typography>
+                  <COVIDPromptGenerator formData={formData} />
                   
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      multiline
-                      rows={3}
-                      label="Additional Information (Revenue Reduction)"
-                      name="revenueReductionInfo"
-                      value={formData.revenueReductionInfo}
-                      onChange={handleInputChange}
-                      placeholder="Enter any additional details about revenue reductions during COVID periods..."
-                    />
-                  </Grid>
-                </Grid>
-                
-                <Box sx={{ mb: 2, mt: 2 }}>
-                  <Button
-                    variant="contained"
-                    onClick={handleNext}
-                    sx={{ mt: 1, mr: 1 }}
-                    disabled={!isFormValid()}
-                  >
-                    Continue to Generate Documents
-                  </Button>
-                </Box>
-              </form>
-            </StepContent>
-          </Step>
-          
-          {/* Step 2: Generate COVID Order Prompt and Documents */}
-          <Step>
-            <StepLabel>Generate Required Documents</StepLabel>
-            <StepContent>
-              {/* COVID Prompt Generator */}
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                COVID Orders Research Prompt
-              </Typography>
-              <COVIDPromptGenerator formData={formData} />
-              
-              <Divider sx={{ my: 3 }} />
-              
-              <Typography variant="h6" gutterBottom>
-                Upload Disallowance Notice
-              </Typography>
-              
-              <Grid container spacing={3}>
-                <Grid item xs={12}>
-                  <Button
-                    variant="outlined"
-                    component="label"
-                    startIcon={<FileUpload />}
-                    sx={{ mt: 1 }}
-                  >
-                    Upload Disallowance Notices (PDF)
-                    <input
-                      type="file"
-                      multiple
-                      accept=".pdf"
-                      hidden
-                      onChange={handleFileUpload}
-                    />
-                  </Button>
-                  {pdfFiles.length > 0 && (
-                    <Typography variant="body2" sx={{ mt: 1 }}>
-                      {pdfFiles.length} file(s) selected
-                    </Typography>
-                  )}
-                </Grid>
-              </Grid>
-              
-              <Box sx={{ mb: 3, mt: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                  Generate Protest Letter
-                </Typography>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  After completing your COVID orders research in ChatGPT, paste the ChatGPT conversation link below 
-                  to generate a formal protest letter that you can download and submit to the IRS.
-                </Typography>
-                
-                {/* Add the Protest Letter Generator component - UPDATED TO PASS PDF FILES */}
-                <ERCProtestLetterGenerator 
-                  formData={{
-                    ...formData,
-                    trackingId: submissionStatus?.data?.trackingId || formData.trackingId
-                  }}
-                  onGenerated={onProtestLetterGenerated}
-                  pdfFiles={pdfFiles} // Pass the PDF files for address extraction
-                />
-              </Box>
-              
-              <Divider sx={{ my: 3 }} />
-              
-              <Box sx={{ mb: 2, mt: 2 }}>
-                <Button
-                  variant="contained"
-                  onClick={handleSubmit}
-                  sx={{ mt: 1, mr: 1 }}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <CircularProgress size={24} sx={{ mr: 1 }} />
-                      Processing...
-                    </>
-                  ) : 'Submit ERC Protest'}
-                </Button>
-                <Button
-                  onClick={handleBack}
-                  sx={{ mt: 1, mr: 1 }}
-                >
-                  Back
-                </Button>
-              </Box>
-            </StepContent>
-          </Step>
-          
-          {/* Step 3: Simplified Confirmation */}
-          <Step>
-            <StepLabel>Submission Complete</StepLabel>
-            <StepContent>
-              {submissionStatus && (
-                <Box p={3} bgcolor={submissionStatus.success ? 'success.light' : 'error.light'} borderRadius={1} textAlign="center">
-                  {submissionStatus.success ? (
-                    <>
-                      <Typography variant="h6" mb={2}>
-                        Submission Successful!
-                      </Typography>
-                      <Typography variant="body1" mb={3}>
-                        Your ERC protest has been submitted. You can now create another protest letter or start a new submission.
-                      </Typography>
-                      {submissionStatus.data?.trackingId && (
-                        <Typography variant="body2" color="primary">
-                          Tracking ID: {submissionStatus.data.trackingId}
+                  <Divider sx={{ my: 3 }} />
+                  
+                  <Typography variant="h6" gutterBottom>
+                    Upload Disallowance Notice
+                  </Typography>
+                  
+                  <Grid container spacing={3}>
+                    <Grid item xs={12}>
+                      <Button
+                        variant="outlined"
+                        component="label"
+                        startIcon={<FileUpload />}
+                        sx={{ mt: 1 }}
+                      >
+                        Upload Disallowance Notices (PDF)
+                        <input
+                          type="file"
+                          multiple
+                          accept=".pdf"
+                          hidden
+                          onChange={handleFileUpload}
+                        />
+                      </Button>
+                      {pdfFiles.length > 0 && (
+                        <Typography variant="body2" sx={{ mt: 1 }}>
+                          {pdfFiles.length} file(s) selected
                         </Typography>
                       )}
-                    </>
-                  ) : (
-                    <Typography variant="body1">
-                      {submissionStatus.message || "An error occurred during submission. Please try again."}
+                    </Grid>
+                  </Grid>
+                  
+                  <Box sx={{ mb: 3, mt: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                      Generate Protest Letter
                     </Typography>
-                  )}
-                </Box>
-              )}
+                    <Typography variant="body2" color="text.secondary" paragraph>
+                      After completing your COVID orders research in ChatGPT, paste the ChatGPT conversation link below 
+                      to generate a formal protest letter that you can download and submit to the IRS.
+                    </Typography>
+                    
+                    {/* Add the Protest Letter Generator component - UPDATED TO PASS PDF FILES */}
+                    <ERCProtestLetterGenerator 
+                      formData={{
+                        ...formData,
+                        trackingId: submissionStatus?.data?.trackingId || formData.trackingId
+                      }}
+                      onGenerated={onProtestLetterGenerated}
+                      pdfFiles={pdfFiles} // Pass the PDF files for address extraction
+                    />
+                  </Box>
+                  
+                  <Divider sx={{ my: 3 }} />
+                  
+                  <Box sx={{ mb: 2, mt: 2 }}>
+                    <Button
+                      variant="contained"
+                      onClick={handleSubmit}
+                      sx={{ mt: 1, mr: 1 }}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <CircularProgress size={24} sx={{ mr: 1 }} />
+                          Processing...
+                        </>
+                      ) : 'Submit ERC Protest'}
+                    </Button>
+                    <Button
+                      onClick={handleBack}
+                      sx={{ mt: 1, mr: 1 }}
+                    >
+                      Back
+                    </Button>
+                  </Box>
+                </StepContent>
+              </Step>
               
-              {/* Navigation buttons - centered and prominent */}
-              <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 3 }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  onClick={() => {
-                    // Reset the form data
-                    setFormData({
-                      businessName: '',
-                      ein: '',
-                      location: '',
-                      businessWebsite: '',
-                      naicsCode: '',
-                      timePeriods: [],
-                      governmentOrdersInfo: '',
-                      revenueReductionInfo: '',
-                      trackingId: '', // Clear the tracking ID for a truly new submission
-                      isControlledGroup: false,
-                      // Reset all quarterly revenue fields
-                      q1_2019: '',
-                      q2_2019: '',
-                      q3_2019: '',
-                      q4_2019: '',
-                      q1_2020: '',
-                      q2_2020: '',
-                      q3_2020: '',
-                      q4_2020: '',
-                      q1_2021: '',
-                      q2_2021: '',
-                      q3_2021: ''
-                    });
-                    // Reset files
-                    setPdfFiles([]);
-                    // Reset protest letter data
-                    setProtestLetterData(null);
-                    // Reset submission status
-                    setSubmissionStatus(null);
-                    // Go to first step
-                    setActiveStep(0);
-                  }}
-                  startIcon={<AddIcon />}
-                >
-                  Start New Submission
-                </Button>
-                
-                <Button
-                  variant="outlined"
-                  size="large"
-                  onClick={() => {
-                    // Go back to document generation step
-                    setActiveStep(1);
-                  }}
-                  startIcon={<ArrowBackIcon />}
-                >
-                  Generate Another Letter
-                </Button>
-              </Box>
-            </StepContent>
-          </Step>
-        </Stepper>
-      </Paper>
+              {/* Step 3: Simplified Confirmation */}
+              <Step>
+                <StepLabel>Submission Complete</StepLabel>
+                <StepContent>
+                  {submissionStatus && (
+                    <Box p={3} bgcolor={submissionStatus.success ? 'success.light' : 'error.light'} borderRadius={1} textAlign="center">
+                      {submissionStatus.success ? (
+                        <>
+                          <Typography variant="h6" mb={2}>
+                            Submission Successful!
+                          </Typography>
+                          <Typography variant="body1" mb={3}>
+                            Your ERC protest has been submitted. You can now create another protest letter or start a new submission.
+                          </Typography>
+                          {submissionStatus.data?.trackingId && (
+                            <Typography variant="body2" color="primary">
+                              Tracking ID: {submissionStatus.data.trackingId}
+                            </Typography>
+                          )}
+                        </>
+                      ) : (
+                        <Typography variant="body1">
+                          {submissionStatus.message || "An error occurred during submission. Please try again."}
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
+                  
+                  {/* Navigation buttons - centered and prominent */}
+                  <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 3 }}>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      size="large"
+                      onClick={() => {
+                        // Reset the form data
+                        setFormData({
+                          businessName: '',
+                          ein: '',
+                          location: '',
+                          businessWebsite: '',
+                          naicsCode: '',
+                          timePeriods: [],
+                          governmentOrdersInfo: '',
+                          revenueReductionInfo: '',
+                          trackingId: '', // Clear the tracking ID for a truly new submission
+                          isControlledGroup: false,
+                          // Reset all quarterly revenue fields
+                          q1_2019: '',
+                          q2_2019: '',
+                          q3_2019: '',
+                          q4_2019: '',
+                          q1_2020: '',
+                          q2_2020: '',
+                          q3_2020: '',
+                          q4_2020: '',
+                          q1_2021: '',
+                          q2_2021: '',
+                          q3_2021: ''
+                        });
+                        // Reset files
+                        setPdfFiles([]);
+                        // Reset protest letter data
+                        setProtestLetterData(null);
+                        // Reset submission status
+                        setSubmissionStatus(null);
+                        // Go to first step
+                        setActiveStep(0);
+                      }}
+                      startIcon={<AddIcon />}
+                    >
+                      Start New Submission
+                    </Button>
+                    
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      onClick={() => {
+                        // Go back to document generation step
+                        setActiveStep(1);
+                      }}
+                      startIcon={<ArrowBackIcon />}
+                    >
+                      Generate Another Letter
+                    </Button>
+                  </Box>
+                </StepContent>
+              </Step>
+            </Stepper>
+          </Paper>
+        </Grid>
+        
+        {/* Queue panel on the right */}
+        <Grid item xs={12} md={4}>
+          <SubmissionQueue onLoadSubmission={handleLoadSubmission} />
+        </Grid>
+      </Grid>
+      
+      {/* Save notification */}
+      <Snackbar
+        open={saveSnackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSaveSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSaveSnackbarOpen(false)} 
+          severity={saveSuccess ? "success" : "error"}
+          sx={{ width: '100%' }}
+        >
+          {saveMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
