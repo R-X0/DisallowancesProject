@@ -107,6 +107,21 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath, d
     );
     console.log(`ZIP package uploaded with ID: ${zipFile.id}`);
     
+    // ADDED CODE: Upload a copy to the master folder with formatted name
+    console.log(`Uploading copy of ZIP package to master folder...`);
+    const formattedFileName = `${trackingId}_${businessName.replace(/[^a-zA-Z0-9]/g, '_')}_Package.zip`;
+    const masterZipFile = await googleDriveService.uploadToMasterFolder(
+      zipPath,
+      formattedFileName,
+      'application/zip'
+    );
+    
+    if (masterZipFile) {
+      console.log(`ZIP package also uploaded to master folder with ID: ${masterZipFile.id}`);
+    } else {
+      console.log(`Failed to upload to master folder or master folder not configured`);
+    }
+    
     // Verify both files are visible in the folder
     console.log(`Verifying files in folder ${folderResult.folderId}...`);
     const filesInFolder = await googleDriveService.drive.files.list({
@@ -128,6 +143,10 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath, d
     
     if (docxFile) {
       result.docxLink = docxFile.webViewLink;
+    }
+    
+    if (masterZipFile) {
+      result.masterPackageLink = masterZipFile.webViewLink;
     }
     
     // Update Google Sheet with file links - with better error handling
@@ -276,6 +295,14 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath, d
           submission.submissionData.documentLinks.docxLink = result.docxLink;
         }
         
+        // Add master folder link if available
+        if (result.masterPackageLink) {
+          if (!submission.submissionData.documentLinks) {
+            submission.submissionData.documentLinks = {};
+          }
+          submission.submissionData.documentLinks.masterPackageLink = result.masterPackageLink;
+        }
+        
         await submission.save();
         console.log(`Updated MongoDB record for ${trackingId}`);
       }
@@ -311,6 +338,11 @@ async function uploadToGoogleDrive(trackingId, businessName, pdfPath, zipPath, d
             // Add DOCX path if available
             if (result.docxLink) {
               submissionInfo.docxPath = result.docxLink;
+            }
+            
+            // Add master package link if available
+            if (result.masterPackageLink) {
+              submissionInfo.masterPackageLink = result.masterPackageLink;
             }
             
             await fs.writeFile(

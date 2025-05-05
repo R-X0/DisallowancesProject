@@ -15,7 +15,11 @@ class GoogleDriveService {
     // Root folder ID where to store all ERC protest files
     this.rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
     
+    // Master folder ID for all ZIP packages
+    this.masterFolderId = '1YSw3JgGp3w8XJwgNkPLwcwbBt2J6NfGn';
+    
     console.log('GoogleDriveService constructor - Share email:', this.shareWithEmail);
+    console.log('Master folder ID:', this.masterFolderId);
   }
 
   async initialize() {
@@ -270,6 +274,59 @@ class GoogleDriveService {
     } catch (error) {
       console.error(`Error uploading file ${fileName}:`, error);
       throw error;
+    }
+  }
+  
+  /**
+   * Upload a file to the master folder
+   * @param {string} filePath - Local path to the file
+   * @param {string} fileName - Name to give the file in Google Drive
+   * @param {string} mimeType - MIME type of the file
+   * @returns {Object} - File data including id and webViewLink
+   */
+  async uploadToMasterFolder(filePath, fileName, mimeType) {
+    await this.ensureInitialized();
+    
+    try {
+      console.log(`Uploading file ${fileName} to master folder ${this.masterFolderId}`);
+      
+      // Create file metadata
+      const fileMetadata = {
+        name: fileName,
+        parents: [this.masterFolderId]
+      };
+      
+      // Create a readable stream from the file
+      const fileStream = fs.createReadStream(filePath);
+      
+      // Upload the file
+      const media = {
+        mimeType: mimeType,
+        body: fileStream
+      };
+      
+      const response = await this.drive.files.create({
+        resource: fileMetadata,
+        media: media,
+        fields: 'id, webViewLink'
+      });
+      
+      console.log(`File uploaded to master folder successfully: ${fileName}, ID: ${response.data.id}`);
+      
+      // Make the file accessible by anyone with the link with reader permissions
+      await this.drive.permissions.create({
+        fileId: response.data.id,
+        requestBody: {
+          role: 'reader',
+          type: 'anyone'
+        }
+      });
+      console.log(`Set permissions for file in master folder to "anyone" with "reader" role`);
+      
+      return response.data;
+    } catch (error) {
+      console.error(`Error uploading file to master folder: ${fileName}`, error);
+      return null;
     }
   }
   

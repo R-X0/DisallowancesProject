@@ -1,0 +1,101 @@
+5/4/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 45-5324837  
+Taxpayer Name: 10 JDD Inc. DBA Rome Athletic Club  
+RE: Formal Protest of ERC Disallowance for Q2 2020  
+
+Dear Appeals Officer:
+
+We write to formally protest the disallowance of the Employee Retention Credit (ERC) for Q2 2020. The IRS notice stated that our claim was disallowed on the basis that “no government orders were in effect” for the period in question. We respectfully disagree. Multiple COVID-19 government orders were indeed in effect during Q2 2020, and these orders imposed significant restrictions on businesses, including ours. In addition, while our Q2 2020 revenue decline did not independently qualify us for ERC based on gross receipts, we qualify for ERC by virtue of the partial suspension test arising from these government-issued mandates.
+
+I. Government Orders in Effect During Q2 2020
+
+Below is a detailed list of the principal federal and state orders that materially impacted business operations in Q2 2020. Each order is presented with (1) its official name, (2) order number, (3) date enacted, (4) date rescinded, (5) a summary, and (6) its impact on the second quarter of 2020.
+
+• Order Name: Proclamation 9994 – National Emergency Concerning COVID-19  
+  • Order Number: 9994  
+  • Date Enacted: 03/13/2020  
+  • Date Rescinded: Remained in effect throughout 2020–2021 (not rescinded in Q2 2020)  
+  • Order Summary: This proclamation declared a nationwide emergency due to COVID-19. It enabled federal emergency powers and opened the door for subsequent state and local restrictions on business activities.  
+  • Impact on Quarter: During Q2 2020, the ongoing federal state of emergency authorized and justified strict statewide and local lockdowns. As a result, businesses were compelled to operate under restrictive conditions in compliance with rules that derived legal force from Proclamation 9994.  
+
+• Order Name: State of Emergency Proclamation – California COVID-19 State of Emergency  
+  • Order Number: N/A (Governor’s Proclamation)  
+  • Date Enacted: 03/04/2020  
+  • Date Rescinded: Not rescinded during 2020–2021  
+  • Order Summary: The California Governor declared a state of emergency related to COVID-19 on March 4, 2020. This authorized sweeping health directives and capacity limits on businesses.  
+  • Impact on Quarter: In Q2 2020, the ongoing state of emergency empowered local and regional health officers to impose continuing restrictions (e.g., closure of certain categories of businesses, limited indoor activities). This limited normal operations and forced businesses to comply with mandated safety rules.  
+
+• Order Name: Executive Order N-33-20 – Statewide “Stay-at-Home” Order  
+  • Order Number: N-33-20  
+  • Date Enacted: 03/19/2020  
+  • Date Rescinded: 06/15/2021  
+  • Order Summary: California’s Governor directed all individuals to stay at home except for critical infrastructure activities. Non-essential businesses (e.g., gyms, indoor recreational facilities, and many retail operations) were ordered to close or move to minimal basic operations to reduce COVID-19 spread.  
+  • Impact on Quarter: Throughout Q2 2020, many businesses experienced forced closures or significant limitations under this order. For businesses like ours, indoor operations were largely disallowed, dramatically cutting services offered, membership usage, and revenue.  
+
+• Order Name: State Public Health Officer Order (Stage 2 Reopening) – Modifying Stay-at-Home  
+  • Order Number: May 7, 2020 Order (per Governor’s Executive Order N-60-20)  
+  • Date Enacted: 05/07/2020  
+  • Date Rescinded: 06/15/2021  
+  • Order Summary: This order relaxed some of the stricter lockdown rules under the original stay-at-home mandate, allowing certain lower-risk businesses to reopen in limited capacities (e.g., curbside retail, limited manufacturing). Higher-risk establishments (including gyms, indoor fitness centers, and salons) generally remained closed well into Q2.  
+  • Impact on Quarter: While some businesses benefited from partial operational resumption, gyms and other higher-risk indoor venues did not see immediate relief in Q2 2020. Consequently, our operations remained largely suspended during this time, resulting in a substantial limitation of normal business activities.  
+
+As shown above, these orders were fully in effect from April 1 to June 30, 2020. Despite partial reopenings for certain sectors in May and June, strict rules continued for many indoor, in-person operations—particularly fitness-related businesses. The assertion that no government orders were in effect is therefore incorrect. Our business, like many others, was subject to legal mandates that reduced customer capacity, restricted normal operations, and forced partial or total closure of certain service areas.
+
+II. Revenue Data Demonstrating Declines
+
+In addition to the government orders discussed above, we are submitting quarterly revenue data that demonstrates the reported revenues for 2019 and comparison revenues for 2020 and 2021. The following table presents the quarterly revenue amounts and percentage changes for comparison purposes:
+
+Quarter       | 2019 Revenue    | Comparison Revenue | Dollar Decline  | % Decline  | Qualifies  
+--------------------------------------------------------------------------------------------
+Q1 2019-2020  | $107,831.03     | $87,184.00         | $20,647.03      | 19.15%     | NO        
+Q2 2019-2020  | $104,577.08     | $65,793.39         | $38,783.69      | 37.09%     | NO        
+Q3 2019-2020  | $93,453.83      | $62,831.13         | $30,622.70      | 32.77%     | NO        
+Q4 2019-2020  | $89,785.19      | $96,008.48         | -$6,223.29      | -6.93%     | NO        
+Q1 2019-2021  | $107,831.03     | $80,266.78         | $27,564.25      | 25.56%     | YES       
+Q2 2019-2021  | $104,577.08     | $74,678.44         | $29,898.64      | 28.59%     | YES       
+Q3 2019-2021  | $93,453.83      | $108,106.73        | -$14,652.90     | -15.68%    | NO        
+--------------------------------------------------------------------------------------------
+
+As shown in the revenue table above, only Q1 2019–2021 and Q2 2019–2021 met the ERC threshold for revenue decline. Q2 2019–2020, the focus of this protest, showed a 37.09% decline, which did not reach the 50% threshold required for 2020 ERC qualification by gross receipts. Nevertheless, our ERC claim for Q2 2020 is valid based on the partial suspension criteria stemming from the government orders summarized earlier.
+
+III. Partial Suspension Analysis
+
+Under IRS guidance, a “partial suspension” of operations due to a governmental order may suffice to qualify an employer for ERC if the suspension was more than nominal. Here, numerous orders forced fitness establishments, including athletic clubs and gyms, to close or remain severely limited in Q2 2020. These restrictions required us to:
+
+• Limit or prohibit indoor activities.
+• Restrict walk-in clientele and largely suspend normal membership usage.
+• Postpone or cancel most group classes and personal training services.
+• Sustain fixed overhead expenses while scrambling to meet changing safety protocols.
+
+These constraints, mandated by lawful orders, significantly curtailed our ability to operate normally and meet revenue goals. According to relevant IRS notices, such mandated limitations constitute a partial suspension of business operations—particularly when they affect services comprising more than a nominal portion of the organization’s overall activities. That is precisely our situation: a substantial portion of our normal gym operations was discontinued in Q2 2020 due to these government orders.
+
+IV. Conclusion and Request
+
+In light of these facts and the pertinent IRS guidance, we respectfully request that the IRS reverse its disallowance. Contrary to the statement that “no government orders were in effect,” the orders outlined above were indeed active and required significant operational changes for our business during Q2 2020. While our revenue reduction did not reach the 50% threshold for Q2 2020, the government-ordered partial suspension is independently sufficient to qualify us for the ERC under the CARES Act provisions.
+
+We trust that upon review of this information, the Appeals Office will find that 10 JDD Inc. DBA Rome Athletic Club meets the partial suspension criteria for Q2 2020. We appreciate your prompt and thorough reconsideration of our ERC claim. Should you require any additional information or clarification, please feel free to contact us.
+
+Attestation: “Under penalties of perjury, I declare that I submitted this protest and accompanying documents, and to the best of my knowledge and belief, the information stated in this protest and accompanying documents is true, correct, and complete.”
+
+Sincerely,
+
+___________________________________
+Signature of Authorized Representative  
+Title: _____________________________  
+Date: _____________________________  
+
+-------------------------------------------------------------------------------
+SOURCES:
+1. https://bidenwhitehouse.archives.gov/briefing-room/presidential-actions/2021/02/24/notice-on-the-continuation-of-the-national-emergency-concerning-the-coronavirus-disease-2019-covid-19-pandemic/ - Notice on Continuation of National Emergency
+2. https://www.gov.ca.gov/2020/03/04/governor-newsom-declares-state-of-emergency-to-help-state-prepare-for-broader-spread-of-covid-19/ - Governor Newsom Declares State of Emergency
+3. https://www.gov.ca.gov/wp-content/uploads/2020/03/3.19.20-attested-EO-N-33-20-COVID-19-HEALTH-ORDER.pdf - Executive Order N-33-20
+4. https://www.cdph.ca.gov/Programs/CID/DCDC/CDPH%20Document%20Library/COVID-19/8-28-20_Order-Plan-Reducing-COVID19-Adjusting-Permitted-Sectors-Signed.pdf - State Public Health Officer Order (Stage 2 Reopening)
+5. https://vcportal.ventura.org/covid19/docs/VC_Roadmap_to_Reopening_rev052120f.pdf - Ventura County Roadmap to Reopening (May 2020)
+
+
+
+
+
