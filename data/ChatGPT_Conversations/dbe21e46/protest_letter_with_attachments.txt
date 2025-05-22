@@ -1,0 +1,102 @@
+5/5/2025  
+Internal Revenue Service  
+Ogden, UT 84201  
+
+EIN: 46-1542767  
+Taxpayer Name: Adkok Inc-trade name Audi Valencia  
+RE: Formal Protest to ERC Disallowance for Q3 2021  
+Tax Period: 3rd Quarter 2021 (202109)  
+
+Dear Appeals Officer:
+
+We write to formally protest the IRS determination disallowing Adkok Inc-trade name Audi Valencia’s Employee Retention Credit (ERC) claim for the third quarter of 2021. The disallowance cites “no government orders were in effect” throughout Q3 2021 that caused a suspension of our operations. We respectfully disagree. Multiple federal, state, county, and city government orders remained active during July 1–September 30, 2021, and those orders materially disrupted our business operations by causing partial suspension through supply chain constraints and related limitations. We qualify under the “partial suspension” test in the ERC guidance (e.g., IRS Notice 2021-20) because government orders significantly affected our ability to conduct normal business activities in this period.
+
+Below is a concise overview of the government orders in effect during Q3 2021, each formatted to meet the IRS requirement for identifying and explaining their impact. These orders collectively contributed to a partial suspension of our operations, making Adkok Inc-trade name Audi Valencia eligible for the ERC under the governmental orders criterion.
+
+--------------------------------------------------------------------------------
+GOVERNMENT ORDERS IN EFFECT DURING Q3 2021
+--------------------------------------------------------------------------------
+
+• Order Name: Proclamation 9994 – National Emergency Concerning COVID-19  
+• Order Number: Proclamation 9994  
+• Date Enacted: 03/13/2020  
+• Date Rescinded: Ended by Congress in 2023 (remained in effect through Q3 2021)  
+• Order Summary: Declared a nationwide emergency due to COVID-19, providing expansive federal authority to combat the pandemic. Empowered states and localities to impose restrictive measures aided by federal emergency powers.  
+• Impact on Quarter: The ongoing national emergency facilitated stricter state and local rules well into Q3 2021, causing upstream and downstream supply chain disruptions. Our normal operations were partially suspended due to delayed shipments, limited supplier capacity, and logistical hurdles arising from emergency measures still authorized under the proclamation.
+
+--------------------------------------------------------------------------------
+
+• Order Name: CDC/FAA Mask Mandates – Federal Mask Requirements for Travel  
+• Order Number: Executive Order 13998 (and subsequent CDC orders)  
+• Date Enacted: 01/21/2021  
+• Date Rescinded: Lifted in 2022 (still in effect during Q3 2021)  
+• Order Summary: Required masks on major travel modes (airplanes, trains, buses) and in transit hubs. Although not a nationwide business-closure order, it kept stringent federal precautions in place.  
+• Impact on Quarter: These mandates, in conjunction with broader federal guidance, sustained COVID-19 response measures throughout Q3 2021. Shipping times, transit workforce shortages, and increased logistics costs persisted, partially suspending our normal business operations due to ongoing travel/transport disruptions.
+
+--------------------------------------------------------------------------------
+
+• Order Name: State of Emergency Proclamation – California COVID-19 State of Emergency  
+• Order Number: Governor’s Proclamation (03/04/2020)  
+• Date Enacted: 03/04/2020  
+• Date Rescinded: 02/28/2023  
+• Order Summary: Declared a statewide emergency, granting state officials power to issue sweeping emergency directives and public health mandates.  
+• Impact on Quarter: While some restrictions were loosened in mid-2021, the underlying state of emergency remained in effect in Q3 2021. Suppliers and partners within California continued to operate under changing regulations, limiting normal capacity or causing interruptions in materials and distribution, resulting in a partial suspension of our business operations.
+
+--------------------------------------------------------------------------------
+
+• Order Name: Ventura County Local Health Emergency – County Declaration of Local Health Emergency  
+• Order Number: County Public Health Emergency Declaration  
+• Date Enacted: 03/12/2020  
+• Date Rescinded: Ended in 2022 (remained active during Q3 2021)  
+• Order Summary: Formally recognized a local health emergency in Ventura County, empowering local authorities to impose restrictions on business operations and gatherings.  
+• Impact on Quarter: This ongoing local emergency contributed to supply chain slowdowns, as vendors in the affected locale complied with local safety protocols, staffing limitations, and partial closures. Our access to components and services from Ventura County entities was constrained, causing delays and curtailing regular production schedules.
+
+--------------------------------------------------------------------------------
+
+• Order Name: City of Camarillo Local Emergency Proclamation – City Declaration of Emergency  
+• Order Number: EOC Director Order No. 20-1 (03/13/2020)  
+• Date Enacted: 03/13/2020  
+• Date Rescinded: Lifted in 2022 (still active through Q3 2021)  
+• Order Summary: Declared a municipal emergency, authorizing city officials to adopt public health measures and limit government facilities’ availability. Local agencies and businesses remained subject to emergency rules.  
+• Impact on Quarter: Although city-level restrictions varied over time, the extended declaration through Q3 2021 contributed to ongoing operational challenges for suppliers located or operating in Camarillo. This restricted normal commuting, reduced on-site staffing, and imposed health protocols, all of which hindered our usual supply chain flow and limited our operations.
+
+--------------------------------------------------------------------------------
+
+HOW THESE ORDERS CAUSED A PARTIAL SUSPENSION
+
+The above orders collectively constrained our normal course of business. Because of continuing emergency declarations, our upstream supply partners faced operational restrictions, workforce limitations, and unpredictable shutdowns or slowdowns. Even though many state-imposed capacity limits were lifted by mid-2021, the legal and regulatory emergency framework persisted. During Q3 2021, factories and distributors in the declared emergency areas were unable to meet regular production or shipping schedules. In turn, our business could not access essential materials, parts, and services without significant delay or at normal capacity.
+
+Under IRS guidance (e.g., Notice 2021-20 and subsequent clarifications), an employer qualifies for the ERC if it experienced more than a nominal impact on its operations because of government orders that either fully or partially suspended its activities. Here, substantial segments of our operation were impaired:
+
+• Delays in receiving essential inventory from California-based suppliers subject to county-level emergency mandates.  
+• Logistics and transit disruptions under the enduring federal and state declarations.  
+• Ongoing public health protocols in local jurisdictions that reduced labor availability and extended lead times.
+
+Such limitations were neither negligible nor offset by remote or alternative means. The cumulative effect on our production and fulfillment processes meets the standard of “partial suspension.” Accordingly, Adkok Inc-trade name Audi Valencia should be deemed eligible for the ERC in Q3 2021 under the “government orders” test.
+
+CONCLUSION AND REQUEST
+
+We respectfully request that the IRS reverse its disallowance and recognize Adkok Inc-trade name Audi Valencia’s eligibility for the ERC in Q3 2021. The government orders described above were unequivocally active and caused direct impacts on our operational capacity. By the criteria set forth in IRS Notices and guidance, these restrictions constitute a partial suspension of our normal activities. We affirm that our claim is consistent with the statutory and regulatory framework of the Employee Retention Credit.
+
+Thank you for your attention to this protest. We appreciate your prompt review and stand ready to provide any further information you may require.  
+
+Attestation: “Under penalties of perjury, I declare that I submitted this protest and accompanying documents, and to the best of my knowledge and belief, the information stated is true, correct, and complete.”
+
+Sincerely,
+
+[Signature]
+[Name], Authorized Representative
+Adkok Inc-trade name Audi Valencia
+
+--------------------------------------------------------------------------------
+ATTACHMENTS:
+1. source_1_bidenwhitehouse.archives.gov.pdf - Notice on the Continuation of the National Emergency Concerning the COVID-19 Pandemic
+2. source_2_cdc.gov.pdf - CDC Order Implementing Federal Mask Mandates for Travel
+3. source_3_gov.ca.gov.pdf - Governor Newsom Declares State of Emergency
+4. source_4_vcportal.ventura.org.pdf - Ventura County Declaration of Local Health Emergency
+5. source_5_cms7files.revize.com.pdf - City of Camarillo Local Emergency Proclamation
+
+
+
+
+
